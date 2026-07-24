@@ -33,8 +33,11 @@ export function TemplateDetailsScreen({ templateId }: Props) {
   const [scopeOpen, setScopeOpen] = useState(false);
   const [scope, setScope] = useState<EditScope>("template");
 
-  const now = new Date();
-  const horizonEnd = new Date(now.getTime() + 30 * 24 * 3600 * 1000).toISOString();
+  const now = useMemo(() => new Date(), []);
+  const horizonEnd = useMemo(
+    () => new Date(now.getTime() + 30 * 24 * 3600 * 1000).toISOString(),
+    [now],
+  );
 
   const futureOccurrences = useMemo(
     () => (tpl ? generateOccurrences(tpl, now.toISOString(), horizonEnd) : []),
