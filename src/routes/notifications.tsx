@@ -1,29 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Bell } from "lucide-react";
-import { AppShell } from "@/components/shell/AppShell";
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
-import { t } from "@/lib/i18n";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({
     meta: [
-      { title: "התראות — Tori" },
-      { name: "description", content: "מרכז ההתראות של המשפחה." },
-      { property: "og:title", content: "התראות — Tori" },
-      { property: "og:description", content: "מרכז ההתראות ב‑Tori." },
+      { title: "מרכז ההתראות — Tori" },
+      {
+        name: "description",
+        content: "מרכז התראות רגוע, ממוקד פעולה. סיכומי יום, תזכורות והתראות דחופות במקום אחד.",
+      },
+      { property: "og:title", content: "מרכז ההתראות — Tori" },
+      {
+        property: "og:description",
+        content: "מרכז התראות משפחתי עם קיבוץ לפי היום, אתמול ומוקדם יותר.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: NotificationsPage,
+  component: () => <Outlet />,
 });
-
-function NotificationsPage() {
-  return (
-    <AppShell title={t("nav.notifications")}>
-      <PlaceholderPage
-        title={t("placeholder.notifications.title")}
-        description={t("placeholder.notifications.description")}
-        icon={<Bell className="h-8 w-8" />}
-      />
-    </AppShell>
-  );
-}
