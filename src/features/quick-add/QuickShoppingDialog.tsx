@@ -33,7 +33,7 @@ interface Props {
 
 export function QuickShoppingDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
-  const lists = useMemo(() => listLists(), [open]);
+  const lists = useSyncExternalStore(shoppingRepo.subscribe, listLists, listLists);
   const [listId, setListId] = useState<string>(lists[0]?.id ?? "");
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
