@@ -15,6 +15,7 @@ import { DesktopWeekGrid } from "./DesktopWeekGrid";
 import { EmptyState } from "@/components/design-system/EmptyState";
 import { ErrorState } from "@/components/design-system/ErrorState";
 import { PermissionDeniedState } from "@/components/design-system/PermissionDeniedState";
+import { Button } from "@/components/ui/button";
 
 const VIEW_OPTIONS: Array<{ value: CalendarViewState; label: string }> = [
   { value: "normal", label: "רגיל" },
@@ -91,7 +92,11 @@ export function WeekCalendarScreen() {
         <ErrorState
           title="לא הצלחנו לטעון את הלוח"
           description="בדקו את החיבור לאינטרנט ונסו שוב."
-          onRetry={() => calendarRepo.setView("normal")}
+          action={
+            <Button variant="outline" size="sm" onClick={() => calendarRepo.setView("normal")}>
+              נסו שוב
+            </Button>
+          }
         />
       ) : view === "permission_denied" ? (
         <PermissionDeniedState

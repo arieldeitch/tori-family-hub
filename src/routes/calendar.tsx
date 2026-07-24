@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
 import { t } from "@/lib/i18n";
+import { WeekCalendarScreen } from "@/features/calendar/WeekCalendarScreen";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({
     meta: [
-      { title: "לוח שנה — Tori" },
-      { name: "description", content: "לוח שנה משפחתי משותף." },
-      { property: "og:title", content: "לוח שנה — Tori" },
-      { property: "og:description", content: "לוח שנה משפחתי משותף ב‑Tori." },
+      { title: "לוח שבועי — Tori" },
+      { name: "description", content: "לוח משפחתי שבועי — אירועים לפי יום ושעה, לפי בן משפחה." },
+      { property: "og:title", content: "לוח שבועי — Tori" },
+      { property: "og:description", content: "תצוגת סדר יום שבועית לכל בני הבית." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: CalendarPage,
@@ -19,11 +20,7 @@ export const Route = createFileRoute("/calendar")({
 function CalendarPage() {
   return (
     <AppShell title={t("nav.calendar")}>
-      <PlaceholderPage
-        title={t("placeholder.calendar.title")}
-        description={t("placeholder.calendar.description")}
-        icon={<CalendarDays className="h-8 w-8" />}
-      />
+      <WeekCalendarScreen />
     </AppShell>
   );
 }
