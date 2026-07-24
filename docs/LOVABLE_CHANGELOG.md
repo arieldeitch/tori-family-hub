@@ -180,3 +180,18 @@ Built on top of the domain from prompt 6.1. No templates, no recurrence, no pers
 - Not implemented (out of scope): `lowest_load`, `least_recently_done`, `volunteer`, swaps, advanced fairness.
 - Tests: `src/domain/shifts.test.ts` — 19 cases covering determinism, sequence, unavailability, single/none eligible, consecutive avoidance, weekday-fixed, fallback, stable tie, algorithm version, manual override, manual strategy.
 - Results: vitest 76/76 ✓, typecheck ✓, lint ✓ (6 pre-existing shadcn warnings), build ✓.
+
+## Prompt 6.5 — Shifts UI (rules, preview, why-chosen, history demo)
+- New data + hooks: `src/data/shiftsRepo.ts` (rules + demo history + per-day availability, in-memory only), `src/lib/useShifts.ts`.
+- Application helpers (no selection logic — pure delegation to the 7.1 engine):
+  - `src/features/shifts/preview.ts` — `computePreview({rule, members, availability, from, count, lastAssigneeIdBefore})` calls `selectAssignee` per occurrence deterministically.
+  - `src/features/shifts/human.ts` — Hebrew mapping of ReasonCodes: "הוקצה לנועה כי היא הבאה בסבב.", "הוקצה ליואב כי נועה אינה זמינה.", "הוקצה לנועה שוב כי היא היחידה שזמינה.", "לא הוקצה: אין משתתף זמין." + weekday/strategy labels.
+- UI components (`src/features/shifts/`):
+  - `RuleListScreen`, `RuleFormScreen` (creates + edits — same screen), `ParticipantsEditor`, `SequenceEditor` (up/down buttons — no drag; if drag is added later, buttons stay), `WeekdayFixedEditor`, `AvailabilityEditor`, `AssignmentPreview` (7 upcoming occurrences with "למה?" toggle), `WhyChosenPanel` (headline + reason + warnings; algorithmVersion + candidateSnapshot inside a collapsed `<details>` — not in the main view), `HistoryDemo` (all rows tagged "הדגמה").
+- Routes: `src/routes/shifts.tsx` (AppShell layout with head meta), `shifts.index.tsx`, `shifts.new.tsx`, `shifts.$ruleId.tsx`.
+- Nav: added `nav.shifts` label and secondary nav entry (`Repeat` icon).
+- Rules honoured: preview never mutates data; simulation labelled "הדגמה"; no scores / ranking / judgemental language; no points; UI never computes assignments (engine only); no real persistence — text on-screen makes this explicit.
+- Accessibility & mobile: RTL throughout; every mobile row uses `grid-cols-[minmax(0,1fr)_auto]` + `min-w-0` / `shrink-0` per responsive-layout rules; sequence reorder is buttons-only with `aria-label`s; expandable "why" uses `aria-expanded`/`aria-controls`.
+- Tests: `src/features/shifts/shifts.ui.test.ts` (6 cases) — determinism, sequence rotation, per-day unavailability, no-eligible → NO_ELIGIBLE_PARTICIPANT, rule CRUD without history rewrite, delete-rule cascades demo history.
+- Results: vitest **82/82 ✓**, typecheck ✓, lint ✓ (6 pre-existing shadcn `react-refresh/only-export-components` warnings), build ✓.
+- Explicit non-goals kept: no calendar, no transport, no real persistence, no server, no scores/fairness, no swaps, no volunteers.
