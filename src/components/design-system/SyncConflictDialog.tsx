@@ -67,17 +67,14 @@ export function SyncConflictDialog({
             <span>נמצאו שינויים סותרים</span>
           </DialogTitle>
           <DialogDescription className="text-right">
-            {entityLabel} — יש הבדל בין מה ששמור אצלך למה שנמצא בשרת. בחר/י מה לשמור. לא נדרוס
-            שום דבר בלי אישור מפורש.
+            {entityLabel} — יש הבדל בין מה ששמור אצלך למה שנמצא בשרת. בחר/י מה לשמור. לא נדרוס שום
+            דבר בלי אישור מפורש.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           {fields.map((f) => (
-            <div
-              key={f.label}
-              className="rounded-lg border border-border bg-surface p-3 text-sm"
-            >
+            <div key={f.label} className="rounded-lg border border-border bg-surface p-3 text-sm">
               <p className="mb-2 font-medium text-foreground">{f.label}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 <ValueBox tone="local" title="הערך אצלך (מקומי)" value={f.local} />
@@ -125,9 +122,7 @@ function ValueBox({
     <div
       className={cn(
         "rounded-md border p-2",
-        tone === "local"
-          ? "border-primary/30 bg-primary/5"
-          : "border-info/30 bg-info/5",
+        tone === "local" ? "border-primary/30 bg-primary/5" : "border-info/30 bg-info/5",
       )}
     >
       <p className="mb-1 text-xs text-muted-foreground">{title}</p>

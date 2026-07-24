@@ -78,7 +78,8 @@ export default defineConfig({
               },
             },
             {
-              urlPattern: ({ request, sameOrigin }) => sameOrigin && request.destination === "image",
+              urlPattern: ({ request, sameOrigin }) =>
+                sameOrigin && request.destination === "image",
               handler: "CacheFirst",
               options: {
                 cacheName: "images",
