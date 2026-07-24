@@ -30,6 +30,7 @@ import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TasksIndexRouteImport } from './routes/tasks.index'
 import { Route as ShoppingIndexRouteImport } from './routes/shopping.index'
 import { Route as ShiftsIndexRouteImport } from './routes/shifts.index'
+import { Route as NotificationsIndexRouteImport } from './routes/notifications.index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
 import { Route as ErrandsIndexRouteImport } from './routes/errands.index'
 import { Route as TransportUnassignedRouteImport } from './routes/transport.unassigned'
@@ -43,6 +44,7 @@ import { Route as TasksTaskIdRouteImport } from './routes/tasks.$taskId'
 import { Route as ShoppingListIdRouteImport } from './routes/shopping.$listId'
 import { Route as ShiftsNewRouteImport } from './routes/shifts.new'
 import { Route as ShiftsRuleIdRouteImport } from './routes/shifts.$ruleId'
+import { Route as NotificationsPreferencesRouteImport } from './routes/notifications.preferences'
 import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
 import { Route as ErrandsErrandIdRouteImport } from './routes/errands.$errandId'
 import { Route as TransportRideIdEditRouteImport } from './routes/transport.$rideId.edit'
@@ -152,6 +154,11 @@ const ShiftsIndexRoute = ShiftsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ShiftsRoute,
 } as any)
+const NotificationsIndexRoute = NotificationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => NotificationsRoute,
+} as any)
 const FollowUpsIndexRoute = FollowUpsIndexRouteImport.update({
   id: '/follow-ups/',
   path: '/follow-ups/',
@@ -217,6 +224,12 @@ const ShiftsRuleIdRoute = ShiftsRuleIdRouteImport.update({
   path: '/$ruleId',
   getParentRoute: () => ShiftsRoute,
 } as any)
+const NotificationsPreferencesRoute =
+  NotificationsPreferencesRouteImport.update({
+    id: '/preferences',
+    path: '/preferences',
+    getParentRoute: () => NotificationsRoute,
+  } as any)
 const FollowUpsCaseIdRoute = FollowUpsCaseIdRouteImport.update({
   id: '/follow-ups/$caseId',
   path: '/follow-ups/$caseId',
@@ -241,7 +254,7 @@ export interface FileRoutesByFullPath {
   '/errands': typeof ErrandsRouteWithChildren
   '/household': typeof HouseholdRoute
   '/more': typeof MoreRoute
-  '/notifications': typeof NotificationsRoute
+  '/notifications': typeof NotificationsRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
   '/shifts': typeof ShiftsRouteWithChildren
@@ -252,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/transport': typeof TransportRouteWithChildren
   '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/notifications/preferences': typeof NotificationsPreferencesRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
   '/shopping/$listId': typeof ShoppingListIdRoute
@@ -265,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/transport/unassigned': typeof TransportUnassignedRoute
   '/errands/': typeof ErrandsIndexRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
+  '/notifications/': typeof NotificationsIndexRoute
   '/shifts/': typeof ShiftsIndexRoute
   '/shopping/': typeof ShoppingIndexRoute
   '/tasks/': typeof TasksIndexRoute
@@ -279,12 +294,12 @@ export interface FileRoutesByTo {
   '/design-system': typeof DesignSystemRoute
   '/household': typeof HouseholdRoute
   '/more': typeof MoreRoute
-  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
   '/today': typeof TodayRoute
   '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/notifications/preferences': typeof NotificationsPreferencesRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
   '/shopping/$listId': typeof ShoppingListIdRoute
@@ -298,6 +313,7 @@ export interface FileRoutesByTo {
   '/transport/unassigned': typeof TransportUnassignedRoute
   '/errands': typeof ErrandsIndexRoute
   '/follow-ups': typeof FollowUpsIndexRoute
+  '/notifications': typeof NotificationsIndexRoute
   '/shifts': typeof ShiftsIndexRoute
   '/shopping': typeof ShoppingIndexRoute
   '/tasks': typeof TasksIndexRoute
@@ -314,7 +330,7 @@ export interface FileRoutesById {
   '/errands': typeof ErrandsRouteWithChildren
   '/household': typeof HouseholdRoute
   '/more': typeof MoreRoute
-  '/notifications': typeof NotificationsRoute
+  '/notifications': typeof NotificationsRouteWithChildren
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
   '/shifts': typeof ShiftsRouteWithChildren
@@ -325,6 +341,7 @@ export interface FileRoutesById {
   '/transport': typeof TransportRouteWithChildren
   '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/notifications/preferences': typeof NotificationsPreferencesRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
   '/shopping/$listId': typeof ShoppingListIdRoute
@@ -338,6 +355,7 @@ export interface FileRoutesById {
   '/transport/unassigned': typeof TransportUnassignedRoute
   '/errands/': typeof ErrandsIndexRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
+  '/notifications/': typeof NotificationsIndexRoute
   '/shifts/': typeof ShiftsIndexRoute
   '/shopping/': typeof ShoppingIndexRoute
   '/tasks/': typeof TasksIndexRoute
@@ -366,6 +384,7 @@ export interface FileRouteTypes {
     | '/transport'
     | '/errands/$errandId'
     | '/follow-ups/$caseId'
+    | '/notifications/preferences'
     | '/shifts/$ruleId'
     | '/shifts/new'
     | '/shopping/$listId'
@@ -379,6 +398,7 @@ export interface FileRouteTypes {
     | '/transport/unassigned'
     | '/errands/'
     | '/follow-ups/'
+    | '/notifications/'
     | '/shifts/'
     | '/shopping/'
     | '/tasks/'
@@ -393,12 +413,12 @@ export interface FileRouteTypes {
     | '/design-system'
     | '/household'
     | '/more'
-    | '/notifications'
     | '/onboarding'
     | '/settings'
     | '/today'
     | '/errands/$errandId'
     | '/follow-ups/$caseId'
+    | '/notifications/preferences'
     | '/shifts/$ruleId'
     | '/shifts/new'
     | '/shopping/$listId'
@@ -412,6 +432,7 @@ export interface FileRouteTypes {
     | '/transport/unassigned'
     | '/errands'
     | '/follow-ups'
+    | '/notifications'
     | '/shifts'
     | '/shopping'
     | '/tasks'
@@ -438,6 +459,7 @@ export interface FileRouteTypes {
     | '/transport'
     | '/errands/$errandId'
     | '/follow-ups/$caseId'
+    | '/notifications/preferences'
     | '/shifts/$ruleId'
     | '/shifts/new'
     | '/shopping/$listId'
@@ -451,6 +473,7 @@ export interface FileRouteTypes {
     | '/transport/unassigned'
     | '/errands/'
     | '/follow-ups/'
+    | '/notifications/'
     | '/shifts/'
     | '/shopping/'
     | '/tasks/'
@@ -467,7 +490,7 @@ export interface RootRouteChildren {
   ErrandsRoute: typeof ErrandsRouteWithChildren
   HouseholdRoute: typeof HouseholdRoute
   MoreRoute: typeof MoreRoute
-  NotificationsRoute: typeof NotificationsRoute
+  NotificationsRoute: typeof NotificationsRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
   SettingsRoute: typeof SettingsRoute
   ShiftsRoute: typeof ShiftsRouteWithChildren
@@ -629,6 +652,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShiftsIndexRouteImport
       parentRoute: typeof ShiftsRoute
     }
+    '/notifications/': {
+      id: '/notifications/'
+      path: '/'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof NotificationsIndexRouteImport
+      parentRoute: typeof NotificationsRoute
+    }
     '/follow-ups/': {
       id: '/follow-ups/'
       path: '/follow-ups'
@@ -720,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShiftsRuleIdRouteImport
       parentRoute: typeof ShiftsRoute
     }
+    '/notifications/preferences': {
+      id: '/notifications/preferences'
+      path: '/preferences'
+      fullPath: '/notifications/preferences'
+      preLoaderRoute: typeof NotificationsPreferencesRouteImport
+      parentRoute: typeof NotificationsRoute
+    }
     '/follow-ups/$caseId': {
       id: '/follow-ups/$caseId'
       path: '/follow-ups/$caseId'
@@ -756,6 +793,20 @@ const ErrandsRouteChildren: ErrandsRouteChildren = {
 
 const ErrandsRouteWithChildren =
   ErrandsRoute._addFileChildren(ErrandsRouteChildren)
+
+interface NotificationsRouteChildren {
+  NotificationsPreferencesRoute: typeof NotificationsPreferencesRoute
+  NotificationsIndexRoute: typeof NotificationsIndexRoute
+}
+
+const NotificationsRouteChildren: NotificationsRouteChildren = {
+  NotificationsPreferencesRoute: NotificationsPreferencesRoute,
+  NotificationsIndexRoute: NotificationsIndexRoute,
+}
+
+const NotificationsRouteWithChildren = NotificationsRoute._addFileChildren(
+  NotificationsRouteChildren,
+)
 
 interface ShiftsRouteChildren {
   ShiftsRuleIdRoute: typeof ShiftsRuleIdRoute
@@ -856,7 +907,7 @@ const rootRouteChildren: RootRouteChildren = {
   ErrandsRoute: ErrandsRouteWithChildren,
   HouseholdRoute: HouseholdRoute,
   MoreRoute: MoreRoute,
-  NotificationsRoute: NotificationsRoute,
+  NotificationsRoute: NotificationsRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
   SettingsRoute: SettingsRoute,
   ShiftsRoute: ShiftsRouteWithChildren,
