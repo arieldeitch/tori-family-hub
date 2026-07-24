@@ -135,9 +135,12 @@ export function selectMyTasks(d: TodayDataset): TaskItem[] {
 }
 
 export function selectWaitingApproval(d: TodayDataset): Array<TaskItem | TransportItem> {
-  const tasks = d.tasks.filter((t) => t.status === "waiting_approval");
+  const tasks: TaskItem[] = visibleToRole(
+    d.tasks.filter((t) => t.status === "waiting_approval"),
+    d.viewerRole,
+  );
   const transports = d.transports.filter((t) => t.status === "waiting_approval");
-  return visibleToRole<TaskItem | TransportItem>([...tasks, ...transports], d.viewerRole);
+  return [...tasks, ...transports];
 }
 
 export function selectFollowUpsDue(d: TodayDataset): FollowUpDueItem[] {
