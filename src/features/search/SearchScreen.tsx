@@ -211,7 +211,7 @@ export function SearchScreen() {
                     {findMember(t.assignment?.memberId)?.name ?? "ללא אחראי"} · {dateShort(t.dueAt)}
                   </div>
                 </div>
-                <StatusBadge tone="neutral">{TASK_STATUS[t.status]}</StatusBadge>
+                <StatusBadge kind="neutral">{TASK_STATUS[t.status]}</StatusBadge>
               </Link>
             ))}
           </Section>
@@ -248,7 +248,7 @@ export function SearchScreen() {
                     {f.externalParty} · {dateShort(f.nextFollowUpAt)}
                   </div>
                 </div>
-                <StatusBadge tone="neutral">{FU_STATUS[f.status]}</StatusBadge>
+                <StatusBadge kind="neutral">{FU_STATUS[f.status]}</StatusBadge>
               </Link>
             ))}
           </Section>
@@ -269,7 +269,7 @@ export function SearchScreen() {
                     {findMember(r.childMemberId)?.name ?? ""} · {dateShort(r.timeAt)}
                   </div>
                 </div>
-                <StatusBadge tone="neutral">{r.status}</StatusBadge>
+                <StatusBadge kind="neutral">{r.status}</StatusBadge>
               </Link>
             ))}
           </Section>
@@ -289,7 +289,7 @@ export function SearchScreen() {
                     {it.unit ? ` ${it.unit}` : ""}
                   </div>
                 </div>
-                <StatusBadge tone="neutral">{SHOP_STATUS[it.status]}</StatusBadge>
+                <StatusBadge kind="neutral">{SHOP_STATUS[it.status]}</StatusBadge>
               </Link>
             ))}
           </Section>
