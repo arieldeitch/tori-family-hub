@@ -1,0 +1,21 @@
+# Normalize line endings across Windows, macOS, Linux and CI.
+#
+# `text=auto` lets Git detect text files; `eol=lf` forces them to LF in the
+# repository AND on checkout, so a Windows contributor with core.autocrlf=true
+# no longer ends up with a CRLF working tree that trips prettier/prettier
+# ("Delete ␍") in `bun run lint`. Line endings stay consistent everywhere.
+* text=auto eol=lf
+
+# Known binary assets — never apply text/eol conversion to their bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.avif binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
