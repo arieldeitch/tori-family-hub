@@ -17,10 +17,7 @@ function Index() {
         </h1>
         <p className="mt-3 text-base text-muted-foreground">{t("home.subtitle")}</p>
         <span className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-          <span
-            className="inline-block h-2 w-2 rounded-full bg-primary"
-            aria-hidden="true"
-          />
+          <span className="inline-block h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
           {t("home.healthy")}
         </span>
       </div>
