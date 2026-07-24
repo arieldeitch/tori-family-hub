@@ -78,18 +78,20 @@ describe("shoppingService.mergeInto (user-confirmed)", () => {
   });
 
   it("add-anyway path just keeps both items (no service call needed)", () => {
-    addItem(
+    const a = addItem(
       { listId: "list_home", name: "חלב 3%", quantity: 1, requestedByMemberId: "m1" },
       adult,
-    );
-    addItem(
+    ).item;
+    const b = addItem(
       { listId: "list_home", name: "חלב 3%", quantity: 2, requestedByMemberId: "m2" },
       adult,
-    );
+    ).item;
     const open = shoppingRepo
       .getSnapshot()
-      .items.filter((i) => i.listId === "list_home" && i.normalizedName === "חלב 3");
-    expect(open).toHaveLength(2);
+      .items.filter(
+        (i) => i.listId === "list_home" && i.normalizedName === a.normalizedName,
+      );
+    expect(open.map((i) => i.id).sort()).toEqual([a.id, b.id].sort());
   });
 });
 
