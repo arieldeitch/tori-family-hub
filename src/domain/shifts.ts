@@ -202,7 +202,8 @@ function selectWeekdayFixed(input: EngineInput, snapshot: CandidateSnapshot[]): 
   if (pool.length === 1) return single(pool[0]!, snapshot, warnings, "ONLY_ELIGIBLE_PARTICIPANT");
 
   if (input.rule.fallback === "next_available_in_sequence" && input.rule.sequence?.length) {
-    return selectFixedSequence(input, snapshot);
+    const inner = selectFixedSequence(input, snapshot);
+    return { ...inner, warnings: [...warnings, ...inner.warnings] };
   }
 
   // Default fallback: unassigned (manual required).
