@@ -23,7 +23,7 @@ routes / features / components (UI)
 - `features/` — feature slices (screens, dialogs, forms). One folder per business module.
 - `components/` — shared UI: `ui/` (shadcn), `design-system/` (Tori wrappers), `shell/` (AppShell, header, nav, QuickAdd).
 - `routes/` — TanStack file-based routes. Never edit `routeTree.gen.ts`.
-- `lib/`, `infrastructure/`, `hooks/`, `locales/`, `test/` — supporting utilities.
+- `lib/`, `hooks/`, `locales/`, `test/` — supporting utilities. Note (as-built): `lib/` also holds the modular data hooks (`useTasks`, `useToday`, …); `hooks/` currently contains only `use-mobile.tsx`; and `src/app/` and `src/infrastructure/` are empty placeholders (`.gitkeep` only) — those concerns currently live under `lib/`. Documented, not refactored (see `project-status.md`).
 
 ## Key patterns
 
