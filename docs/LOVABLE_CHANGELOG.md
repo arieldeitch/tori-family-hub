@@ -59,3 +59,16 @@ Explicitly NOT done: Supabase Auth, invitation emails, PIN authentication, devic
 - RTL: כל הרכיבים משתמשים ב-logical properties/utility classes ניטרליות; אין horizontal overflow (בדוק ב-360/390/desktop).
 - Verified: `typecheck` (0), `tests` (15/15), `lint` (0 errors; 6 אזהרות shadcn קיימות), `build` (ok).
 - Known limitations: אין badge של unread על כפתור ההתראות (אין עדיין data source), Quick Add לא כולל טפסים בפועל (מחוץ להיקף), אין persistence של המסך הנבחר.
+
+## Prompt 4 — Today screen (`/today`)
+
+- Domain: `src/domain/today.ts` — types + pure selectors (`selectRisks`, `selectNext`, `selectMyTasks`, `selectWaitingApproval`, `selectFollowUpsDue`, `selectUnassignedTasks`, `visibleToRole`, `isOverdue`).
+- Repo: `src/data/todayRepo.ts` — typed in-memory store, `TodayViewState` variants (`normal`/`busy`/`nearly_empty`/`loading`/`error`/`offline`/`permission_denied`/`child`), and demo mutations (`assignTransport`, `approveItem`, `completeTask`, `claimTask`). UI never imports fixtures directly.
+- Hook: `src/lib/useToday.ts` via `useSyncExternalStore`.
+- Feature: `src/features/today/` — `TodayScreen`, `TaskCard`, `TransportCard`, `ChildTodayScreen`, `format.ts`.
+- Route: `src/routes/today.tsx` now renders `TodayScreen` inside `AppShell`.
+- Sections in order: operational risk → next-in-time → pickups/drop-offs → my tasks → waiting approval → follow-ups due → unassigned tasks → shopping summary. Empty sections are hidden.
+- Cards limited to title/assignee/time/status + one primary action; transport cards add child, direction, place, approval state, recommended leave time.
+- Child mode: large text, today only, three actions per task (בוצע / צריך עזרה / רוצה להחליף); `adultsOnly` filtered (UX-only — server must enforce).
+- Tests: `src/domain/today.test.ts` (6 tests). Total 21/21 passing. Typecheck clean, build passes.
+- Known limits: demo actions mutate memory only, no persistence, no server, no RLS.
