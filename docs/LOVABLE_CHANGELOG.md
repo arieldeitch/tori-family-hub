@@ -170,3 +170,13 @@ Built on top of the domain from prompt 6.1. No templates, no recurrence, no pers
 - מחיקה רכה: `ConfirmationDialog` בלבד, `deletedAt`/`deletedByMemberId` מסומנים, פריט מוסתר מתצוגה רגילה ומופיע בסל שחזור לפחות 48 שעות. אין purge.
 - בדיקות: `src/features/templates/templates.test.ts` (12) — הפרדת template/instance, snapshot immutability, dedupe מופעים, soft delete + restore, גזירת שחזור לפי role, describe/generate. סה"כ 57/57 עוברות.
 - פערים מוצהרים: הרחבה של recurrence היא prototype (אין BYDAY מלא / EXDATE / RRULE ייצור); בחירת ה־scope באירוע עריכה מוצגת ומתועדת אך לא מבצעת פיצול תבנית פיזי; אין worker/DB/RLS.
+
+## Prompt 6.4 — Shift engine (pure)
+- Added `src/domain/shifts.ts`: deterministic engine for `fixed_sequence`, `weekday_fixed`, `manual`.
+- Inputs: rule, participants, availability, lastAssigneeId, targetWeekday, avoidConsecutive, fallback.
+- Output: `{ selectedProfileId, reasonCode, humanExplanation, candidateSnapshot, algorithmVersion, warnings }`.
+- Reason codes: `NEXT_IN_SEQUENCE`, `WEEKDAY_FIXED`, `PRIMARY_UNAVAILABLE`, `ONLY_ELIGIBLE_PARTICIPANT`, `NO_ELIGIBLE_PARTICIPANT`, `MANUAL_ASSIGNMENT_REQUIRED`, `CONSECUTIVE_AVOIDED`.
+- Rules: eligibility checked before sequence; avoid-consecutive only fires with ≥2 eligible; single eligible always wins; no randomness; stable tie-break by memberId; `applyManualOverride` preserves original snapshot/version (no history rewrite); no "debt" carried after unavailability.
+- Not implemented (out of scope): `lowest_load`, `least_recently_done`, `volunteer`, swaps, advanced fairness.
+- Tests: `src/domain/shifts.test.ts` — 19 cases covering determinism, sequence, unavailability, single/none eligible, consecutive avoidance, weekday-fixed, fallback, stable tie, algorithm version, manual override, manual strategy.
+- Results: vitest 76/76 ✓, typecheck ✓, lint ✓ (6 pre-existing shadcn warnings), build ✓.
