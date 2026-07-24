@@ -54,3 +54,11 @@ Minimal `t()` helper reading from `src/locales/he.ts`. Only Hebrew for now; stru
   `OfflineState`, `SyncStatusIndicator`, `SectionHeader`, `MobilePageHeader`.
 - Sheet uses shadcn Radix primitive; opens from `side="right"` for RTL affordance.
 - Accessibility invariants enforced in the wrappers: `IconButton` requires `aria-label`, min tap target `44×44`; `FormField` wires `htmlFor`/`aria-describedby`/`aria-invalid`; `StatusBadge` always carries a glyph so meaning is not color-only.
+
+## App Shell (prompt 3)
+- Shell components in `src/components/shell/`: `AppShell` (layout wrapper), `AppHeader`, `BottomNav` (mobile), `DesktopSidebar` (>=lg), `QuickAddSheet`, `PlaceholderPage`, `navConfig.ts`.
+- Primary nav: `/today`, `/calendar`, `/tasks`, `/shopping`, `/more`. Secondary (sidebar + `/more`): `/transport`, `/follow-ups`, `/household`, `/notifications`, `/settings`, `/child`.
+- `/` redirects to `/today`. `/child`, `/onboarding`, `/design-system` render standalone (no shell).
+- Quick Add opens a bottom Sheet with 7 options; unimplemented ones show a toast (no fake success). "נושא למעקב" routes to the existing `/follow-ups` module.
+- Placeholders show title + description + `EmptyState`; no mock data.
+- Safe area: `env(safe-area-inset-top)` on header, `env(safe-area-inset-bottom)` on bottom nav and main padding.
