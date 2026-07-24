@@ -3,13 +3,16 @@
 // domain objects directly.
 
 import {
+  createTaskInstanceSnapshot,
   transitionTask,
   type TaskInstance,
   type TaskAssignment,
   type TaskPriority,
   type TaskStatus,
+  type TaskTemplate,
   type TransitionInput,
 } from "@/domain/task";
+import { isSoftDeleted, occurrenceKey } from "@/domain/recurrence";
 
 type Listener = () => void;
 
