@@ -294,3 +294,33 @@ Scope: shopping only. No schedules.
 - Buyer picker offers owners/adults from the current household; if the household is empty (fresh install) it falls back to a `"seed"` requester id so the demo still functions.
 - Normalization is intentionally naive: no synonyms, no stemming beyond one Hebrew plural suffix, no AI. Duplicates that differ in wording (e.g. "חלב 3%" vs "חלב תנובה") will not be suggested.
 - `ChildHome` / child-mode does not link to `/shopping`; the module lives inside the adult AppShell.
+
+## Notifications center + preferences (prototype)
+
+- `src/domain/notification.ts` — pure domain: types, dedupe key, quiet-hours
+  (cross-midnight aware), suppression, escalation stages, reminder
+  cancellation on entity completion, lock-screen sensitive redaction.
+- `src/domain/notification.test.ts` — 10 tests covering dedupe, cross-midnight
+  quiet hours, suppression (category disabled + quiet hours + digest bypass),
+  reminder cancellation for completed entity, sensitive lock-screen preview,
+  no-action notifications, and escalation staging.
+- `src/data/notificationsRepo.ts` — in-memory repo with fixtures for all 8
+  requested categories. `useSyncExternalStore`-friendly, no persistence.
+- `src/lib/useNotifications.ts` — read hooks.
+- `src/features/notifications/NotificationsScreen.tsx` — tabs (unread/read),
+  grouping by היום / אתמול / מוקדם יותר, mark-read, one direct action per
+  notification, empty / loading / error states, lock-screen preview toggle.
+- `src/features/notifications/PreferencesScreen.tsx` — per-category switches,
+  quiet hours (start/end), morning + evening digest times, transport reminder
+  offset, family escalation.
+- Routes: `/notifications` (layout), `/notifications/` (index),
+  `/notifications/preferences`.
+
+Mock-only limitations (nothing real is delivered):
+- No push, no service worker, no email, SMS, or WhatsApp.
+- No Supabase / persistence — state resets on reload.
+- No timers/schedulers; escalation and cancellation are functions callable
+  from tests or from other in-app actions.
+- Sensitive redaction is enforced by the domain function `renderPreview`;
+  the "lock screen preview" toggle in the UI just applies the same rule so
+  the redaction can be inspected visually.
