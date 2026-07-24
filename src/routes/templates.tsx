@@ -11,7 +11,7 @@ export const Route = createFileRoute("/templates")({
     ],
   }),
   component: () => (
-    <AppShell titleKey="nav.templates">
+    <AppShell title="תבניות">
       <Outlet />
     </AppShell>
   ),

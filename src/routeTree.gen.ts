@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TransportRouteImport } from './routes/transport'
 import { Route as TodayRouteImport } from './routes/today'
+import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as ShoppingRouteImport } from './routes/shopping'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -22,8 +23,11 @@ import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ChildRouteImport } from './routes/child'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TasksIndexRouteImport } from './routes/tasks.index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
+import { Route as TemplatesTrashRouteImport } from './routes/templates.trash'
+import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as TasksUnassignedRouteImport } from './routes/tasks.unassigned'
 import { Route as TasksTaskIdRouteImport } from './routes/tasks.$taskId'
 import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
@@ -36,6 +40,11 @@ const TransportRoute = TransportRouteImport.update({
 const TodayRoute = TodayRouteImport.update({
   id: '/today',
   path: '/today',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesRoute = TemplatesRouteImport.update({
+  id: '/templates',
+  path: '/templates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TasksRoute = TasksRouteImport.update({
@@ -93,6 +102,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TemplatesRoute,
+} as any)
 const TasksIndexRoute = TasksIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -102,6 +116,16 @@ const FollowUpsIndexRoute = FollowUpsIndexRouteImport.update({
   id: '/follow-ups/',
   path: '/follow-ups/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesTrashRoute = TemplatesTrashRouteImport.update({
+  id: '/trash',
+  path: '/trash',
+  getParentRoute: () => TemplatesRoute,
+} as any)
+const TemplatesTemplateIdRoute = TemplatesTemplateIdRouteImport.update({
+  id: '/$templateId',
+  path: '/$templateId',
+  getParentRoute: () => TemplatesRoute,
 } as any)
 const TasksUnassignedRoute = TasksUnassignedRouteImport.update({
   id: '/unassigned',
@@ -131,13 +155,17 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/shopping': typeof ShoppingRoute
   '/tasks': typeof TasksRouteWithChildren
+  '/templates': typeof TemplatesRouteWithChildren
   '/today': typeof TodayRoute
   '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/tasks/$taskId': typeof TasksTaskIdRoute
   '/tasks/unassigned': typeof TasksUnassignedRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/templates/trash': typeof TemplatesTrashRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
   '/tasks/': typeof TasksIndexRoute
+  '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,8 +183,11 @@ export interface FileRoutesByTo {
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/tasks/$taskId': typeof TasksTaskIdRoute
   '/tasks/unassigned': typeof TasksUnassignedRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/templates/trash': typeof TemplatesTrashRoute
   '/follow-ups': typeof FollowUpsIndexRoute
   '/tasks': typeof TasksIndexRoute
+  '/templates': typeof TemplatesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -171,13 +202,17 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/shopping': typeof ShoppingRoute
   '/tasks': typeof TasksRouteWithChildren
+  '/templates': typeof TemplatesRouteWithChildren
   '/today': typeof TodayRoute
   '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/tasks/$taskId': typeof TasksTaskIdRoute
   '/tasks/unassigned': typeof TasksUnassignedRoute
+  '/templates/$templateId': typeof TemplatesTemplateIdRoute
+  '/templates/trash': typeof TemplatesTrashRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
   '/tasks/': typeof TasksIndexRoute
+  '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -193,13 +228,17 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shopping'
     | '/tasks'
+    | '/templates'
     | '/today'
     | '/transport'
     | '/follow-ups/$caseId'
     | '/tasks/$taskId'
     | '/tasks/unassigned'
+    | '/templates/$templateId'
+    | '/templates/trash'
     | '/follow-ups/'
     | '/tasks/'
+    | '/templates/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -217,8 +256,11 @@ export interface FileRouteTypes {
     | '/follow-ups/$caseId'
     | '/tasks/$taskId'
     | '/tasks/unassigned'
+    | '/templates/$templateId'
+    | '/templates/trash'
     | '/follow-ups'
     | '/tasks'
+    | '/templates'
   id:
     | '__root__'
     | '/'
@@ -232,13 +274,17 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shopping'
     | '/tasks'
+    | '/templates'
     | '/today'
     | '/transport'
     | '/follow-ups/$caseId'
     | '/tasks/$taskId'
     | '/tasks/unassigned'
+    | '/templates/$templateId'
+    | '/templates/trash'
     | '/follow-ups/'
     | '/tasks/'
+    | '/templates/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -253,6 +299,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ShoppingRoute: typeof ShoppingRoute
   TasksRoute: typeof TasksRouteWithChildren
+  TemplatesRoute: typeof TemplatesRouteWithChildren
   TodayRoute: typeof TodayRoute
   TransportRoute: typeof TransportRoute
   FollowUpsCaseIdRoute: typeof FollowUpsCaseIdRoute
@@ -273,6 +320,13 @@ declare module '@tanstack/react-router' {
       path: '/today'
       fullPath: '/today'
       preLoaderRoute: typeof TodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates': {
+      id: '/templates'
+      path: '/templates'
+      fullPath: '/templates'
+      preLoaderRoute: typeof TemplatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tasks': {
@@ -352,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates/': {
+      id: '/templates/'
+      path: '/'
+      fullPath: '/templates/'
+      preLoaderRoute: typeof TemplatesIndexRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
     '/tasks/': {
       id: '/tasks/'
       path: '/'
@@ -365,6 +426,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/follow-ups/'
       preLoaderRoute: typeof FollowUpsIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/templates/trash': {
+      id: '/templates/trash'
+      path: '/trash'
+      fullPath: '/templates/trash'
+      preLoaderRoute: typeof TemplatesTrashRouteImport
+      parentRoute: typeof TemplatesRoute
+    }
+    '/templates/$templateId': {
+      id: '/templates/$templateId'
+      path: '/$templateId'
+      fullPath: '/templates/$templateId'
+      preLoaderRoute: typeof TemplatesTemplateIdRouteImport
+      parentRoute: typeof TemplatesRoute
     }
     '/tasks/unassigned': {
       id: '/tasks/unassigned'
@@ -404,6 +479,22 @@ const TasksRouteChildren: TasksRouteChildren = {
 
 const TasksRouteWithChildren = TasksRoute._addFileChildren(TasksRouteChildren)
 
+interface TemplatesRouteChildren {
+  TemplatesTemplateIdRoute: typeof TemplatesTemplateIdRoute
+  TemplatesTrashRoute: typeof TemplatesTrashRoute
+  TemplatesIndexRoute: typeof TemplatesIndexRoute
+}
+
+const TemplatesRouteChildren: TemplatesRouteChildren = {
+  TemplatesTemplateIdRoute: TemplatesTemplateIdRoute,
+  TemplatesTrashRoute: TemplatesTrashRoute,
+  TemplatesIndexRoute: TemplatesIndexRoute,
+}
+
+const TemplatesRouteWithChildren = TemplatesRoute._addFileChildren(
+  TemplatesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
@@ -416,6 +507,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ShoppingRoute: ShoppingRoute,
   TasksRoute: TasksRouteWithChildren,
+  TemplatesRoute: TemplatesRouteWithChildren,
   TodayRoute: TodayRoute,
   TransportRoute: TransportRoute,
   FollowUpsCaseIdRoute: FollowUpsCaseIdRoute,
