@@ -257,3 +257,16 @@ Standalone module so unassigned rides don't get buried inside the calendar. Cale
 - Actor identity is `DEMO_VIEWER_ID`; real per-user identity waits on auth.
 - `TransportCard` in the new module is not yet wired into `TodayScreen` (which still uses its own `today.TransportCard` on a separate mock). Migration deferred to avoid double-listing today's rides; will be handled in a later integration prompt.
 - Full swap flow (offer/accept/decline) is out of scope for this prompt — only direct `transferred` is supported.
+
+## Prompt 9 audit — Follow-ups
+Read-only audit + one proven gap fix. No module rebuild, no other module touched.
+
+**Present and correct (no change):** cases list (`FollowUpListScreen`), details screen (`FollowUpDetailScreen`), create dialog (`FollowUpFormDialog`), edit dialog (same, reused with `initial=`), timeline (`Timeline` in detail), "הגיע הזמן לעקוב" and "ממתין לגורם חיצוני" as list tabs, filters by owner/status/date, all 7 canonical statuses (`action_required | waiting_external | response_received | more_info_required | completed | closed_no_action | blocked`), sensitivity levels (`household | adults_only | restricted`), highlight bar with ball-holder / last action / next follow-up / next action, and `canRoleSeeFollowUp` hiding adults_only + restricted for child role (UX-only; RLS deferred to backend). Existing tests: waiting_external without follow-up ✓, opt-out reason accepted ✓, completed clears future reminders ✓, adults-only hidden from child ✓.
+
+**Gap found and fixed:** the "waiting_external requires nextFollowUpAt OR followUpDisabledReason" rule was enforced only inside the form (form button disabled on `errors.length > 0`). The domain function `validateFollowUp` existed but `followUpRepo.create()` / `update()` did not call it, so any non-form caller could persist an invalid case. Added a `FollowUpValidationFailedError` and made both repo mutators run `validateFollowUp` on the resulting shape before writing state — application-layer safety net now backs the form.
+
+**Tests added (`src/data/followUpRepo.test.ts`, 4 new):** repo.create throws for waiting_external missing follow-up/reason (and state is unchanged so caller-side input is preserved); repo.create accepts waiting_external + opt-out reason; repo.update throws on invalid patch and leaves original state intact ("failed save preserves input"); update to completed clears future reminder via `clearFutureRemindersIfTerminal`.
+
+**Still requires backend (unchanged, explicit):** sensitivity gating is UX-only — no RLS, no server checks; `canRoleSeeFollowUp` filters the client list only. Persistence is in-memory (state resets on reload). Reminders and next-follow-up dates are not real notifications. `restrictedToMemberIds` is honored client-side only.
+
+**Results:** tsgo ✓ · vitest **100/100** (4 new) ✓ · lint ✓ · build ✓.
