@@ -12,7 +12,7 @@ interface AppShellProps {
 
 export function AppShell({ title, children }: AppShellProps) {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const household = useHousehold();
+  const { household } = useHousehold();
 
   return (
     <div className="flex min-h-screen w-full bg-background">
