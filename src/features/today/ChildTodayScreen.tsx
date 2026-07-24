@@ -72,9 +72,10 @@ export function ChildTodayScreen({ dataset }: Props) {
                     size="lg"
                     className="min-h-12 flex-1 text-base"
                     onClick={() => {
-                      todayRepo.completeTask(task.id);
+                      completeTaskAction(task.id, dataset.viewerId);
                       toast.success("סימנו שבוצע!");
                     }}
+
                   >
                     בוצע
                   </Button>
