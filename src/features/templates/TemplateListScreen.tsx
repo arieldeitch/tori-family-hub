@@ -35,7 +35,7 @@ export function TemplateListScreen() {
         <EmptyState
           title="אין עדיין תבניות"
           description="תבנית מגדירה מתי המשימה חוזרת ומי מעורב. אפשר להתחיל עם 'תבנית חדשה'."
-          actions={<Button onClick={() => setWizardOpen(true)}>יצירת תבנית</Button>}
+          action={<Button onClick={() => setWizardOpen(true)}>יצירת תבנית</Button>}
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
