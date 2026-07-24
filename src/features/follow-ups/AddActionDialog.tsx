@@ -44,18 +44,10 @@ const KINDS: FollowUpActionKind[] = [
   "status_changed",
 ];
 
-export function AddActionDialog({
-  open,
-  onOpenChange,
-  members,
-  defaultMemberId,
-  onSubmit,
-}: Props) {
+export function AddActionDialog({ open, onOpenChange, members, defaultMemberId, onSubmit }: Props) {
   const [kind, setKind] = useState<FollowUpActionKind>("called");
   const [description, setDescription] = useState("");
-  const [byMemberId, setByMemberId] = useState(
-    defaultMemberId ?? members[0]?.id ?? "",
-  );
+  const [byMemberId, setByMemberId] = useState(defaultMemberId ?? members[0]?.id ?? "");
   const [nextFollowUpAt, setNextFollowUpAt] = useState<string | undefined>();
 
   const handle = (e: React.FormEvent) => {
@@ -81,10 +73,7 @@ export function AddActionDialog({
         <form onSubmit={handle} className="space-y-3">
           <div className="space-y-1">
             <Label>סוג פעולה</Label>
-            <Select
-              value={kind}
-              onValueChange={(v) => setKind(v as FollowUpActionKind)}
-            >
+            <Select value={kind} onValueChange={(v) => setKind(v as FollowUpActionKind)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -132,9 +121,7 @@ export function AddActionDialog({
               id="a-next"
               type="date"
               value={toDateInputValue(nextFollowUpAt)}
-              onChange={(e) =>
-                setNextFollowUpAt(fromDateInputValue(e.target.value))
-              }
+              onChange={(e) => setNextFollowUpAt(fromDateInputValue(e.target.value))}
             />
           </div>
 

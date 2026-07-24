@@ -64,8 +64,7 @@ export function FollowUpListScreen() {
       if (!canRoleSeeFollowUp("adult", c)) return false;
       if (tab === "due" && !isDueForFollowUp(c, now)) return false;
       if (tab === "waiting" && !isWaitingExternal(c)) return false;
-      if (ownerFilter !== "all" && c.responsibleMemberId !== ownerFilter)
-        return false;
+      if (ownerFilter !== "all" && c.responsibleMemberId !== ownerFilter) return false;
       if (statusFilter !== "all" && c.status !== statusFilter) return false;
       if (dateFilter) {
         const cmp = new Date(`${dateFilter}T00:00:00.000Z`).toISOString();
@@ -125,9 +124,7 @@ export function FollowUpListScreen() {
             </Select>
             <Select
               value={statusFilter}
-              onValueChange={(v) =>
-                setStatusFilter(v === "all" ? "all" : (v as FollowUpStatus))
-              }
+              onValueChange={(v) => setStatusFilter(v === "all" ? "all" : (v as FollowUpStatus))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="סטטוס" />
@@ -155,10 +152,7 @@ export function FollowUpListScreen() {
             <ul className="space-y-2">
               {visible.map((c) => (
                 <li key={c.id}>
-                  <FollowUpRow
-                    followUp={c}
-                    members={memberOptions}
-                  />
+                  <FollowUpRow followUp={c} members={memberOptions} />
                 </li>
               ))}
             </ul>
@@ -194,11 +188,7 @@ function FollowUpRow({
   const last = followUp.actions[0];
 
   return (
-    <Link
-      to="/follow-ups/$caseId"
-      params={{ caseId: followUp.id }}
-      className="block"
-    >
+    <Link to="/follow-ups/$caseId" params={{ caseId: followUp.id }} className="block">
       <Card className="hover:border-primary/60 transition-colors">
         <CardContent className="p-4 space-y-2">
           <div className="flex items-start justify-between gap-2">

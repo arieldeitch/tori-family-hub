@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HouseholdRouteImport } from './routes/household'
+import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ChildRouteImport } from './routes/child'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
@@ -24,6 +25,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const HouseholdRoute = HouseholdRouteImport.update({
   id: '/household',
   path: '/household',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesignSystemRoute = DesignSystemRouteImport.update({
+  id: '/design-system',
+  path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChildRoute = ChildRouteImport.update({
@@ -50,6 +56,7 @@ const FollowUpsCaseIdRoute = FollowUpsCaseIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/child': typeof ChildRoute
+  '/design-system': typeof DesignSystemRoute
   '/household': typeof HouseholdRoute
   '/onboarding': typeof OnboardingRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/child': typeof ChildRoute
+  '/design-system': typeof DesignSystemRoute
   '/household': typeof HouseholdRoute
   '/onboarding': typeof OnboardingRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/child': typeof ChildRoute
+  '/design-system': typeof DesignSystemRoute
   '/household': typeof HouseholdRoute
   '/onboarding': typeof OnboardingRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
@@ -77,6 +86,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/child'
+    | '/design-system'
     | '/household'
     | '/onboarding'
     | '/follow-ups/$caseId'
@@ -85,6 +95,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/child'
+    | '/design-system'
     | '/household'
     | '/onboarding'
     | '/follow-ups/$caseId'
@@ -93,6 +104,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/child'
+    | '/design-system'
     | '/household'
     | '/onboarding'
     | '/follow-ups/$caseId'
@@ -102,6 +114,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChildRoute: typeof ChildRoute
+  DesignSystemRoute: typeof DesignSystemRoute
   HouseholdRoute: typeof HouseholdRoute
   OnboardingRoute: typeof OnboardingRoute
   FollowUpsCaseIdRoute: typeof FollowUpsCaseIdRoute
@@ -122,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/household'
       fullPath: '/household'
       preLoaderRoute: typeof HouseholdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/design-system': {
+      id: '/design-system'
+      path: '/design-system'
+      fullPath: '/design-system'
+      preLoaderRoute: typeof DesignSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/child': {
@@ -158,6 +178,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChildRoute: ChildRoute,
+  DesignSystemRoute: DesignSystemRoute,
   HouseholdRoute: HouseholdRoute,
   OnboardingRoute: OnboardingRoute,
   FollowUpsCaseIdRoute: FollowUpsCaseIdRoute,

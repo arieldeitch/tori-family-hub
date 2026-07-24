@@ -18,11 +18,7 @@ import { toast } from "sonner";
 import { useFollowUp } from "@/lib/useFollowUps";
 import { useHousehold } from "@/lib/useHousehold";
 import * as followUpRepo from "@/data/followUpRepo";
-import {
-  isDueForFollowUp,
-  isTerminalStatus,
-  type FollowUpCase,
-} from "@/domain/followUp";
+import { isDueForFollowUp, isTerminalStatus, type FollowUpCase } from "@/domain/followUp";
 import {
   ACTION_KIND_LABEL,
   BALL_HOLDER_LABEL,
@@ -200,15 +196,7 @@ export function FollowUpDetailScreen({ caseId }: Props) {
   );
 }
 
-function Header({
-  followUp,
-  owner,
-  due,
-}: {
-  followUp: FollowUpCase;
-  owner: string;
-  due: boolean;
-}) {
+function Header({ followUp, owner, due }: { followUp: FollowUpCase; owner: string; due: boolean }) {
   return (
     <header className="space-y-2">
       <div className="flex flex-wrap items-center gap-2">
@@ -270,11 +258,7 @@ function HighlightBar({
         <Cell
           label="הפעולה הבאה"
           value={nextAction}
-          hint={
-            followUp.targetDate
-              ? `יעד: ${formatDate(followUp.targetDate)}`
-              : undefined
-          }
+          hint={followUp.targetDate ? `יעד: ${formatDate(followUp.targetDate)}` : undefined}
         />
       </CardContent>
       {members.length === 0 && <Separator />}
@@ -282,15 +266,7 @@ function HighlightBar({
   );
 }
 
-function Cell({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-}) {
+function Cell({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div>
       <div className="text-xs font-medium text-muted-foreground">{label}</div>
@@ -309,9 +285,7 @@ function Timeline({
 }) {
   if (followUp.actions.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        עדיין לא נוספו פעולות. הוסיפו את הראשונה.
-      </p>
+      <p className="text-sm text-muted-foreground">עדיין לא נוספו פעולות. הוסיפו את הראשונה.</p>
     );
   }
   return (
@@ -322,19 +296,13 @@ function Timeline({
           <Card>
             <CardContent className="p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm font-semibold">
-                  {ACTION_KIND_LABEL[a.kind]}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {formatDateTime(a.at)}
-                </span>
+                <span className="text-sm font-semibold">{ACTION_KIND_LABEL[a.kind]}</span>
+                <span className="text-xs text-muted-foreground">{formatDateTime(a.at)}</span>
               </div>
               <p className="mt-1 text-sm">{a.description}</p>
               <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
                 <span>בוצע ע״י {resolveMemberName(a.byMemberId, members)}</span>
-                {a.nextFollowUpAt && (
-                  <span>מעקב הבא: {formatDate(a.nextFollowUpAt)}</span>
-                )}
+                {a.nextFollowUpAt && <span>מעקב הבא: {formatDate(a.nextFollowUpAt)}</span>}
               </div>
             </CardContent>
           </Card>

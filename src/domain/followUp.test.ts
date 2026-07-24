@@ -81,12 +81,8 @@ describe("clearFutureRemindersIfTerminal", () => {
 
 describe("canRoleSeeFollowUp", () => {
   it("hides adults_only from child role", () => {
-    expect(
-      canRoleSeeFollowUp("child", { ...base, sensitivity: "adults_only" }),
-    ).toBe(false);
-    expect(
-      canRoleSeeFollowUp("adult", { ...base, sensitivity: "adults_only" }),
-    ).toBe(true);
+    expect(canRoleSeeFollowUp("child", { ...base, sensitivity: "adults_only" })).toBe(false);
+    expect(canRoleSeeFollowUp("adult", { ...base, sensitivity: "adults_only" })).toBe(true);
   });
 
   it("restricted requires viewer to be on the allow-list", () => {

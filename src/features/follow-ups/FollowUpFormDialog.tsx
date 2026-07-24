@@ -84,8 +84,7 @@ export function FollowUpFormDialog({
   }));
 
   const errors = useMemo(() => validateFollowUp(values), [values]);
-  const errorFor = (field: string) =>
-    errors.find((e) => e.field === field)?.message;
+  const errorFor = (field: string) => errors.find((e) => e.field === field)?.message;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,9 +113,7 @@ export function FollowUpFormDialog({
               maxLength={140}
               required
             />
-            {errorFor("title") && (
-              <p className="text-xs text-destructive">{errorFor("title")}</p>
-            )}
+            {errorFor("title") && <p className="text-xs text-destructive">{errorFor("title")}</p>}
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -124,9 +121,7 @@ export function FollowUpFormDialog({
               <Label>אחראי</Label>
               <Select
                 value={values.responsibleMemberId}
-                onValueChange={(v) =>
-                  setValues((s) => ({ ...s, responsibleMemberId: v }))
-                }
+                onValueChange={(v) => setValues((s) => ({ ...s, responsibleMemberId: v }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="בחר/י אחראי" />
@@ -140,9 +135,7 @@ export function FollowUpFormDialog({
                 </SelectContent>
               </Select>
               {errorFor("responsibleMemberId") && (
-                <p className="text-xs text-destructive">
-                  {errorFor("responsibleMemberId")}
-                </p>
+                <p className="text-xs text-destructive">{errorFor("responsibleMemberId")}</p>
               )}
             </div>
 
@@ -151,16 +144,12 @@ export function FollowUpFormDialog({
               <Input
                 id="fu-ext"
                 value={values.externalParty}
-                onChange={(e) =>
-                  setValues((s) => ({ ...s, externalParty: e.target.value }))
-                }
+                onChange={(e) => setValues((s) => ({ ...s, externalParty: e.target.value }))}
                 placeholder="למשל: בנק דיסקונט"
                 maxLength={140}
               />
               {errorFor("externalParty") && (
-                <p className="text-xs text-destructive">
-                  {errorFor("externalParty")}
-                </p>
+                <p className="text-xs text-destructive">{errorFor("externalParty")}</p>
               )}
             </div>
           </div>
@@ -170,9 +159,7 @@ export function FollowUpFormDialog({
               <Label>מי מחזיק בכדור</Label>
               <Select
                 value={values.ballHolder}
-                onValueChange={(v) =>
-                  setValues((s) => ({ ...s, ballHolder: v as BallHolder }))
-                }
+                onValueChange={(v) => setValues((s) => ({ ...s, ballHolder: v as BallHolder }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -191,9 +178,7 @@ export function FollowUpFormDialog({
               <Label>סטטוס</Label>
               <Select
                 value={values.status}
-                onValueChange={(v) =>
-                  setValues((s) => ({ ...s, status: v as FollowUpStatus }))
-                }
+                onValueChange={(v) => setValues((s) => ({ ...s, status: v as FollowUpStatus }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -212,8 +197,8 @@ export function FollowUpFormDialog({
           {values.status === "waiting_external" && (
             <Alert>
               <AlertDescription>
-                במצב <b>ממתין לגורם חיצוני</b> חובה למלא תאריך מעקב הבא, או לציין
-                סיבה מפורשת לביטול התזכורת.
+                במצב <b>ממתין לגורם חיצוני</b> חובה למלא תאריך מעקב הבא, או לציין סיבה מפורשת לביטול
+                התזכורת.
               </AlertDescription>
             </Alert>
           )}
@@ -233,9 +218,7 @@ export function FollowUpFormDialog({
                 }
               />
               {errorFor("nextFollowUpAt") && (
-                <p className="text-xs text-destructive">
-                  {errorFor("nextFollowUpAt")}
-                </p>
+                <p className="text-xs text-destructive">{errorFor("nextFollowUpAt")}</p>
               )}
             </div>
 
@@ -284,9 +267,7 @@ export function FollowUpFormDialog({
                 onChange={(e) =>
                   setValues((s) => ({
                     ...s,
-                    possibleAmount: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
+                    possibleAmount: e.target.value ? Number(e.target.value) : undefined,
                   }))
                 }
               />
@@ -296,21 +277,17 @@ export function FollowUpFormDialog({
               <Label>רגישות</Label>
               <Select
                 value={values.sensitivity}
-                onValueChange={(v) =>
-                  setValues((s) => ({ ...s, sensitivity: v as Sensitivity }))
-                }
+                onValueChange={(v) => setValues((s) => ({ ...s, sensitivity: v as Sensitivity }))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(["household", "adults_only", "restricted"] as const).map(
-                    (s) => (
-                      <SelectItem key={s} value={s}>
-                        {SENSITIVITY_LABEL[s]}
-                      </SelectItem>
-                    ),
-                  )}
+                  {(["household", "adults_only", "restricted"] as const).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {SENSITIVITY_LABEL[s]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
@@ -320,11 +297,7 @@ export function FollowUpFormDialog({
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               ביטול
             </Button>
             <Button type="submit" disabled={errors.length > 0}>

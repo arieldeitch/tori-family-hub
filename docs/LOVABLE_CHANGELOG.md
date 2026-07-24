@@ -35,3 +35,13 @@ Prototype security limitations (documented in code + memory):
 - Removed members are hard-deleted from in-memory demo state.
 
 Explicitly NOT done: Supabase Auth, invitation emails, PIN authentication, device sessions, RLS, real persistence, multi-household switching.
+
+## Prompt 2 — Design System
+- Added Hebrew-first tokens (semantic status: success/warning/error/info/overdue/blocked; surface; focus ring) in `src/styles.css`; kept every existing shadcn token untouched.
+- Loaded `Heebo` via `<link>` in `__root.tsx`; wired `--font-sans` and applied on `html,body`. No remote `@import` in CSS.
+- Added `prefers-reduced-motion` global reset and `:focus-visible` outline.
+- New `src/components/design-system/` wrapper library (13 components) built on shadcn primitives — no shadcn file modified.
+- New internal route `/design-system` showcasing tokens, family palette, all wrappers and status states. Not added to any nav.
+- Verified: `typecheck` (0), `test` (15/15), `lint` (0 errors, 6 pre-existing shadcn warnings), `build` (ok).
+- Dependencies added: **none**. Heebo is loaded from Google Fonts CDN.
+- Known limitations: dark mode tokens defined but there is no theme toggle yet (out of scope for prompt 2). No visual regression tests. Contrast tuned by eye against WCAG AA on the calm palette; a full audit will come with prompt 3 (App Shell).
