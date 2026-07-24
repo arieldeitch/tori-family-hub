@@ -324,3 +324,49 @@ Mock-only limitations (nothing real is delivered):
 - Sensitive redaction is enforced by the domain function `renderPreview`;
   the "lock screen preview" toggle in the UI just applies the same rule so
   the redaction can be inspected visually.
+
+## Global system states + basic PWA app-shell
+
+### Design-system state components
+- New: `LoadingState`, `PendingSyncBadge`, `SyncFailedState`,
+  `ExpiredSessionState`, `RetryBanner`, `SyncConflictDialog`.
+- Existing (kept): `EmptyState`, `ErrorState`, `OfflineState`,
+  `PermissionDeniedState`, `SyncStatusIndicator`.
+- All use `motion-safe:` variants so `prefers-reduced-motion` users get
+  static states (no pulses/spins).
+- `SyncConflictDialog` shows local vs server values side-by-side with three
+  explicit choices (keep local / use server / cancel) and optional retry —
+  no silent overwrite path exists. 5 tests in
+  `src/components/design-system/SyncConflictDialog.test.tsx` guard this.
+
+### PWA (basic app-shell only)
+- Added `vite-plugin-pwa` (`generateSW`, `autoUpdate`,
+  `injectRegister: null`, `devOptions.enabled: false`).
+- Manifest served at `/manifest.webmanifest` with name, short_name,
+  `display: "standalone"`, theme color `#2C7A7B`, lang/dir `he/rtl`, and
+  three PNG icons (192, 512, 512 maskable).
+- `public/offline.html` — Hebrew/RTL offline fallback for the app shell.
+- Head links added to `src/routes/__root.tsx`: `manifest`, `theme-color`,
+  `apple-mobile-web-app-*`, and icon references.
+- Single guarded registration wrapper `src/lib/pwa/register.ts`. Refuses to
+  register in dev, iframes, Lovable preview hosts, or when `?sw=off` is
+  set; unregisters `/sw.js` in every refused context.
+- Workbox rules: `NetworkFirst` for HTML navigations (3s timeout, 20 entry
+  cap, 1 day TTL), `CacheFirst` for same-origin static assets/images, and
+  navigation fallback to `/offline.html`. `/api/*` and `/~oauth` excluded
+  from the navigation fallback.
+
+### Mock-only / not production-ready
+- Icons are placeholders (`public/icons/*`), replace before launch.
+- No background sync, no offline business logic, no push notifications.
+- `PendingSyncBadge` is UI only — no queue actually retries; UI never
+  promises background delivery.
+- No auth yet, so post-logout cache scrubbing is deferred to when auth
+  lands (documented in `docs/PWA.md`).
+
+### Commands verified
+- `bunx tsgo --noEmit` — clean.
+- `bunx eslint --fix ...` — clean.
+- `bunx vitest run` — 145/145 passing (17 files).
+- `bunx vite build` — build ok; emits `dist/sw.js`, `manifest.webmanifest`,
+  `offline.html`.
