@@ -14,6 +14,7 @@ import { Route as TodayRouteImport } from './routes/today'
 import { Route as TemplatesRouteImport } from './routes/templates'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as ShiftsRouteImport } from './routes/shifts'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -25,11 +26,14 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TasksIndexRouteImport } from './routes/tasks.index'
+import { Route as ShiftsIndexRouteImport } from './routes/shifts.index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
 import { Route as TemplatesTrashRouteImport } from './routes/templates.trash'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as TasksUnassignedRouteImport } from './routes/tasks.unassigned'
 import { Route as TasksTaskIdRouteImport } from './routes/tasks.$taskId'
+import { Route as ShiftsNewRouteImport } from './routes/shifts.new'
+import { Route as ShiftsRuleIdRouteImport } from './routes/shifts.$ruleId'
 import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
 
 const TransportRoute = TransportRouteImport.update({
@@ -55,6 +59,11 @@ const TasksRoute = TasksRouteImport.update({
 const ShoppingRoute = ShoppingRouteImport.update({
   id: '/shopping',
   path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShiftsRoute = ShiftsRouteImport.update({
+  id: '/shifts',
+  path: '/shifts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -112,6 +121,11 @@ const TasksIndexRoute = TasksIndexRouteImport.update({
   path: '/',
   getParentRoute: () => TasksRoute,
 } as any)
+const ShiftsIndexRoute = ShiftsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ShiftsRoute,
+} as any)
 const FollowUpsIndexRoute = FollowUpsIndexRouteImport.update({
   id: '/follow-ups/',
   path: '/follow-ups/',
@@ -137,6 +151,16 @@ const TasksTaskIdRoute = TasksTaskIdRouteImport.update({
   path: '/$taskId',
   getParentRoute: () => TasksRoute,
 } as any)
+const ShiftsNewRoute = ShiftsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => ShiftsRoute,
+} as any)
+const ShiftsRuleIdRoute = ShiftsRuleIdRouteImport.update({
+  id: '/$ruleId',
+  path: '/$ruleId',
+  getParentRoute: () => ShiftsRoute,
+} as any)
 const FollowUpsCaseIdRoute = FollowUpsCaseIdRouteImport.update({
   id: '/follow-ups/$caseId',
   path: '/follow-ups/$caseId',
@@ -153,17 +177,21 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
+  '/shifts': typeof ShiftsRouteWithChildren
   '/shopping': typeof ShoppingRoute
   '/tasks': typeof TasksRouteWithChildren
   '/templates': typeof TemplatesRouteWithChildren
   '/today': typeof TodayRoute
   '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/shifts/$ruleId': typeof ShiftsRuleIdRoute
+  '/shifts/new': typeof ShiftsNewRoute
   '/tasks/$taskId': typeof TasksTaskIdRoute
   '/tasks/unassigned': typeof TasksUnassignedRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/templates/trash': typeof TemplatesTrashRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
+  '/shifts/': typeof ShiftsIndexRoute
   '/tasks/': typeof TasksIndexRoute
   '/templates/': typeof TemplatesIndexRoute
 }
@@ -181,11 +209,14 @@ export interface FileRoutesByTo {
   '/today': typeof TodayRoute
   '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/shifts/$ruleId': typeof ShiftsRuleIdRoute
+  '/shifts/new': typeof ShiftsNewRoute
   '/tasks/$taskId': typeof TasksTaskIdRoute
   '/tasks/unassigned': typeof TasksUnassignedRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/templates/trash': typeof TemplatesTrashRoute
   '/follow-ups': typeof FollowUpsIndexRoute
+  '/shifts': typeof ShiftsIndexRoute
   '/tasks': typeof TasksIndexRoute
   '/templates': typeof TemplatesIndexRoute
 }
@@ -200,17 +231,21 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
+  '/shifts': typeof ShiftsRouteWithChildren
   '/shopping': typeof ShoppingRoute
   '/tasks': typeof TasksRouteWithChildren
   '/templates': typeof TemplatesRouteWithChildren
   '/today': typeof TodayRoute
   '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/shifts/$ruleId': typeof ShiftsRuleIdRoute
+  '/shifts/new': typeof ShiftsNewRoute
   '/tasks/$taskId': typeof TasksTaskIdRoute
   '/tasks/unassigned': typeof TasksUnassignedRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/templates/trash': typeof TemplatesTrashRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
+  '/shifts/': typeof ShiftsIndexRoute
   '/tasks/': typeof TasksIndexRoute
   '/templates/': typeof TemplatesIndexRoute
 }
@@ -226,17 +261,21 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/settings'
+    | '/shifts'
     | '/shopping'
     | '/tasks'
     | '/templates'
     | '/today'
     | '/transport'
     | '/follow-ups/$caseId'
+    | '/shifts/$ruleId'
+    | '/shifts/new'
     | '/tasks/$taskId'
     | '/tasks/unassigned'
     | '/templates/$templateId'
     | '/templates/trash'
     | '/follow-ups/'
+    | '/shifts/'
     | '/tasks/'
     | '/templates/'
   fileRoutesByTo: FileRoutesByTo
@@ -254,11 +293,14 @@ export interface FileRouteTypes {
     | '/today'
     | '/transport'
     | '/follow-ups/$caseId'
+    | '/shifts/$ruleId'
+    | '/shifts/new'
     | '/tasks/$taskId'
     | '/tasks/unassigned'
     | '/templates/$templateId'
     | '/templates/trash'
     | '/follow-ups'
+    | '/shifts'
     | '/tasks'
     | '/templates'
   id:
@@ -272,17 +314,21 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/settings'
+    | '/shifts'
     | '/shopping'
     | '/tasks'
     | '/templates'
     | '/today'
     | '/transport'
     | '/follow-ups/$caseId'
+    | '/shifts/$ruleId'
+    | '/shifts/new'
     | '/tasks/$taskId'
     | '/tasks/unassigned'
     | '/templates/$templateId'
     | '/templates/trash'
     | '/follow-ups/'
+    | '/shifts/'
     | '/tasks/'
     | '/templates/'
   fileRoutesById: FileRoutesById
@@ -297,6 +343,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
   SettingsRoute: typeof SettingsRoute
+  ShiftsRoute: typeof ShiftsRouteWithChildren
   ShoppingRoute: typeof ShoppingRoute
   TasksRoute: typeof TasksRouteWithChildren
   TemplatesRoute: typeof TemplatesRouteWithChildren
@@ -341,6 +388,13 @@ declare module '@tanstack/react-router' {
       path: '/shopping'
       fullPath: '/shopping'
       preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shifts': {
+      id: '/shifts'
+      path: '/shifts'
+      fullPath: '/shifts'
+      preLoaderRoute: typeof ShiftsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -420,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasksIndexRouteImport
       parentRoute: typeof TasksRoute
     }
+    '/shifts/': {
+      id: '/shifts/'
+      path: '/'
+      fullPath: '/shifts/'
+      preLoaderRoute: typeof ShiftsIndexRouteImport
+      parentRoute: typeof ShiftsRoute
+    }
     '/follow-ups/': {
       id: '/follow-ups/'
       path: '/follow-ups'
@@ -455,6 +516,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TasksTaskIdRouteImport
       parentRoute: typeof TasksRoute
     }
+    '/shifts/new': {
+      id: '/shifts/new'
+      path: '/new'
+      fullPath: '/shifts/new'
+      preLoaderRoute: typeof ShiftsNewRouteImport
+      parentRoute: typeof ShiftsRoute
+    }
+    '/shifts/$ruleId': {
+      id: '/shifts/$ruleId'
+      path: '/$ruleId'
+      fullPath: '/shifts/$ruleId'
+      preLoaderRoute: typeof ShiftsRuleIdRouteImport
+      parentRoute: typeof ShiftsRoute
+    }
     '/follow-ups/$caseId': {
       id: '/follow-ups/$caseId'
       path: '/follow-ups/$caseId'
@@ -464,6 +539,21 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ShiftsRouteChildren {
+  ShiftsRuleIdRoute: typeof ShiftsRuleIdRoute
+  ShiftsNewRoute: typeof ShiftsNewRoute
+  ShiftsIndexRoute: typeof ShiftsIndexRoute
+}
+
+const ShiftsRouteChildren: ShiftsRouteChildren = {
+  ShiftsRuleIdRoute: ShiftsRuleIdRoute,
+  ShiftsNewRoute: ShiftsNewRoute,
+  ShiftsIndexRoute: ShiftsIndexRoute,
+}
+
+const ShiftsRouteWithChildren =
+  ShiftsRoute._addFileChildren(ShiftsRouteChildren)
 
 interface TasksRouteChildren {
   TasksTaskIdRoute: typeof TasksTaskIdRoute
@@ -505,6 +595,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
   SettingsRoute: SettingsRoute,
+  ShiftsRoute: ShiftsRouteWithChildren,
   ShoppingRoute: ShoppingRoute,
   TasksRoute: TasksRouteWithChildren,
   TemplatesRoute: TemplatesRouteWithChildren,
