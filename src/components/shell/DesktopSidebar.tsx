@@ -7,8 +7,7 @@ export function DesktopSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const renderItem = (item: (typeof primaryNav)[number]) => {
-    const active =
-      pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
+    const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
     const Icon = item.icon;
     return (
       <li key={item.key}>
@@ -36,9 +35,7 @@ export function DesktopSidebar() {
     >
       <div className="flex h-14 items-center gap-2 border-b border-border px-4">
         <span className="text-lg font-bold text-foreground">{t("app.name")}</span>
-        <span className="truncate text-xs text-muted-foreground">
-          {t("app.tagline")}
-        </span>
+        <span className="truncate text-xs text-muted-foreground">{t("app.tagline")}</span>
       </div>
       <nav className="flex-1 overflow-y-auto p-3">
         <ul className="space-y-1">{primaryNav.map(renderItem)}</ul>

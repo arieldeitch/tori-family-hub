@@ -27,11 +27,7 @@ export function AppHeader({ title, householdName, onQuickAdd }: AppHeaderProps) 
         ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        <Button
-          size="sm"
-          onClick={onQuickAdd}
-          className="hidden gap-1 sm:inline-flex"
-        >
+        <Button size="sm" onClick={onQuickAdd} className="hidden gap-1 sm:inline-flex">
           <Plus className="h-4 w-4" aria-hidden="true" />
           {t("nav.quickAdd")}
         </Button>

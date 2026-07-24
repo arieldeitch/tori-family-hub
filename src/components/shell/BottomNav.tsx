@@ -16,8 +16,7 @@ export function BottomNav() {
     >
       <ul className="mx-auto flex max-w-3xl items-stretch justify-around">
         {primaryNav.map((item) => {
-          const active =
-            pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
+          const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
           const Icon = item.icon;
           return (
             <li key={item.key} className="flex-1">
@@ -26,15 +25,10 @@ export function BottomNav() {
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-[56px] flex-col items-center justify-center gap-1 px-2 py-2 text-xs font-medium transition-colors",
-                  active
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon
-                  className={cn("h-5 w-5", active && "stroke-[2.25]")}
-                  aria-hidden="true"
-                />
+                <Icon className={cn("h-5 w-5", active && "stroke-[2.25]")} aria-hidden="true" />
                 <span>{t(item.labelKey)}</span>
                 {active ? (
                   <span

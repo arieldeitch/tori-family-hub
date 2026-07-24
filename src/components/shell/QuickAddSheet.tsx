@@ -10,7 +10,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { t } from "@/lib/i18n";
 
 interface QuickAddSheetProps {
@@ -63,10 +69,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="pb-[max(1rem,env(safe-area-inset-bottom))]"
-      >
+      <SheetContent side="bottom" className="pb-[max(1rem,env(safe-area-inset-bottom))]">
         <SheetHeader className="text-start">
           <SheetTitle>{t("quickAdd.title")}</SheetTitle>
           <SheetDescription>{t("quickAdd.subtitle")}</SheetDescription>
