@@ -59,7 +59,7 @@ export function TemplateDetailsScreen({ templateId }: Props) {
         <EmptyState
           title="תבנית לא נמצאה"
           description="ייתכן שהיא נמחקה. אפשר לבדוק בסל השחזור."
-          actions={
+          action={
             <Button asChild>
               <Link to="/templates">חזרה לרשימה</Link>
             </Button>
