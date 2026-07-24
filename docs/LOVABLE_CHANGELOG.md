@@ -195,3 +195,31 @@ Built on top of the domain from prompt 6.1. No templates, no recurrence, no pers
 - Tests: `src/features/shifts/shifts.ui.test.ts` (6 cases) — determinism, sequence rotation, per-day unavailability, no-eligible → NO_ELIGIBLE_PARTICIPANT, rule CRUD without history rewrite, delete-rule cascades demo history.
 - Results: vitest **82/82 ✓**, typecheck ✓, lint ✓ (6 pre-existing shadcn `react-refresh/only-export-components` warnings), build ✓.
 - Explicit non-goals kept: no calendar, no transport, no real persistence, no server, no scores/fairness, no swaps, no volunteers.
+
+## Prompt 8 — Weekly calendar view (`/calendar`)
+Mobile-First agenda-like week view. No month/day view, no sync, no drag-and-drop, no transport module.
+
+**Domain (pure, tested):** `src/domain/calendar.ts` — `CalendarEvent` type, `getWeekStart` (Sunday-start, Israel), `addDays`, `isSameDay`, `weekDays`, `groupByDay` (sorted by start), `visibleForRole` (delegates to `canRoleSee` from household — adults-only events hidden from role="child"). Tests in `src/domain/calendar.test.ts` (4 cases).
+
+**Data:** `src/data/calendarRepo.ts` — typed in-memory repo + `calendarMembers` map (id/name/initials/color, deterministic). Fixtures generated relative to the current week so demo data always lands on-screen. View states: `normal | empty | loading | error | permission_denied`. `useCalendar` hook via `useSyncExternalStore`.
+
+**UI (`src/features/calendar/`):**
+- `WeekCalendarScreen` — orchestrates view/role pickers, week navigation, states.
+- `WeekNav` — RTL-correct week nav (right chevron = previous, left = next), "היום" shortcut disabled on current week, 44×44 tap targets, human date range in Hebrew.
+- `EventCard` — colored side-bar (owner color), initials chip + name, linked child (`Baby` icon), location (`MapPin`), transport indicator (`Car` — "דורש הסעה"), adults-only badge (`ShieldAlert`), Hebrew time range with `tabular-nums`. Uses `grid-cols-[minmax(0,1fr)_auto] + min-w-0/shrink-0` per the responsive-layout rule so titles truncate cleanly at 360/390px.
+- `AgendaWeek` (mobile) — vertical list of days, "היום" chip on today, "אין אירועים" per empty day. No horizontal scroll, no dense grid.
+- `DesktopWeekGrid` (`hidden lg:grid lg:grid-cols-7`) — readable 7-column layout, compact cards, only shown ≥1024px.
+- Route `/calendar` updated with per-route head meta (title/description/og/twitter).
+
+**States covered on screen:** normal / empty week (via view picker) / loading (spinner) / error (with "נסו שוב") / permission_denied. Role picker toggles adult ↔ child so QA can verify adults-only filtering (`ev3: רופא משפחה` disappears for child).
+
+**Verifications:**
+- Timezone: all times formatted via `Intl.DateTimeFormat('he-IL')`, `Date` uses browser-local time. Fixtures created with local `setHours` and week grouped on local calendar days.
+- Hebrew day + date (`weekday: 'long'`, `day: 'numeric', month: 'long'`).
+- RTL: nav chevrons flipped (Right = prev), all rows use logical `ms-*` spacing, no horizontal overflow at 360/390.
+- Keyboard: nav buttons are real `<Button>`s with `aria-label`; view/role pickers are native `<select>`.
+- adults-only hidden for `child`: covered in unit test + verifiable via role picker.
+
+**Results:** `tsgo --noEmit` ✓ · vitest **86/86** (4 new) ✓ · `bun run lint` ✓ (6 pre-existing shadcn warnings only) · `bun run build` ✓.
+
+**Not built (per prompt):** month view, day view, external calendar sync, complex drag-and-drop, Supabase, transport state machine.
