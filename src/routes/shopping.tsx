@@ -1,7 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ShoppingCart } from "lucide-react";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppShell } from "@/components/shell/AppShell";
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
 import { t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/shopping")({
@@ -13,17 +11,13 @@ export const Route = createFileRoute("/shopping")({
       { property: "og:description", content: "רשימות קניות משותפות ב‑Tori." },
     ],
   }),
-  component: ShoppingPage,
+  component: ShoppingLayout,
 });
 
-function ShoppingPage() {
+function ShoppingLayout() {
   return (
     <AppShell title={t("nav.shopping")}>
-      <PlaceholderPage
-        title={t("placeholder.shopping.title")}
-        description={t("placeholder.shopping.description")}
-        icon={<ShoppingCart className="h-8 w-8" />}
-      />
+      <Outlet />
     </AppShell>
   );
 }
