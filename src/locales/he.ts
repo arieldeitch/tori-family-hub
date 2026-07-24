@@ -20,6 +20,7 @@ export const he = {
     shopping: "קניות",
     more: "עוד",
     transport: "הסעות",
+    errands: "סידורים",
     followUps: "מעקבים",
     shifts: "תורנויות",
     household: "בני הבית",
