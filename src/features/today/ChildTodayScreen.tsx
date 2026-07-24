@@ -1,9 +1,10 @@
 import { toast } from "sonner";
 import type { TodayDataset } from "@/domain/today";
 import { memberById, selectMyTasks, selectTransportsToday, visibleToRole } from "@/domain/today";
-import { todayRepo } from "@/data/todayRepo";
+import { completeTaskAction } from "@/application/todayService";
 import { Button } from "@/components/ui/button";
 import { formatTime } from "./format";
+
 
 interface Props {
   dataset: TodayDataset;
