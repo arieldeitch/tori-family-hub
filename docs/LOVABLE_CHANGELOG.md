@@ -79,3 +79,45 @@ Explicitly NOT done: Supabase Auth, invitation emails, PIN authentication, devic
 - Fixed onboarding Finish navigation: `/household` → `/today` so the label ("סיום והמשך למסך היום") matches behavior.
 - No other changes: existing types (`Member`, `Household`, `Role`), repo pattern (`householdRepo` via `useSyncExternalStore`), roles/status badges (`MemberCard`), guest access window / restricted children flags, PIN capability flag (no PIN value stored), and the household `permissionsNote` alert all satisfy the audit.
 - Verified: `tsgo` clean, `vitest` 21/21, `eslint` 0 errors, `vite build` passes.
+
+## Tasks Domain Layer (pure)
+
+Added canonical task types and transition logic — no UI, no persistence.
+
+### Files
+- `src/domain/task.ts` — types + pure functions
+- `src/domain/task.test.ts` — 16 unit tests
+
+### Types
+- `TaskStatus` = inbox | planned | assigned | accepted | in_progress | waiting | blocked | done | skipped | cancelled
+- `TaskPriority` = low | normal | high | urgent
+- `TaskSource` = manual | template | recurring | delegated | system | import
+- `TaskTemplate`, `TaskInstance`, `TaskAssignment`, `TaskActivity`, `TemplateSnapshot`
+- `TaskDomainError` with codes: invalid_transition, missing_completed_at, missing_assignee, missing_due_date, missing_cancel_reason, terminal_state, already_in_status, unknown_status
+
+### Pure functions
+- `canTransitionTask(from, to)` — table lookup, disallows same-status
+- `transitionTask(instance, input)` — returns new instance or throws `TaskDomainError`
+- `validateTaskForCompletion({status, completedAt, completedByMemberId, actorMemberId})`
+- `isTaskOverdue(task, nowIso)` — false for terminal / missing dueAt
+- `requiresAssignment(task)` — true when assignee or dueAt is missing
+- `createTaskInstanceSnapshot(template, input)` — freezes template fields at creation (revision + values); later template edits do not touch the instance
+- `templateSnapshot`, `allowedNextStatuses`, `isTerminal`
+
+### Transition table (canonical)
+- inbox → planned | assigned | cancelled
+- planned → assigned | inbox | cancelled | skipped
+- assigned → accepted | in_progress | planned | inbox | cancelled | skipped
+- accepted → in_progress | waiting | blocked | assigned | **done** | cancelled | skipped
+- in_progress → waiting | blocked | **done** | accepted | cancelled | skipped
+- waiting → in_progress | blocked | **done** | cancelled | skipped
+- blocked → in_progress | waiting | **done** | cancelled | skipped
+- done / skipped / cancelled → (terminal, no outgoing)
+
+Rules enforced: `done` unreachable from `planned`/`assigned`/`inbox`; `done` requires `completedAt`; `completedByMemberId` required when actor known; `cancelled`/`skipped` require `cancelReason`; terminal states reject further transitions; instance activity is append-only and never mutated in place.
+
+### Test results
+- vitest: 37 passed (16 new + 21 existing)
+- tsgo typecheck: clean
+- eslint: 0 errors (6 pre-existing shadcn warnings)
+- build: OK
