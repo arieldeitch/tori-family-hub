@@ -223,3 +223,37 @@ Mobile-First agenda-like week view. No month/day view, no sync, no drag-and-drop
 **Results:** `tsgo --noEmit` ✓ · vitest **86/86** (4 new) ✓ · `bun run lint` ✓ (6 pre-existing shadcn warnings only) · `bun run build` ✓.
 
 **Not built (per prompt):** month view, day view, external calendar sync, complex drag-and-drop, Supabase, transport state machine.
+
+## Prompt 9 — Transport (pickups & dropoffs)
+Standalone module so unassigned rides don't get buried inside the calendar. Calendar was not modified.
+
+**Domain (`src/domain/transport.ts`) — pure, tested:**
+- Statuses: `unassigned | pending_acceptance | accepted | en_route | completed | transferred | cancelled`. Terminal: `completed`, `transferred`, `cancelled`.
+- Transition table hard-codes legality: `unassigned → pending_acceptance|cancelled`, `pending_acceptance → accepted|unassigned|cancelled`, `accepted → en_route|transferred|cancelled`, `en_route → completed|transferred|cancelled`. No shortcut from `pending_acceptance` to `en_route`.
+- `transitionTransport(ride, to, ctx)` throws `TransportDomainError` with codes `INVALID_TRANSITION | MISSING_ASSIGNEE | WRONG_ACTOR | TERMINAL_STATE`, enforcing: `completed` requires assignee; `accepted` requires `ctx.actorMemberId === ride.assigneeMemberId` (WRONG_ACTOR); `en_route` requires prior `accepted`; `transferred` requires `newAssigneeMemberId` and preserves `previousAssigneeMemberId`. Never mutates input.
+- `assignTransport` moves `unassigned → pending_acceptance` and sets `assigneeMemberId`.
+- `PRIMARY_ACTION_BY_STATUS` — canonical UI mapping (unassigned=הקצה, pending_acceptance=אשר אחריות, accepted=בדרך, en_route=הושלם). `transferred` and `cancelled` have no primary action.
+
+**Data (`src/data/transportRepo.ts`):** in-memory repo, `useSyncExternalStore`-compatible, view states (`normal|empty|loading|error|permission_denied`), demo fixtures generated relative to *now* covering all 5 non-terminal-plus-transferred statuses. `DEMO_VIEWER_ID = "m1"` is the "current viewer" for actor-scoped guards. Hook: `src/lib/useTransport.ts`.
+
+**UI (`src/features/transport/`):**
+- `TransportCard` — colored bar (child color), status badge, time + recommended departure, origin → destination, equipment, assignee chip or "אין אחראי" warning, acceptance-deadline label (`עוד N דק׳` / `עבר לפני N דק׳`, red when past). Uses `grid-cols-[minmax(0,1fr)_auto] + min-w-0/shrink-0` throughout for 360/390px safety.
+- `TransportListScreen` — view-state picker, quick-links to "ללא אחראי" / "ממתין לאישור" with counts, tabs (הכל / ללא אחראי / ממתין / בטיפול / היסטוריה), covers loading/error/empty/permission_denied.
+- `TransportDetailScreen` — full metadata, primary action per status (assign picker → transfer dialog → cancel dialog with reason). Every status change routes through `transportRepo.transition()` → domain function. UI never mutates status directly.
+- `TransportForm` — create/edit; datetime-local for time/departure/deadline; assignee optional (empty → `unassigned`, present → `pending_acceptance` on create); backup as free-text placeholder (explicitly labelled "לא מנוע גיבוי אמיתי").
+
+**Routes:** `src/routes/transport.tsx` (AppShell layout), `transport.index.tsx` (list), `transport.new.tsx`, `transport.$rideId.tsx`, `transport.$rideId.edit.tsx`, `transport.unassigned.tsx`, `transport.pending.tsx`.
+
+**Tests (`src/domain/transport.test.ts`, 10 cases):** canonical happy path (unassigned→pending→accepted→en_route→completed), illegal transition rejection, completed without assignee, wrong actor accepting, no shortcut from pending_acceptance to en_route, transferred swaps + remembers previous, cancellation records reason, `selectUnassigned` filter, `PRIMARY_ACTION_BY_STATUS` coverage, input non-mutation.
+
+**Verifications:** mobile at 360/390 (grid safety), RTL throughout, keyboard-navigable (native `<select>`/`<button>`; dialogs from AlertDialog primitive), loading/empty/error/permission_denied via view picker.
+
+**Results:** vitest **96/96** (10 new) ✓, `tsgo --noEmit` ✓, `bun run lint` ✓ (6 pre-existing shadcn warnings), `bun run build` ✓.
+
+**Limitations (explicit):**
+- No real notifications (deadlines shown as text only).
+- No real backup engine — `backupPlaceholder` is free text.
+- No persistence: rides reset on refresh.
+- Actor identity is `DEMO_VIEWER_ID`; real per-user identity waits on auth.
+- `TransportCard` in the new module is not yet wired into `TodayScreen` (which still uses its own `today.TransportCard` on a separate mock). Migration deferred to avoid double-listing today's rides; will be handled in a later integration prompt.
+- Full swap flow (offer/accept/decline) is out of scope for this prompt — only direct `transferred` is supported.

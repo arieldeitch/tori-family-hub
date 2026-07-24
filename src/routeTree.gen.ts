@@ -24,10 +24,15 @@ import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ChildRouteImport } from './routes/child'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TransportIndexRouteImport } from './routes/transport.index'
 import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TasksIndexRouteImport } from './routes/tasks.index'
 import { Route as ShiftsIndexRouteImport } from './routes/shifts.index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
+import { Route as TransportUnassignedRouteImport } from './routes/transport.unassigned'
+import { Route as TransportPendingRouteImport } from './routes/transport.pending'
+import { Route as TransportNewRouteImport } from './routes/transport.new'
+import { Route as TransportRideIdRouteImport } from './routes/transport.$rideId'
 import { Route as TemplatesTrashRouteImport } from './routes/templates.trash'
 import { Route as TemplatesTemplateIdRouteImport } from './routes/templates.$templateId'
 import { Route as TasksUnassignedRouteImport } from './routes/tasks.unassigned'
@@ -35,6 +40,7 @@ import { Route as TasksTaskIdRouteImport } from './routes/tasks.$taskId'
 import { Route as ShiftsNewRouteImport } from './routes/shifts.new'
 import { Route as ShiftsRuleIdRouteImport } from './routes/shifts.$ruleId'
 import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
+import { Route as TransportRideIdEditRouteImport } from './routes/transport.$rideId.edit'
 
 const TransportRoute = TransportRouteImport.update({
   id: '/transport',
@@ -111,6 +117,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TransportIndexRoute = TransportIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TransportRoute,
+} as any)
 const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -130,6 +141,26 @@ const FollowUpsIndexRoute = FollowUpsIndexRouteImport.update({
   id: '/follow-ups/',
   path: '/follow-ups/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TransportUnassignedRoute = TransportUnassignedRouteImport.update({
+  id: '/unassigned',
+  path: '/unassigned',
+  getParentRoute: () => TransportRoute,
+} as any)
+const TransportPendingRoute = TransportPendingRouteImport.update({
+  id: '/pending',
+  path: '/pending',
+  getParentRoute: () => TransportRoute,
+} as any)
+const TransportNewRoute = TransportNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => TransportRoute,
+} as any)
+const TransportRideIdRoute = TransportRideIdRouteImport.update({
+  id: '/$rideId',
+  path: '/$rideId',
+  getParentRoute: () => TransportRoute,
 } as any)
 const TemplatesTrashRoute = TemplatesTrashRouteImport.update({
   id: '/trash',
@@ -166,6 +197,11 @@ const FollowUpsCaseIdRoute = FollowUpsCaseIdRouteImport.update({
   path: '/follow-ups/$caseId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TransportRideIdEditRoute = TransportRideIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => TransportRideIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -182,7 +218,7 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof TasksRouteWithChildren
   '/templates': typeof TemplatesRouteWithChildren
   '/today': typeof TodayRoute
-  '/transport': typeof TransportRoute
+  '/transport': typeof TransportRouteWithChildren
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
@@ -190,10 +226,16 @@ export interface FileRoutesByFullPath {
   '/tasks/unassigned': typeof TasksUnassignedRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/templates/trash': typeof TemplatesTrashRoute
+  '/transport/$rideId': typeof TransportRideIdRouteWithChildren
+  '/transport/new': typeof TransportNewRoute
+  '/transport/pending': typeof TransportPendingRoute
+  '/transport/unassigned': typeof TransportUnassignedRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
   '/shifts/': typeof ShiftsIndexRoute
   '/tasks/': typeof TasksIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/transport/': typeof TransportIndexRoute
+  '/transport/$rideId/edit': typeof TransportRideIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -207,7 +249,6 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/shopping': typeof ShoppingRoute
   '/today': typeof TodayRoute
-  '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
@@ -215,10 +256,16 @@ export interface FileRoutesByTo {
   '/tasks/unassigned': typeof TasksUnassignedRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/templates/trash': typeof TemplatesTrashRoute
+  '/transport/$rideId': typeof TransportRideIdRouteWithChildren
+  '/transport/new': typeof TransportNewRoute
+  '/transport/pending': typeof TransportPendingRoute
+  '/transport/unassigned': typeof TransportUnassignedRoute
   '/follow-ups': typeof FollowUpsIndexRoute
   '/shifts': typeof ShiftsIndexRoute
   '/tasks': typeof TasksIndexRoute
   '/templates': typeof TemplatesIndexRoute
+  '/transport': typeof TransportIndexRoute
+  '/transport/$rideId/edit': typeof TransportRideIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -236,7 +283,7 @@ export interface FileRoutesById {
   '/tasks': typeof TasksRouteWithChildren
   '/templates': typeof TemplatesRouteWithChildren
   '/today': typeof TodayRoute
-  '/transport': typeof TransportRoute
+  '/transport': typeof TransportRouteWithChildren
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
@@ -244,10 +291,16 @@ export interface FileRoutesById {
   '/tasks/unassigned': typeof TasksUnassignedRoute
   '/templates/$templateId': typeof TemplatesTemplateIdRoute
   '/templates/trash': typeof TemplatesTrashRoute
+  '/transport/$rideId': typeof TransportRideIdRouteWithChildren
+  '/transport/new': typeof TransportNewRoute
+  '/transport/pending': typeof TransportPendingRoute
+  '/transport/unassigned': typeof TransportUnassignedRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
   '/shifts/': typeof ShiftsIndexRoute
   '/tasks/': typeof TasksIndexRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/transport/': typeof TransportIndexRoute
+  '/transport/$rideId/edit': typeof TransportRideIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -274,10 +327,16 @@ export interface FileRouteTypes {
     | '/tasks/unassigned'
     | '/templates/$templateId'
     | '/templates/trash'
+    | '/transport/$rideId'
+    | '/transport/new'
+    | '/transport/pending'
+    | '/transport/unassigned'
     | '/follow-ups/'
     | '/shifts/'
     | '/tasks/'
     | '/templates/'
+    | '/transport/'
+    | '/transport/$rideId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -291,7 +350,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shopping'
     | '/today'
-    | '/transport'
     | '/follow-ups/$caseId'
     | '/shifts/$ruleId'
     | '/shifts/new'
@@ -299,10 +357,16 @@ export interface FileRouteTypes {
     | '/tasks/unassigned'
     | '/templates/$templateId'
     | '/templates/trash'
+    | '/transport/$rideId'
+    | '/transport/new'
+    | '/transport/pending'
+    | '/transport/unassigned'
     | '/follow-ups'
     | '/shifts'
     | '/tasks'
     | '/templates'
+    | '/transport'
+    | '/transport/$rideId/edit'
   id:
     | '__root__'
     | '/'
@@ -327,10 +391,16 @@ export interface FileRouteTypes {
     | '/tasks/unassigned'
     | '/templates/$templateId'
     | '/templates/trash'
+    | '/transport/$rideId'
+    | '/transport/new'
+    | '/transport/pending'
+    | '/transport/unassigned'
     | '/follow-ups/'
     | '/shifts/'
     | '/tasks/'
     | '/templates/'
+    | '/transport/'
+    | '/transport/$rideId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -348,7 +418,7 @@ export interface RootRouteChildren {
   TasksRoute: typeof TasksRouteWithChildren
   TemplatesRoute: typeof TemplatesRouteWithChildren
   TodayRoute: typeof TodayRoute
-  TransportRoute: typeof TransportRoute
+  TransportRoute: typeof TransportRouteWithChildren
   FollowUpsCaseIdRoute: typeof FollowUpsCaseIdRoute
   FollowUpsIndexRoute: typeof FollowUpsIndexRoute
 }
@@ -460,6 +530,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/transport/': {
+      id: '/transport/'
+      path: '/'
+      fullPath: '/transport/'
+      preLoaderRoute: typeof TransportIndexRouteImport
+      parentRoute: typeof TransportRoute
+    }
     '/templates/': {
       id: '/templates/'
       path: '/'
@@ -487,6 +564,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/follow-ups/'
       preLoaderRoute: typeof FollowUpsIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/transport/unassigned': {
+      id: '/transport/unassigned'
+      path: '/unassigned'
+      fullPath: '/transport/unassigned'
+      preLoaderRoute: typeof TransportUnassignedRouteImport
+      parentRoute: typeof TransportRoute
+    }
+    '/transport/pending': {
+      id: '/transport/pending'
+      path: '/pending'
+      fullPath: '/transport/pending'
+      preLoaderRoute: typeof TransportPendingRouteImport
+      parentRoute: typeof TransportRoute
+    }
+    '/transport/new': {
+      id: '/transport/new'
+      path: '/new'
+      fullPath: '/transport/new'
+      preLoaderRoute: typeof TransportNewRouteImport
+      parentRoute: typeof TransportRoute
+    }
+    '/transport/$rideId': {
+      id: '/transport/$rideId'
+      path: '/$rideId'
+      fullPath: '/transport/$rideId'
+      preLoaderRoute: typeof TransportRideIdRouteImport
+      parentRoute: typeof TransportRoute
     }
     '/templates/trash': {
       id: '/templates/trash'
@@ -537,6 +642,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FollowUpsCaseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/transport/$rideId/edit': {
+      id: '/transport/$rideId/edit'
+      path: '/edit'
+      fullPath: '/transport/$rideId/edit'
+      preLoaderRoute: typeof TransportRideIdEditRouteImport
+      parentRoute: typeof TransportRideIdRoute
+    }
   }
 }
 
@@ -585,6 +697,38 @@ const TemplatesRouteWithChildren = TemplatesRoute._addFileChildren(
   TemplatesRouteChildren,
 )
 
+interface TransportRideIdRouteChildren {
+  TransportRideIdEditRoute: typeof TransportRideIdEditRoute
+}
+
+const TransportRideIdRouteChildren: TransportRideIdRouteChildren = {
+  TransportRideIdEditRoute: TransportRideIdEditRoute,
+}
+
+const TransportRideIdRouteWithChildren = TransportRideIdRoute._addFileChildren(
+  TransportRideIdRouteChildren,
+)
+
+interface TransportRouteChildren {
+  TransportRideIdRoute: typeof TransportRideIdRouteWithChildren
+  TransportNewRoute: typeof TransportNewRoute
+  TransportPendingRoute: typeof TransportPendingRoute
+  TransportUnassignedRoute: typeof TransportUnassignedRoute
+  TransportIndexRoute: typeof TransportIndexRoute
+}
+
+const TransportRouteChildren: TransportRouteChildren = {
+  TransportRideIdRoute: TransportRideIdRouteWithChildren,
+  TransportNewRoute: TransportNewRoute,
+  TransportPendingRoute: TransportPendingRoute,
+  TransportUnassignedRoute: TransportUnassignedRoute,
+  TransportIndexRoute: TransportIndexRoute,
+}
+
+const TransportRouteWithChildren = TransportRoute._addFileChildren(
+  TransportRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
@@ -600,7 +744,7 @@ const rootRouteChildren: RootRouteChildren = {
   TasksRoute: TasksRouteWithChildren,
   TemplatesRoute: TemplatesRouteWithChildren,
   TodayRoute: TodayRoute,
-  TransportRoute: TransportRoute,
+  TransportRoute: TransportRouteWithChildren,
   FollowUpsCaseIdRoute: FollowUpsCaseIdRoute,
   FollowUpsIndexRoute: FollowUpsIndexRoute,
 }
