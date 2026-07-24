@@ -11,6 +11,22 @@ export type CalendarViewState =
   | "error"
   | "permission_denied";
 
+export interface CalendarMemberRef {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+}
+
+// Deterministic demo members. In real integration this map will be derived
+// from householdRepo; kept local so the demo screen works stand-alone.
+export const calendarMembers: Record<string, CalendarMemberRef> = {
+  m1: { id: "m1", name: "דנה", initials: "דל", color: "#7BA7C7" },
+  m2: { id: "m2", name: "יואב", initials: "יל", color: "#C79A7B" },
+  m3: { id: "m3", name: "נועה", initials: "נל", color: "#8CB48C" },
+  m4: { id: "m4", name: "איתי", initials: "אל", color: "#C77B9E" },
+};
+
 interface State {
   view: CalendarViewState;
   events: CalendarEvent[];
