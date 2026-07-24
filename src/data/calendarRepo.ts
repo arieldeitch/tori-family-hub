@@ -141,4 +141,3 @@ export const calendarRepo = {
     return state.events.find((e) => e.id === id);
   },
 };
-

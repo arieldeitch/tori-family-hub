@@ -68,9 +68,7 @@ export function QuickShoppingDialog({ open, onOpenChange }: Props) {
         },
         { role: "adult" },
       );
-      toast.success(
-        duplicates.length > 0 ? "הפריט נוסף. נמצאו פריטים דומים ברשימה" : "הפריט נוסף",
-      );
+      toast.success(duplicates.length > 0 ? "הפריט נוסף. נמצאו פריטים דומים ברשימה" : "הפריט נוסף");
       reset();
       onOpenChange(false);
       void item;
