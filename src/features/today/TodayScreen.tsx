@@ -29,14 +29,13 @@ import { formatTime } from "./format";
 
 const VIEW_OPTIONS: Array<{ value: TodayViewState; label: string }> = [
   { value: "normal", label: "רגיל" },
-  { value: "busy", label: "עמוס" },
-  { value: "nearly_empty", label: "כמעט ריק" },
   { value: "loading", label: "טעינה" },
   { value: "error", label: "שגיאה" },
   { value: "offline", label: "לא מקוון" },
   { value: "permission_denied", label: "אין הרשאה" },
   { value: "child", label: "תצוגת ילד" },
 ];
+
 
 export function TodayScreen() {
   const { view, dataset } = useToday();
