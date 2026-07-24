@@ -47,25 +47,25 @@ describe("transport domain", () => {
   it("rejects illegal transitions", () => {
     const r = make({ status: "unassigned" });
     expect(canTransitionTransport("unassigned", "accepted")).toBe(false);
-    expect(() =>
-      transitionTransport(r, "accepted", { actorMemberId: "m1" }),
-    ).toThrow(TransportDomainError);
+    expect(() => transitionTransport(r, "accepted", { actorMemberId: "m1" })).toThrow(
+      TransportDomainError,
+    );
   });
 
   it("blocks completed without an assignee", () => {
     // Force an en_route ride with no assignee (defensive: shouldn't be
     // reachable via public API, but the guard must still fire).
     const r = make({ status: "en_route", assigneeMemberId: undefined });
-    expect(() =>
-      transitionTransport(r, "completed", { actorMemberId: "m1" }),
-    ).toThrow(/without an assignee/);
+    expect(() => transitionTransport(r, "completed", { actorMemberId: "m1" })).toThrow(
+      /without an assignee/,
+    );
   });
 
   it("only the assigned member may accept", () => {
     const r = make({ status: "pending_acceptance", assigneeMemberId: "m1" });
-    expect(() =>
-      transitionTransport(r, "accepted", { actorMemberId: "m2" }),
-    ).toThrow(/Only the assigned member/);
+    expect(() => transitionTransport(r, "accepted", { actorMemberId: "m2" })).toThrow(
+      /Only the assigned member/,
+    );
     const ok = transitionTransport(r, "accepted", { actorMemberId: "m1" });
     expect(ok.status).toBe("accepted");
   });
@@ -73,9 +73,9 @@ describe("transport domain", () => {
   it("en_route requires accepted first (no shortcut from pending_acceptance)", () => {
     const r = make({ status: "pending_acceptance", assigneeMemberId: "m1" });
     expect(canTransitionTransport("pending_acceptance", "en_route")).toBe(false);
-    expect(() =>
-      transitionTransport(r, "en_route", { actorMemberId: "m1" }),
-    ).toThrow(TransportDomainError);
+    expect(() => transitionTransport(r, "en_route", { actorMemberId: "m1" })).toThrow(
+      TransportDomainError,
+    );
   });
 
   it("transferred swaps assignee and remembers previous", () => {
@@ -100,7 +100,10 @@ describe("transport domain", () => {
   });
 
   it("selectUnassigned filters correctly", () => {
-    const rides = [make({ id: "a" }), make({ id: "b", status: "accepted", assigneeMemberId: "m1" })];
+    const rides = [
+      make({ id: "a" }),
+      make({ id: "b", status: "accepted", assigneeMemberId: "m1" }),
+    ];
     expect(selectUnassigned(rides).map((r) => r.id)).toEqual(["a"]);
   });
 

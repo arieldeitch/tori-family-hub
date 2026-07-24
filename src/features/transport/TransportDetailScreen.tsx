@@ -89,7 +89,8 @@ export function TransportDetailScreen({ ride }: Props) {
           <span className="tabular-nums">{formatDayTime(ride.timeAt)}</span>
           {ride.recommendedDepartureAt ? (
             <span className="text-muted-foreground">
-              {" "}· יציאה מומלצת {formatDayTime(ride.recommendedDepartureAt)}
+              {" "}
+              · יציאה מומלצת {formatDayTime(ride.recommendedDepartureAt)}
             </span>
           ) : null}
         </Row>
@@ -123,7 +124,9 @@ export function TransportDetailScreen({ ride }: Props) {
         {ride.backupPlaceholder ? (
           <Row icon={<Car className="h-4 w-4" />} label="גיבוי">
             {ride.backupPlaceholder}
-            <span className="ms-2 text-xs text-muted-foreground">(placeholder — לא מנוע גיבוי)</span>
+            <span className="ms-2 text-xs text-muted-foreground">
+              (placeholder — לא מנוע גיבוי)
+            </span>
           </Row>
         ) : null}
         {ride.equipment ? (
@@ -155,18 +158,16 @@ export function TransportDetailScreen({ ride }: Props) {
           </Button>
         )}
         {!["completed", "cancelled", "transferred"].includes(ride.status) && (
-          <Button
-            variant="outline"
-            className="h-11 text-error"
-            onClick={() => setCancelOpen(true)}
-          >
+          <Button variant="outline" className="h-11 text-error" onClick={() => setCancelOpen(true)}>
             בטל
           </Button>
         )}
         <Button
           variant="ghost"
           className="h-11"
-          onClick={() => void navigate({ to: "/transport/$rideId/edit", params: { rideId: ride.id } })}
+          onClick={() =>
+            void navigate({ to: "/transport/$rideId/edit", params: { rideId: ride.id } })
+          }
         >
           <Pencil className="h-4 w-4" aria-hidden />
           עריכה
@@ -222,7 +223,9 @@ export function TransportDetailScreen({ ride }: Props) {
               onChange={(e) => setTransferTo(e.target.value)}
             >
               {ADULTS.filter((id) => id !== ride.assigneeMemberId).map((id) => (
-                <option key={id} value={id}>{transportMembers[id]?.name}</option>
+                <option key={id} value={id}>
+                  {transportMembers[id]?.name}
+                </option>
               ))}
             </select>
           </div>
@@ -288,7 +291,10 @@ function Row({
 }) {
   return (
     <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-2">
-      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground" aria-hidden>
+      <span
+        className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center text-muted-foreground"
+        aria-hidden
+      >
         {icon}
       </span>
       <div className="min-w-0">

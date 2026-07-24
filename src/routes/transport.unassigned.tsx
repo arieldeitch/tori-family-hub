@@ -16,10 +16,7 @@ function UnassignedRoute() {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-        <SectionHeader
-          title={<span>ללא אחראי</span>}
-          subtitle={<span>הסעות שממתינות להקצאה</span>}
-        />
+        <SectionHeader title={<span>ללא אחראי</span>} />
         <Button asChild variant="ghost" size="sm" className="h-11">
           <Link to="/transport">כל ההסעות</Link>
         </Button>

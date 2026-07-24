@@ -24,7 +24,11 @@ export const STATUS_KIND: Record<TransportStatus, StatusKind> = {
 export const DIRECTION_LABEL = { pickup: "איסוף", dropoff: "הורדה" } as const;
 
 const timeFmt = new Intl.DateTimeFormat("he-IL", { hour: "2-digit", minute: "2-digit" });
-const dayFmt = new Intl.DateTimeFormat("he-IL", { weekday: "short", day: "numeric", month: "short" });
+const dayFmt = new Intl.DateTimeFormat("he-IL", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+});
 
 export function formatTime(iso: string): string {
   return timeFmt.format(new Date(iso));

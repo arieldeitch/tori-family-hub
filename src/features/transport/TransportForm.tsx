@@ -29,9 +29,15 @@ export function TransportForm({ mode, ride, onDone }: Props) {
   const navigate = useNavigate();
   const [childMemberId, setChildMemberId] = useState(ride?.childMemberId ?? CHILDREN[0]!.id);
   const [direction, setDirection] = useState<TransportDirection>(ride?.direction ?? "pickup");
-  const [timeAt, setTimeAt] = useState(toLocalInput(ride?.timeAt) || toLocalInput(new Date(Date.now() + 60 * 60 * 1000).toISOString()));
-  const [recommendedDepartureAt, setRecommendedDepartureAt] = useState(toLocalInput(ride?.recommendedDepartureAt));
-  const [acceptanceDeadlineAt, setAcceptanceDeadlineAt] = useState(toLocalInput(ride?.acceptanceDeadlineAt));
+  const [timeAt, setTimeAt] = useState(
+    toLocalInput(ride?.timeAt) || toLocalInput(new Date(Date.now() + 60 * 60 * 1000).toISOString()),
+  );
+  const [recommendedDepartureAt, setRecommendedDepartureAt] = useState(
+    toLocalInput(ride?.recommendedDepartureAt),
+  );
+  const [acceptanceDeadlineAt, setAcceptanceDeadlineAt] = useState(
+    toLocalInput(ride?.acceptanceDeadlineAt),
+  );
   const [origin, setOrigin] = useState(ride?.origin ?? "");
   const [destination, setDestination] = useState(ride?.destination ?? "");
   const [assigneeMemberId, setAssigneeMemberId] = useState(ride?.assigneeMemberId ?? "");
@@ -89,7 +95,9 @@ export function TransportForm({ mode, ride, onDone }: Props) {
           onChange={(e) => setChildMemberId(e.target.value)}
         >
           {CHILDREN.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
           ))}
         </select>
       </FormField>
@@ -173,7 +181,9 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         >
           <option value="">— ללא אחראי —</option>
           {ADULTS.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
           ))}
         </select>
       </FormField>
@@ -208,7 +218,11 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         />
       </FormField>
 
-      {error ? <p role="alert" className="text-sm text-error">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-error">
+          {error}
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap gap-2 pt-2">
         <Button type="submit" disabled={!canSubmit} className="min-w-32">

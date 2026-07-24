@@ -46,9 +46,7 @@ export function TransportCard({ ride, linked = true }: Props) {
             <Clock className="h-3.5 w-3.5" aria-hidden />
             {formatTime(ride.timeAt)}
             {ride.recommendedDepartureAt ? (
-              <span className="ms-1">
-                (יציאה מומלצת {formatTime(ride.recommendedDepartureAt)})
-              </span>
+              <span className="ms-1">(יציאה מומלצת {formatTime(ride.recommendedDepartureAt)})</span>
             ) : null}
           </span>
           <span className="inline-flex min-w-0 items-center gap-1">
@@ -88,9 +86,7 @@ export function TransportCard({ ride, linked = true }: Props) {
           {ride.acceptanceDeadlineAt && ride.status === "pending_acceptance" ? (
             <span
               className={`inline-flex shrink-0 items-center gap-1 text-xs tabular-nums ${
-                isDeadlinePast(ride.acceptanceDeadlineAt)
-                  ? "text-error"
-                  : "text-muted-foreground"
+                isDeadlinePast(ride.acceptanceDeadlineAt) ? "text-error" : "text-muted-foreground"
               }`}
             >
               <AlertTriangle className="h-3.5 w-3.5" aria-hidden />

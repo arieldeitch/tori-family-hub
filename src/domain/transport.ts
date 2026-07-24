@@ -61,21 +61,14 @@ const TRANSITIONS: TransitionMap = {
 export class TransportDomainError extends Error {
   constructor(
     message: string,
-    public code:
-      | "INVALID_TRANSITION"
-      | "MISSING_ASSIGNEE"
-      | "WRONG_ACTOR"
-      | "TERMINAL_STATE",
+    public code: "INVALID_TRANSITION" | "MISSING_ASSIGNEE" | "WRONG_ACTOR" | "TERMINAL_STATE",
   ) {
     super(message);
     this.name = "TransportDomainError";
   }
 }
 
-export function canTransitionTransport(
-  from: TransportStatus,
-  to: TransportStatus,
-): boolean {
+export function canTransitionTransport(from: TransportStatus, to: TransportStatus): boolean {
   return TRANSITIONS[from].includes(to);
 }
 
@@ -154,10 +147,7 @@ export function transitionTransport(
 
   if (to === "transferred") {
     if (!ctx.newAssigneeMemberId) {
-      throw new TransportDomainError(
-        "Transfer requires a new assignee",
-        "MISSING_ASSIGNEE",
-      );
+      throw new TransportDomainError("Transfer requires a new assignee", "MISSING_ASSIGNEE");
     }
     next.previousAssigneeMemberId = ride.assigneeMemberId;
     next.assigneeMemberId = ctx.newAssigneeMemberId;
@@ -197,9 +187,7 @@ export function assignTransport(
 export function selectUnassigned(rides: ReadonlyArray<TransportRide>): TransportRide[] {
   return rides.filter((r) => r.status === "unassigned");
 }
-export function selectPendingAcceptance(
-  rides: ReadonlyArray<TransportRide>,
-): TransportRide[] {
+export function selectPendingAcceptance(rides: ReadonlyArray<TransportRide>): TransportRide[] {
   return rides.filter((r) => r.status === "pending_acceptance");
 }
 

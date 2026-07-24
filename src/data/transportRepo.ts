@@ -10,12 +10,7 @@ import {
   type TransportStatus,
 } from "@/domain/transport";
 
-export type TransportViewState =
-  | "normal"
-  | "empty"
-  | "loading"
-  | "error"
-  | "permission_denied";
+export type TransportViewState = "normal" | "empty" | "loading" | "error" | "permission_denied";
 
 export interface TransportMemberRef {
   id: string;
@@ -168,9 +163,7 @@ export const transportRepo = {
   getById(id: string): TransportRide | undefined {
     return state.rides.find((r) => r.id === id);
   },
-  create(
-    input: Omit<TransportRide, "id" | "status" | "createdAt" | "updatedAt">,
-  ): TransportRide {
+  create(input: Omit<TransportRide, "id" | "status" | "createdAt" | "updatedAt">): TransportRide {
     const now = new Date().toISOString();
     const ride: TransportRide = {
       ...input,

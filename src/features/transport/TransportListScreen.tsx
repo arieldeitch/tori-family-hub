@@ -55,7 +55,9 @@ export function TransportListScreen() {
           onChange={(e) => transportRepo.setView(e.target.value as TransportViewState)}
         >
           {VIEW_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
       </div>

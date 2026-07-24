@@ -16,10 +16,7 @@ function PendingRoute() {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-        <SectionHeader
-          title={<span>ממתין לאישור</span>}
-          subtitle={<span>הסעות שהוקצו וממתינות לאישור אחריות</span>}
-        />
+        <SectionHeader title={<span>ממתין לאישור</span>} />
         <Button asChild variant="ghost" size="sm" className="h-11">
           <Link to="/transport">כל ההסעות</Link>
         </Button>
