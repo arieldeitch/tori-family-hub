@@ -102,8 +102,7 @@ export function validateFollowUp(
     if (!hasDate && !hasReason) {
       errors.push({
         field: "nextFollowUpAt",
-        message:
-          'במצב "ממתין לגורם חיצוני" חובה למלא תאריך מעקב הבא או סיבה לביטול תזכורת',
+        message: 'במצב "ממתין לגורם חיצוני" חובה למלא תאריך מעקב הבא או סיבה לביטול תזכורת',
       });
     }
   }
@@ -111,10 +110,7 @@ export function validateFollowUp(
 }
 
 export function isTerminalStatus(status: FollowUpStatus): boolean {
-  return (
-    status === "completed" ||
-    status === "closed_no_action"
-  );
+  return status === "completed" || status === "closed_no_action";
 }
 
 /**
@@ -126,9 +122,7 @@ export function clearFutureRemindersIfTerminal(
   nowIso: string,
 ): FollowUpCase {
   if (!isTerminalStatus(followUp.status)) return followUp;
-  const nextIsFuture =
-    followUp.nextFollowUpAt !== undefined &&
-    followUp.nextFollowUpAt > nowIso;
+  const nextIsFuture = followUp.nextFollowUpAt !== undefined && followUp.nextFollowUpAt > nowIso;
   if (!nextIsFuture && !followUp.followUpDisabledReason) return followUp;
   return {
     ...followUp,
@@ -137,10 +131,7 @@ export function clearFutureRemindersIfTerminal(
   };
 }
 
-export function isDueForFollowUp(
-  followUp: FollowUpCase,
-  nowIso: string,
-): boolean {
+export function isDueForFollowUp(followUp: FollowUpCase, nowIso: string): boolean {
   if (isTerminalStatus(followUp.status)) return false;
   if (!followUp.nextFollowUpAt) return false;
   return followUp.nextFollowUpAt <= nowIso;

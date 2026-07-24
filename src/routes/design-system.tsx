@@ -320,10 +320,7 @@ function DesignSystemShowcase() {
                 </Button>
               }
             />
-            <PermissionDeniedState
-              title="אין הרשאה"
-              description="פנה למנהל משק הבית."
-            />
+            <PermissionDeniedState title="אין הרשאה" description="פנה למנהל משק הבית." />
             <OfflineState title="לא מקוון" description="השינויים ישמרו וישלחו כשהחיבור יחזור." />
           </div>
         </Section>
@@ -349,9 +346,7 @@ function DesignSystemShowcase() {
             <p className="text-base text-foreground">
               פסקה רגילה. הטקסט מוצג עם הפונט Heebo לתמיכה מיטבית בעברית.
             </p>
-            <p className="text-sm text-muted-foreground">
-              טקסט משני להסברים ותיאורים.
-            </p>
+            <p className="text-sm text-muted-foreground">טקסט משני להסברים ותיאורים.</p>
           </div>
         </Section>
       </div>

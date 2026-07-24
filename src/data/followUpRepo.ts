@@ -29,9 +29,11 @@ export function getById(id: string): FollowUpCase | undefined {
   return cases.find((c) => c.id === id);
 }
 
-export function create(input: Omit<FollowUpCase, "id" | "actions" | "openedAt" | "lastActionAt"> & {
-  openedAt?: string;
-}): FollowUpCase {
+export function create(
+  input: Omit<FollowUpCase, "id" | "actions" | "openedAt" | "lastActionAt"> & {
+    openedAt?: string;
+  },
+): FollowUpCase {
   const now = new Date().toISOString();
   const created: FollowUpCase = {
     ...input,
@@ -109,8 +111,7 @@ export function resetToSeed(): void {
 function seed(): FollowUpCase[] {
   const now = Date.now();
   const day = 24 * 60 * 60 * 1000;
-  const iso = (offsetDays: number) =>
-    new Date(now + offsetDays * day).toISOString();
+  const iso = (offsetDays: number) => new Date(now + offsetDays * day).toISOString();
 
   return [
     {

@@ -10,15 +10,13 @@ export interface SyncStatusIndicatorProps {
   className?: string;
 }
 
-const MAP: Record<
-  SyncStatus,
-  { icon: React.ComponentType<{ className?: string }>; tone: string }
-> = {
-  synced: { icon: Check, tone: "text-success" },
-  syncing: { icon: RefreshCw, tone: "text-info" },
-  offline: { icon: CloudOff, tone: "text-warning-foreground" },
-  error: { icon: AlertTriangle, tone: "text-error" },
-};
+const MAP: Record<SyncStatus, { icon: React.ComponentType<{ className?: string }>; tone: string }> =
+  {
+    synced: { icon: Check, tone: "text-success" },
+    syncing: { icon: RefreshCw, tone: "text-info" },
+    offline: { icon: CloudOff, tone: "text-warning-foreground" },
+    error: { icon: AlertTriangle, tone: "text-error" },
+  };
 
 export function SyncStatusIndicator({ status, label, className }: SyncStatusIndicatorProps) {
   const { icon: Icon, tone } = MAP[status];

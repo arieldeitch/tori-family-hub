@@ -23,11 +23,7 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         ref={ref}
         variant={variant}
         size="icon"
-        className={cn(
-          "min-h-11 min-w-11",
-          tone === "muted" && "text-muted-foreground",
-          className,
-        )}
+        className={cn("min-h-11 min-w-11", tone === "muted" && "text-muted-foreground", className)}
         {...props}
       >
         <span aria-hidden="true">{icon}</span>

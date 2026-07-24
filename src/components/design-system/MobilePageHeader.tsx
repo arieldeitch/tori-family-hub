@@ -39,9 +39,7 @@ export function MobilePageHeader({
       )}
       <div className="min-w-0 flex-1 text-center">
         <h1 className="truncate text-base font-semibold text-foreground">{title}</h1>
-        {subtitle ? (
-          <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
-        ) : null}
+        {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
       </div>
       <div className="flex min-w-11 shrink-0 items-center justify-end">{trailing}</div>
     </header>

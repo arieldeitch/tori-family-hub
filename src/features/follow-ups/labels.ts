@@ -1,4 +1,9 @@
-import type { FollowUpStatus, BallHolder, Sensitivity, FollowUpActionKind } from "@/domain/followUp";
+import type {
+  FollowUpStatus,
+  BallHolder,
+  Sensitivity,
+  FollowUpActionKind,
+} from "@/domain/followUp";
 
 export const STATUS_LABEL: Record<FollowUpStatus, string> = {
   action_required: "דורש פעולה",

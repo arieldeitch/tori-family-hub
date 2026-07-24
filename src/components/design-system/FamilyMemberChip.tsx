@@ -13,13 +13,7 @@ export interface FamilyMemberChipProps extends React.HTMLAttributes<HTMLSpanElem
  * Compact family-member chip: avatar + name (+ optional role).
  * The color is redundant with the name text — no color-only meaning.
  */
-export function FamilyMemberChip({
-  name,
-  color,
-  role,
-  className,
-  ...rest
-}: FamilyMemberChipProps) {
+export function FamilyMemberChip({ name, color, role, className, ...rest }: FamilyMemberChipProps) {
   return (
     <span
       className={cn(
