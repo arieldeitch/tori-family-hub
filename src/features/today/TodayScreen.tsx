@@ -384,5 +384,3 @@ export function TodayScreen() {
   );
 }
 
-// re-exports for tests / storybook-like showcases
-export { visibleToRole };
