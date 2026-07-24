@@ -49,7 +49,15 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
     },
     { key: "transport", label: t("quickAdd.transport"), icon: Car, action: notAvailable },
     { key: "event", label: t("quickAdd.event"), icon: CalendarDays, action: notAvailable },
-    { key: "errand", label: t("quickAdd.errand"), icon: Sparkles, action: notAvailable },
+    {
+      key: "errand",
+      label: t("quickAdd.errand"),
+      icon: Sparkles,
+      action: () => {
+        onOpenChange(false);
+        navigate({ to: "/errands" });
+      },
+    },
     {
       key: "followUp",
       label: t("quickAdd.followUp"),

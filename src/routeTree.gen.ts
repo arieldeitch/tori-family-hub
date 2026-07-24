@@ -20,6 +20,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as HouseholdRouteImport } from './routes/household'
+import { Route as ErrandsRouteImport } from './routes/errands'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ChildRouteImport } from './routes/child'
 import { Route as CalendarRouteImport } from './routes/calendar'
@@ -30,6 +31,7 @@ import { Route as TasksIndexRouteImport } from './routes/tasks.index'
 import { Route as ShoppingIndexRouteImport } from './routes/shopping.index'
 import { Route as ShiftsIndexRouteImport } from './routes/shifts.index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
+import { Route as ErrandsIndexRouteImport } from './routes/errands.index'
 import { Route as TransportUnassignedRouteImport } from './routes/transport.unassigned'
 import { Route as TransportPendingRouteImport } from './routes/transport.pending'
 import { Route as TransportNewRouteImport } from './routes/transport.new'
@@ -42,6 +44,7 @@ import { Route as ShoppingListIdRouteImport } from './routes/shopping.$listId'
 import { Route as ShiftsNewRouteImport } from './routes/shifts.new'
 import { Route as ShiftsRuleIdRouteImport } from './routes/shifts.$ruleId'
 import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
+import { Route as ErrandsErrandIdRouteImport } from './routes/errands.$errandId'
 import { Route as TransportRideIdEditRouteImport } from './routes/transport.$rideId.edit'
 
 const TransportRoute = TransportRouteImport.update({
@@ -99,6 +102,11 @@ const HouseholdRoute = HouseholdRouteImport.update({
   path: '/household',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ErrandsRoute = ErrandsRouteImport.update({
+  id: '/errands',
+  path: '/errands',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DesignSystemRoute = DesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
@@ -148,6 +156,11 @@ const FollowUpsIndexRoute = FollowUpsIndexRouteImport.update({
   id: '/follow-ups/',
   path: '/follow-ups/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ErrandsIndexRoute = ErrandsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ErrandsRoute,
 } as any)
 const TransportUnassignedRoute = TransportUnassignedRouteImport.update({
   id: '/unassigned',
@@ -209,6 +222,11 @@ const FollowUpsCaseIdRoute = FollowUpsCaseIdRouteImport.update({
   path: '/follow-ups/$caseId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ErrandsErrandIdRoute = ErrandsErrandIdRouteImport.update({
+  id: '/$errandId',
+  path: '/$errandId',
+  getParentRoute: () => ErrandsRoute,
+} as any)
 const TransportRideIdEditRoute = TransportRideIdEditRouteImport.update({
   id: '/edit',
   path: '/edit',
@@ -220,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRoute
   '/child': typeof ChildRoute
   '/design-system': typeof DesignSystemRoute
+  '/errands': typeof ErrandsRouteWithChildren
   '/household': typeof HouseholdRoute
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRoute
@@ -231,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/templates': typeof TemplatesRouteWithChildren
   '/today': typeof TodayRoute
   '/transport': typeof TransportRouteWithChildren
+  '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
@@ -243,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/transport/new': typeof TransportNewRoute
   '/transport/pending': typeof TransportPendingRoute
   '/transport/unassigned': typeof TransportUnassignedRoute
+  '/errands/': typeof ErrandsIndexRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
   '/shifts/': typeof ShiftsIndexRoute
   '/shopping/': typeof ShoppingIndexRoute
@@ -262,6 +283,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
   '/today': typeof TodayRoute
+  '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
@@ -274,6 +296,7 @@ export interface FileRoutesByTo {
   '/transport/new': typeof TransportNewRoute
   '/transport/pending': typeof TransportPendingRoute
   '/transport/unassigned': typeof TransportUnassignedRoute
+  '/errands': typeof ErrandsIndexRoute
   '/follow-ups': typeof FollowUpsIndexRoute
   '/shifts': typeof ShiftsIndexRoute
   '/shopping': typeof ShoppingIndexRoute
@@ -288,6 +311,7 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRoute
   '/child': typeof ChildRoute
   '/design-system': typeof DesignSystemRoute
+  '/errands': typeof ErrandsRouteWithChildren
   '/household': typeof HouseholdRoute
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRoute
@@ -299,6 +323,7 @@ export interface FileRoutesById {
   '/templates': typeof TemplatesRouteWithChildren
   '/today': typeof TodayRoute
   '/transport': typeof TransportRouteWithChildren
+  '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
@@ -311,6 +336,7 @@ export interface FileRoutesById {
   '/transport/new': typeof TransportNewRoute
   '/transport/pending': typeof TransportPendingRoute
   '/transport/unassigned': typeof TransportUnassignedRoute
+  '/errands/': typeof ErrandsIndexRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
   '/shifts/': typeof ShiftsIndexRoute
   '/shopping/': typeof ShoppingIndexRoute
@@ -326,6 +352,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/child'
     | '/design-system'
+    | '/errands'
     | '/household'
     | '/more'
     | '/notifications'
@@ -337,6 +364,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/today'
     | '/transport'
+    | '/errands/$errandId'
     | '/follow-ups/$caseId'
     | '/shifts/$ruleId'
     | '/shifts/new'
@@ -349,6 +377,7 @@ export interface FileRouteTypes {
     | '/transport/new'
     | '/transport/pending'
     | '/transport/unassigned'
+    | '/errands/'
     | '/follow-ups/'
     | '/shifts/'
     | '/shopping/'
@@ -368,6 +397,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/settings'
     | '/today'
+    | '/errands/$errandId'
     | '/follow-ups/$caseId'
     | '/shifts/$ruleId'
     | '/shifts/new'
@@ -380,6 +410,7 @@ export interface FileRouteTypes {
     | '/transport/new'
     | '/transport/pending'
     | '/transport/unassigned'
+    | '/errands'
     | '/follow-ups'
     | '/shifts'
     | '/shopping'
@@ -393,6 +424,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/child'
     | '/design-system'
+    | '/errands'
     | '/household'
     | '/more'
     | '/notifications'
@@ -404,6 +436,7 @@ export interface FileRouteTypes {
     | '/templates'
     | '/today'
     | '/transport'
+    | '/errands/$errandId'
     | '/follow-ups/$caseId'
     | '/shifts/$ruleId'
     | '/shifts/new'
@@ -416,6 +449,7 @@ export interface FileRouteTypes {
     | '/transport/new'
     | '/transport/pending'
     | '/transport/unassigned'
+    | '/errands/'
     | '/follow-ups/'
     | '/shifts/'
     | '/shopping/'
@@ -430,6 +464,7 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRoute
   ChildRoute: typeof ChildRoute
   DesignSystemRoute: typeof DesignSystemRoute
+  ErrandsRoute: typeof ErrandsRouteWithChildren
   HouseholdRoute: typeof HouseholdRoute
   MoreRoute: typeof MoreRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -524,6 +559,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HouseholdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/errands': {
+      id: '/errands'
+      path: '/errands'
+      fullPath: '/errands'
+      preLoaderRoute: typeof ErrandsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/design-system': {
       id: '/design-system'
       path: '/design-system'
@@ -593,6 +635,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/follow-ups/'
       preLoaderRoute: typeof FollowUpsIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/errands/': {
+      id: '/errands/'
+      path: '/'
+      fullPath: '/errands/'
+      preLoaderRoute: typeof ErrandsIndexRouteImport
+      parentRoute: typeof ErrandsRoute
     }
     '/transport/unassigned': {
       id: '/transport/unassigned'
@@ -678,6 +727,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FollowUpsCaseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/errands/$errandId': {
+      id: '/errands/$errandId'
+      path: '/$errandId'
+      fullPath: '/errands/$errandId'
+      preLoaderRoute: typeof ErrandsErrandIdRouteImport
+      parentRoute: typeof ErrandsRoute
+    }
     '/transport/$rideId/edit': {
       id: '/transport/$rideId/edit'
       path: '/edit'
@@ -687,6 +743,19 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ErrandsRouteChildren {
+  ErrandsErrandIdRoute: typeof ErrandsErrandIdRoute
+  ErrandsIndexRoute: typeof ErrandsIndexRoute
+}
+
+const ErrandsRouteChildren: ErrandsRouteChildren = {
+  ErrandsErrandIdRoute: ErrandsErrandIdRoute,
+  ErrandsIndexRoute: ErrandsIndexRoute,
+}
+
+const ErrandsRouteWithChildren =
+  ErrandsRoute._addFileChildren(ErrandsRouteChildren)
 
 interface ShiftsRouteChildren {
   ShiftsRuleIdRoute: typeof ShiftsRuleIdRoute
@@ -784,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRoute,
   ChildRoute: ChildRoute,
   DesignSystemRoute: DesignSystemRoute,
+  ErrandsRoute: ErrandsRouteWithChildren,
   HouseholdRoute: HouseholdRoute,
   MoreRoute: MoreRoute,
   NotificationsRoute: NotificationsRoute,
