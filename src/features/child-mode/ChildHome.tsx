@@ -18,7 +18,7 @@ export function ChildHome() {
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
   const [approvalIds, setApprovalIds] = useState<Set<string>>(new Set());
 
-  const visibleTasks = DEMO_TASKS.filter((t) => canRoleSee("child", t));
+  const visibleTasks = childTasksRepo.getAll().filter((task) => canRoleSee("child", task));
 
   if (children.length === 0) {
     return (
