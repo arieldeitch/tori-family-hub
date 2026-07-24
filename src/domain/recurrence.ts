@@ -152,9 +152,9 @@ export function generateOccurrences(
       c = addDays(c, n);
     }
   } else if (rule.frequency === "weekly") {
-    const days = (rule.byWeekday && rule.byWeekday.length ? rule.byWeekday : [
-      cursor.getUTCDay() as Weekday,
-    ]) as ReadonlyArray<Weekday>;
+    const days = (
+      rule.byWeekday && rule.byWeekday.length ? rule.byWeekday : [cursor.getUTCDay() as Weekday]
+    ) as ReadonlyArray<Weekday>;
     let weekStart = new Date(cursor);
     weekStart = addDays(weekStart, -weekStart.getUTCDay());
     while (weekStart <= end && results.length < cap) {

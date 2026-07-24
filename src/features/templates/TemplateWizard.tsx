@@ -121,7 +121,13 @@ export function TemplateWizard({ open, onOpenChange }: Props) {
   const steps = ["מה המשימה", "מתי", "מי משתתף", "אם לא בוצעה", "סיכום"];
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) reset(); onOpenChange(o); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) reset();
+        onOpenChange(o);
+      }}
+    >
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>
@@ -230,7 +236,10 @@ export function TemplateWizard({ open, onOpenChange }: Props) {
           {step === 3 && (
             <div>
               <Label>אם לא בוצעה</Label>
-              <Select value={missedAction} onValueChange={(v) => setMissedAction(v as MissedAction)}>
+              <Select
+                value={missedAction}
+                onValueChange={(v) => setMissedAction(v as MissedAction)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

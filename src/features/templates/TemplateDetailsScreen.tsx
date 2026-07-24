@@ -3,18 +3,10 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  ConfirmationDialog,
-  EmptyState,
-  SectionHeader,
-} from "@/components/design-system";
+import { ConfirmationDialog, EmptyState, SectionHeader } from "@/components/design-system";
 import * as templatesRepo from "@/data/templatesRepo";
 import * as tasksRepo from "@/data/tasksRepo";
-import {
-  generateOccurrences,
-  isSoftDeleted,
-  type EditScope,
-} from "@/domain/recurrence";
+import { generateOccurrences, isSoftDeleted, type EditScope } from "@/domain/recurrence";
 import { toast } from "sonner";
 import { ArrowRight, Trash2 } from "lucide-react";
 import {
@@ -133,9 +125,7 @@ export function TemplateDetailsScreen({ templateId }: Props) {
         ) : (
           <ul className="space-y-2">
             {futureOccurrences.slice(0, 10).map((iso) => {
-              const materialised = instances.some(
-                (i) => i.scheduledAt === iso || i.dueAt === iso,
-              );
+              const materialised = instances.some((i) => i.scheduledAt === iso || i.dueAt === iso);
               return (
                 <li
                   key={iso}

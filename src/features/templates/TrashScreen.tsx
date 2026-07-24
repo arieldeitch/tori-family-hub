@@ -18,11 +18,7 @@ import { useSyncExternalStore } from "react";
 const ROLES: ViewerRole[] = ["owner", "adult", "child", "guest"];
 
 function useDeletedTasks() {
-  return useSyncExternalStore(
-    tasksRepo.subscribe,
-    tasksRepo.getDeleted,
-    tasksRepo.getDeleted,
-  );
+  return useSyncExternalStore(tasksRepo.subscribe, tasksRepo.getDeleted, tasksRepo.getDeleted);
 }
 
 export function TrashScreen() {
