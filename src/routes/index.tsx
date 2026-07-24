@@ -1,24 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { t } from "@/lib/i18n";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <main className="flex min-h-screen items-center justify-center bg-background px-6">
+      <div className="max-w-md text-center">
+        <p className="text-sm font-medium text-muted-foreground">
+          {t("app.name")} · {t("app.tagline")}
+        </p>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
+          {t("home.title")}
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">{t("home.subtitle")}</p>
+        <span className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+          <span
+            className="inline-block h-2 w-2 rounded-full bg-primary"
+            aria-hidden="true"
+          />
+          {t("home.healthy")}
+        </span>
+      </div>
+    </main>
   );
 }
