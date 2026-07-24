@@ -129,9 +129,8 @@ function selectFixedSequence(input: EngineInput, snapshot: CandidateSnapshot[]):
   const rotatedPool = rotated.filter((id) => eligibleSet.has(id));
 
   const primary = rotatedPool[0]!;
-  const skippedPrimary = input.lastAssigneeId && seq.includes(input.lastAssigneeId)
-    ? seq[startIdx]
-    : null;
+  const skippedPrimary =
+    input.lastAssigneeId && seq.includes(input.lastAssigneeId) ? seq[startIdx] : null;
   if (skippedPrimary && !eligibleSet.has(skippedPrimary)) {
     warnings.push({
       code: "PRIMARY_UNAVAILABLE",
@@ -292,7 +291,10 @@ export interface ManualOverride {
   note?: string;
 }
 
-export function applyManualOverride(previous: EngineResult, override: ManualOverride): EngineResult {
+export function applyManualOverride(
+  previous: EngineResult,
+  override: ManualOverride,
+): EngineResult {
   return {
     ...previous, // snapshot + algorithmVersion + warnings preserved (history intact)
     selectedProfileId: override.memberId,
