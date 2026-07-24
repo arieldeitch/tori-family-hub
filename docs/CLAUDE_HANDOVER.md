@@ -1,6 +1,6 @@
 # Claude Code — Handover
 
-Read this first. It is the single source of truth for anyone (human or agent) picking up the project.
+Read this first for the **as-built implementation**. It is the source of truth for the technical/handover state of the prototype. The **business** source of truth is the Knowledge Pack — start at [`00-knowledge-pack-readme.md`](./00-knowledge-pack-readme.md) and [`01-product-requirements.md`](./01-product-requirements.md). When this document and the PRD disagree, the PRD wins and the gap is recorded in [`project-status.md`](./project-status.md).
 
 ## What exists in practice
 
@@ -34,7 +34,7 @@ bun run format      # prettier --write .
 ## Folder structure (`src/`)
 
 ```
-app/             app-level composition (providers, shell helpers)
+app/             INTENDED for app-level composition — currently EMPTY (.gitkeep only)
 application/     use-cases across repos (todayService, shoppingService)
 components/
   ui/            shadcn primitives (do not modify upstream files)
@@ -44,16 +44,22 @@ components/
 data/            in-memory repositories + peopleDirectory (subscribe-based)
 domain/          pure types + rules + engines (task, followUp, shopping,
                  transport, errand, calendar, notification, recurrence, shifts,
-                 today, household) — all with .test.ts siblings
+                 today, household) — most have a .test.ts sibling (recurrence.ts has none)
 features/        feature slices (one folder per module)
-hooks/           shared react hooks
-infrastructure/  logging, config adapters
-lib/             framework-agnostic utilities, i18n, pwa/register
+hooks/           only use-mobile.tsx today; the modular data hooks live under lib/
+infrastructure/  INTENDED for logging/config adapters — currently EMPTY (.gitkeep only);
+                 those concerns currently live under lib/
+lib/             framework-agnostic utilities, i18n, pwa/register, AND the modular
+                 hooks (useTasks, useToday, useShopping, …)
 locales/         he.ts (only Hebrew shipped)
 routes/          TanStack file-based routes (do NOT edit routeTree.gen.ts)
 test/            vitest setup
 styles.css       Tailwind v4 tokens (OKLCH)
 ```
+
+> Structure note (WP1): `src/app/` and `src/infrastructure/` are empty placeholders; the
+> modular hooks currently sit under `src/lib/`, not `src/hooks/`. This is documented, not
+> refactored — see `project-status.md`. No structural refactor is in scope for WP1.
 
 ## Routes
 
