@@ -62,3 +62,11 @@ Minimal `t()` helper reading from `src/locales/he.ts`. Only Hebrew for now; stru
 - Quick Add opens a bottom Sheet with 7 options; unimplemented ones show a toast (no fake success). "נושא למעקב" routes to the existing `/follow-ups` module.
 - Placeholders show title + description + `EmptyState`; no mock data.
 - Safe area: `env(safe-area-inset-top)` on header, `env(safe-area-inset-bottom)` on bottom nav and main padding.
+
+## Global state components + PWA app-shell (in place)
+- DS: Loading / Empty / Error / Offline / PendingSync / SyncFailed /
+  SyncConflict / PermissionDenied / ExpiredSession / Retry — all exported
+  from `@/components/design-system`.
+- PWA: `vite-plugin-pwa` with app-shell caching, `/offline.html` fallback,
+  guarded SW registration (`src/lib/pwa/register.ts`), placeholder icons.
+- See `docs/PWA.md` for scope, guardrails, and known limitations.
