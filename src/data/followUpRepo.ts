@@ -49,6 +49,8 @@ export function create(
     openedAt?: string;
   },
 ): FollowUpCase {
+  const errs = validateFollowUp(input);
+  if (errs.length > 0) throw new FollowUpValidationFailedError(errs);
   const now = new Date().toISOString();
   const created: FollowUpCase = {
     ...input,
