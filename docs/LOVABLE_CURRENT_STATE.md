@@ -1,72 +1,82 @@
-# Tori — Current State
+# Tori — Current State (facts only)
 
-## Stack (existing, kept)
-- React 19 + TypeScript (strict)
-- TanStack Start / TanStack Router (Lovable default — replaces the "React Router" mention in the brief)
-- Tailwind CSS v4 (via `@tailwindcss/vite`)
-- shadcn/ui component primitives under `src/components/ui`
-- TanStack Query
-- Vitest + React Testing Library + jsdom (added)
+Snapshot after the Git-readiness / handover pass. All statements are verified against the repository.
+
+## Stack
+
+- React 19.2 + TypeScript 5.8 (strict) + Vite 8
+- TanStack Start 1.168 / TanStack Router 1.170 / TanStack Query
+- Tailwind CSS 4.2 via `@tailwindcss/vite`, tokens in `src/styles.css` (OKLCH)
+- shadcn/ui primitives (`src/components/ui/*`) + Tori DS wrappers (`src/components/design-system/*`)
+- Vitest 4.1 + React Testing Library + jsdom
+- `vite-plugin-pwa` (generateSW)
+- Package manager: Bun (`bun.lock` committed)
+- Build target: Cloudflare Workers (Nitro, `nodejs_compat`)
 
 ## App shell
-- `lang="he"` and `dir="rtl"` set on the root `<html>` in `src/routes/__root.tsx`.
-- Root-level Error Boundary via `errorComponent` on the root route.
-- Temporary route at `/` renders a Hebrew RTL welcome confirming the app runs.
 
-## Modular folder layout (`src/`)
-- `app/` — app-level composition (providers, shell helpers)
-- `components/` — shared UI components (incl. shadcn `ui/`)
-- `features/` — feature modules
-- `domain/` — pure domain models & rules
-- `application/` — use-cases
-- `data/` — repositories
-- `infrastructure/` — logging, config adapters
-- `lib/` — small framework-agnostic utilities (incl. `i18n.ts`)
-- `locales/` — translation dictionaries (`he.ts`)
-- `test/` — Vitest setup + smoke tests
-- `routes/` — TanStack file-based routes
+- `<html lang="he" dir="rtl">` set in `src/routes/__root.tsx`
+- Root error boundary via `errorComponent` on root route
+- Heebo font loaded via `<link>` in root route (Tailwind v4 cannot `@import` remote URLs)
+- `AppShell` + `AppHeader` + `BottomNav` (mobile) + `DesktopSidebar` (≥lg) + `QuickAddSheet`
 
-Import alias `@/*` → `src/*`.
+## Modules implemented (mock-only)
+
+Today, Tasks (one-off + templates + trash/soft-delete), Follow-ups, Shifts (pure engine + UI), Calendar (agenda/mobile + grid/desktop), Transport, Shopping, Errands, Notifications (+ preferences), Household + Onboarding + Child Mode, Search (cross-module), Design-system showcase.
+
+## Routes
+
+41 files under `src/routes/`. See `docs/CLAUDE_HANDOVER.md#routes` for the enumerated list.
+
+## Repositories (all in-memory)
+
+`householdRepo`, `peopleDirectory`, `tasksRepo`, `templatesRepo`, `childTasksRepo`, `followUpRepo`, `shoppingRepo`, `transportRepo`, `errandsRepo`, `calendarRepo`, `shiftsRepo`, `notificationsRepo`, `todayRepo` (derived).
+
+## Domain modules (pure, tested)
+
+`task`, `followUp`, `shopping`, `transport`, `errand`, `calendar`, `notification`, `recurrence`, `shifts`, `today`, `household`.
+
+## Quick Add
+
+Sheet supports: Task, Shopping item, Transport ride, Calendar event, Errand, Follow-up. Each dialog validates minimally, retains input on failure, updates the shared mock repo, then shows success.
+
+## Search
+
+`/search` — cross-module text search over tasks, follow-ups, shopping items, transport rides, errands, calendar events; results grouped by category with `StatusBadge`.
+
+## PWA
+
+App-shell only. See `docs/PWA.md`. Registration guarded to prod + top window only.
 
 ## i18n
-Minimal `t()` helper reading from `src/locales/he.ts`. Only Hebrew for now; structure allows adding locales later.
 
-## Scripts
-`dev`, `build`, `build:dev`, `preview`, `lint`, `typecheck`, `test`, `test:watch`, `format`.
+Hebrew only. Scaffolding (`lib/i18n.ts` + `locales/he.ts`) allows adding locales later.
 
-## Explicitly NOT done (per prompt scope)
-- No Supabase / backend
-- No authentication
-- No schema or migrations
-- No business modules (today/tasks/calendar/shopping/transport)
-- No product screens
-- No PWA
+## Tests
 
-## Design System (prompt 2)
-- Route: `/design-system` (internal, `noindex`, not linked from main nav).
-- Font: **Heebo** loaded via `<link>` in `src/routes/__root.tsx`; `--font-sans` token points to it.
-- Semantic tokens in `src/styles.css` (light + dark, oklch): `background`, `surface`, `foreground`, `muted-foreground`, `border`, `primary`, `ring`, `success`, `warning`, `error`, `info`, `overdue`, `blocked` (+ shadcn baseline).
-- Family palette (limited to 7 calm colors) exposed via `domain/household.ts::pickColor`. Identification is redundant with initials + name via `PersonAvatar` / `FamilyMemberChip`.
-- Global rules in `styles.css`: `:focus-visible` ring, `prefers-reduced-motion` reset, `font-family` on `html,body`.
-- New wrappers under `src/components/design-system/` (composed on top of shadcn — nothing replaced):
-  `IconButton`, `FormField`, `StatusBadge`, `PersonAvatar`, `FamilyMemberChip`,
-  `ConfirmationDialog`, `EmptyState`, `ErrorState`, `PermissionDeniedState`,
-  `OfflineState`, `SyncStatusIndicator`, `SectionHeader`, `MobilePageHeader`.
-- Sheet uses shadcn Radix primitive; opens from `side="right"` for RTL affordance.
-- Accessibility invariants enforced in the wrappers: `IconButton` requires `aria-label`, min tap target `44×44`; `FormField` wires `htmlFor`/`aria-describedby`/`aria-invalid`; `StatusBadge` always carries a glyph so meaning is not color-only.
+`bun run test`: **155 passed / 155 (18 files)**, ~7s.
 
-## App Shell (prompt 3)
-- Shell components in `src/components/shell/`: `AppShell` (layout wrapper), `AppHeader`, `BottomNav` (mobile), `DesktopSidebar` (>=lg), `QuickAddSheet`, `PlaceholderPage`, `navConfig.ts`.
-- Primary nav: `/today`, `/calendar`, `/tasks`, `/shopping`, `/more`. Secondary (sidebar + `/more`): `/transport`, `/follow-ups`, `/household`, `/notifications`, `/settings`, `/child`.
-- `/` redirects to `/today`. `/child`, `/onboarding`, `/design-system` render standalone (no shell).
-- Quick Add opens a bottom Sheet with 7 options; unimplemented ones show a toast (no fake success). "נושא למעקב" routes to the existing `/follow-ups` module.
-- Placeholders show title + description + `EmptyState`; no mock data.
-- Safe area: `env(safe-area-inset-top)` on header, `env(safe-area-inset-bottom)` on bottom nav and main padding.
+## Verification (this pass)
 
-## Global state components + PWA app-shell (in place)
-- DS: Loading / Empty / Error / Offline / PendingSync / SyncFailed /
-  SyncConflict / PermissionDenied / ExpiredSession / Retry — all exported
-  from `@/components/design-system`.
-- PWA: `vite-plugin-pwa` with app-shell caching, `/offline.html` fallback,
-  guarded SW registration (`src/lib/pwa/register.ts`), placeholder icons.
-- See `docs/PWA.md` for scope, guardrails, and known limitations.
+- `bun run typecheck` → 0 errors
+- `bun run lint` → 0 errors, 6 warnings (all inside `src/components/ui/*`, upstream shadcn `react-refresh/only-export-components`)
+- `bun run test` → 155/155 passed
+- `bun run build` → success (client + server + PWA service worker)
+
+## Explicitly NOT connected
+
+- No Supabase / Lovable Cloud
+- No authentication (Supabase Auth, OAuth, PIN-as-credential)
+- No RLS, no server-side validation
+- No `createServerFn` handlers, no `src/routes/api/*` routes
+- No email, push, cron, storage, analytics, error reporting
+- No real persistence — refresh resets to seeds
+- No E2E tests
+
+## Git readiness
+
+- `.gitignore` covers `node_modules`, `dist`, `dist-ssr`, `.output`, `.vinxi`, `.tanstack/**`, `.nitro`, `.wrangler/`, `.dev.vars`, `*.local`, logs, editor files.
+- `bun.lock` committed.
+- `.env.example` contains only public `VITE_*` values, no secrets.
+- No `.env` file present in the repo. No service role key, tokens, or PINs in source, docs, or CI.
+- CI runs `install --frozen-lockfile` → `typecheck` → `lint` → `test` → `build` on push to `main` and all PRs.
