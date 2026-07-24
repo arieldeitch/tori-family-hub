@@ -204,7 +204,7 @@ export function OnboardingWizard() {
             </Button>
           ) : null}
           {step === "summary" ? (
-            <Button onClick={() => navigate({ to: "/household" })}>{t("onboarding.finish")}</Button>
+            <Button onClick={() => navigate({ to: "/today" })}>{t("onboarding.finish")}</Button>
           ) : (
             <Button
               onClick={() => {

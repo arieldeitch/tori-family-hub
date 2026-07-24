@@ -6,24 +6,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Check, HelpCircle, Repeat } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useHousehold } from "@/lib/useHousehold";
-import { canRoleSee, type RoleVisibleItem } from "@/domain/household";
+import { canRoleSee } from "@/domain/household";
+import { childTasksRepo } from "@/data/childTasksRepo";
 import { toast } from "sonner";
-
-interface ChildTask extends RoleVisibleItem {
-  id: string;
-  title: string;
-  childId?: string;
-  requiresApproval?: boolean;
-}
-
-// Demo fixtures. Adults-only items MUST NOT reach the child screen.
-const DEMO_TASKS: ChildTask[] = [
-  { id: "t1", title: "לסדר את התיק לבית הספר" },
-  { id: "t2", title: "לצחצח שיניים אחרי ארוחת ערב" },
-  { id: "t3", title: "לתלות מגבת רטובה" },
-  { id: "t4", title: "לאשר תשלום חוגים", adultsOnly: true }, // must be hidden
-  { id: "t5", title: "לבחור ספר לפני השינה", requiresApproval: true },
-];
 
 export function ChildHome() {
   const { members } = useHousehold();
@@ -33,7 +18,7 @@ export function ChildHome() {
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
   const [approvalIds, setApprovalIds] = useState<Set<string>>(new Set());
 
-  const visibleTasks = DEMO_TASKS.filter((t) => canRoleSee("child", t));
+  const visibleTasks = childTasksRepo.getAll().filter((task) => canRoleSee("child", task));
 
   if (children.length === 0) {
     return (
