@@ -1,5 +1,16 @@
 # Changelog
 
+## WP0 — Foundation fixes (reproducible, timezone-independent quality gates)
+Focused maintenance pass. No UX, routes, data models, business scope, Supabase, auth, RLS or persistence changed.
+
+- **Typecheck reproducibility.** `package.json` `typecheck` script changed from `tsgo --noEmit` to `tsc --noEmit`. The `tsgo` binary (`@typescript/native-preview`) was never a dependency, so `bun run typecheck` failed on a clean install and in CI; `tsc` is already provided by the pinned `typescript` and passes with 0 errors.
+- **Cross-platform line endings.** Added `.gitattributes` (`* text=auto eol=lf` + binary asset rules) and renormalized the working tree to LF. On Windows with `core.autocrlf=true` the checkout was CRLF, so `bun run lint` reported ~24k `prettier/prettier` "Delete ␍" errors; it now reports **0 errors, 6 warnings** (the pre-existing shadcn `react-refresh` warnings) on Windows, Linux and CI alike.
+- **Timezone determinism in the shift engine.** `src/features/shifts/preview.ts` `nextOccurrenceDates` mixed local midnight (`setHours`) with a UTC ISO slice (`toISOString().slice(0,10)`) for the availability date key, so in any non-UTC zone the key shifted by a day and availability lookups missed. Two tests failed outside UTC (e.g. Asia/Jerusalem). Fixed by advancing occurrence dates on the UTC calendar (`setUTCHours`/`setUTCDate`/`getUTCDay`), matching the app's existing `toISOString().slice(0,10)` availability keys (AvailabilityEditor, shiftsRepo). Assignment requirements and selection order unchanged; no randomness.
+- **Timezone regression tests.** Added a `describe("shifts preview — timezone determinism …")` block in `src/features/shifts/shifts.ui.test.ts` exercising UTC, Asia/Jerusalem, America/Los_Angeles and Pacific/Kiritimati (+14) and asserting identical assignments, reason codes and algorithm version across zones. Test total 155 → 158, all passing.
+- **PWA precache.** `vite.config.ts` now points Workbox `globDirectory` at the real Nitro client output — `.output/public` in a local/CI build, `dist/client` in the Lovable sandbox (detected via `LOVABLE_SANDBOX`/`DEV_SERVER__PROJECT_PATH`, mirroring `@lovable.dev/vite-tanstack-config`). Previously it globbed the empty default vite outDir, emitting "One of the glob patterns doesn't match any files" and precaching only 7 include-assets (0 KiB). Build is now warning-free and precaches ~140 app-shell entries (~1 MB). Still app-shell-only: no background sync, no business-data caching, no tokens cached.
+
+Verification (post-WP0): `bun install --frozen-lockfile` ✓ · `bun run typecheck` 0 errors ✓ · `bun run lint` 0 errors / 6 warnings ✓ · `bun run test` 158/158 ✓ · `bun run build` success, no glob warning ✓.
+
 ## Prompt 1 — Infrastructure bootstrap
 - Added `lang="he"` and `dir="rtl"` on root HTML.
 - Established modular folder layout under `src/` (`app`, `features`, `domain`, `application`, `data`, `infrastructure`, `locales`, `test`).

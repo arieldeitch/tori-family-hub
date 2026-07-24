@@ -16,13 +16,15 @@
 ## PWA
 - App-shell only. No offline data, no background sync, no push notifications.
 - Service worker registration is skipped in dev and in iframes.
+- The generated `sw.js`/`workbox-*.js` are still written to the vite `dist/` dir, not the Nitro deploy dir (`.output/public` in a local/CI build). WP0 fixed the precache glob so the manifest now lists the real app-shell assets, but wiring the SW file itself into the deployed output (so `/sw.js` resolves in production on Cloudflare) is deferred — no production hosting is configured yet, and registration is already gated to prod + top window. Revisit when deployment is set up.
 
 ## i18n
 - Hebrew only. `t()` scaffolding present but no other locales bundled.
 
 ## Testing
-- 155 unit/integration tests, mostly domain + a few repo/UI. No E2E (Playwright/Cypress). No visual regression.
+- 158 unit/integration tests, mostly domain + a few repo/UI. No E2E (Playwright/Cypress). No visual regression.
 - Accessibility is enforced via DS wrapper invariants; not audited with axe.
+- Shift-engine timezone determinism is now covered by regression tests (WP0): the preview previously mixed local midnight with a UTC date key, producing different assignments per host timezone. Fixed to use the UTC calendar; tests assert identical results across UTC, Asia/Jerusalem, America/Los_Angeles and Pacific/Kiritimati.
 
 ## Design system
 - 6 ESLint `react-refresh/only-export-components` warnings inside `src/components/ui/*` (shadcn upstream). Left intentionally — patching upstream shadcn adds maintenance cost.

@@ -24,7 +24,7 @@ bun run dev         # vite dev server
 bun run build       # production build (Nitro / Cloudflare Worker)
 bun run build:dev   # dev-mode build
 bun run preview     # preview built output
-bun run typecheck   # tsgo --noEmit
+bun run typecheck   # tsc --noEmit
 bun run lint        # eslint .
 bun run test        # vitest run (single)
 bun run test:watch  # vitest watch
@@ -103,7 +103,7 @@ Each `src/domain/*.ts` module owns its state machine or engine:
 
 ## Tests
 
-155 tests across 18 files. Runs via `bun run test` (~7s). Covers domain rules, key repositories, several UI dialogs, and the today-service integration.
+158 tests across 18 files. Runs via `bun run test`. Covers domain rules, key repositories, several UI dialogs, the today-service integration, and shift-engine timezone determinism (regression).
 
 ## CI
 
@@ -171,9 +171,10 @@ Confirmed. In-memory only. `localStorage`/`IndexedDB` are **not** used as a fall
 
 ## Known issues
 
-- 6 ESLint `react-refresh/only-export-components` warnings in upstream shadcn files (`src/components/ui/*`). Intentional — not patching upstream.
+- 6 ESLint `react-refresh/only-export-components` warnings in upstream shadcn files (`src/components/ui/*`). Intentional — not patching upstream. These are the only lint output; the WP0 `.gitattributes` (LF) fix cleared the Windows CRLF `prettier/prettier` noise.
 - `peopleDirectory` alias table is a legacy bridge for transport ids; remove after seed regeneration.
 - No test covers refresh-persistence (there is none to test).
+- PWA `sw.js` is generated but still written to `dist/`, not the Nitro deploy dir (`.output/public`) in a local/CI build — see `LOVABLE_KNOWN_LIMITATIONS.md#pwa`. Precache manifest is correct (WP0); deploying the SW file is deferred until hosting is configured.
 
 ## Manual actions remaining (outside Claude/Lovable)
 

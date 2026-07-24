@@ -54,14 +54,15 @@ Hebrew only. Scaffolding (`lib/i18n.ts` + `locales/he.ts`) allows adding locales
 
 ## Tests
 
-`bun run test`: **155 passed / 155 (18 files)**, ~7s.
+`bun run test`: **158 passed / 158 (18 files)**. Includes 3 timezone-determinism regression tests for the shift engine (UTC, Asia/Jerusalem, negative-offset and +14 zones).
 
-## Verification (this pass)
+## Verification (WP0 pass)
 
-- `bun run typecheck` → 0 errors
+- `bun run typecheck` (`tsc --noEmit`) → 0 errors
 - `bun run lint` → 0 errors, 6 warnings (all inside `src/components/ui/*`, upstream shadcn `react-refresh/only-export-components`)
-- `bun run test` → 155/155 passed
-- `bun run build` → success (client + server + PWA service worker)
+- `bun run test` → 158/158 passed
+- `bun run build` → success (client + server + PWA service worker), no Workbox glob warning; precaches the real app-shell assets (~140 entries)
+- Reproducible on Windows, Linux and CI: `.gitattributes` enforces LF, and `typecheck` no longer depends on the un-installed `tsgo` binary.
 
 ## Explicitly NOT connected
 
@@ -76,6 +77,7 @@ Hebrew only. Scaffolding (`lib/i18n.ts` + `locales/he.ts`) allows adding locales
 ## Git readiness
 
 - `.gitignore` covers `node_modules`, `dist`, `dist-ssr`, `.output`, `.vinxi`, `.tanstack/**`, `.nitro`, `.wrangler/`, `.dev.vars`, `*.local`, logs, editor files.
+- `.gitattributes` enforces LF (`* text=auto eol=lf`) so line endings stay consistent regardless of `core.autocrlf`; binary assets marked `binary`.
 - `bun.lock` committed.
 - `.env.example` contains only public `VITE_*` values, no secrets.
 - No `.env` file present in the repo. No service role key, tokens, or PINs in source, docs, or CI.
