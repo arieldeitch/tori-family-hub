@@ -31,9 +31,7 @@ export function WeekNav({ weekStart, weekEnd, onPrev, onNext, onToday, isCurrent
       </Button>
       <div className="min-w-0 text-center">
         <div className="truncate text-sm font-medium text-foreground">{label}</div>
-        {isCurrentWeek ? (
-          <div className="text-xs text-muted-foreground">השבוע הנוכחי</div>
-        ) : null}
+        {isCurrentWeek ? <div className="text-xs text-muted-foreground">השבוע הנוכחי</div> : null}
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <Button

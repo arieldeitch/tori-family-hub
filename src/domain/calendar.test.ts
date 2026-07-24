@@ -50,10 +50,7 @@ describe("calendar domain", () => {
   });
 
   it("hides adults-only events from a child", () => {
-    const events: CalendarEvent[] = [
-      ev({ id: "1" }),
-      ev({ id: "2", adultsOnly: true }),
-    ];
+    const events: CalendarEvent[] = [ev({ id: "1" }), ev({ id: "2", adultsOnly: true })];
     expect(visibleForRole(events, "child").map((e) => e.id)).toEqual(["1"]);
     expect(visibleForRole(events, "adult").map((e) => e.id)).toEqual(["1", "2"]);
   });

@@ -4,12 +4,7 @@
 
 import { addDays, getWeekStart, type CalendarEvent } from "@/domain/calendar";
 
-export type CalendarViewState =
-  | "normal"
-  | "empty"
-  | "loading"
-  | "error"
-  | "permission_denied";
+export type CalendarViewState = "normal" | "empty" | "loading" | "error" | "permission_denied";
 
 export interface CalendarMemberRef {
   id: string;

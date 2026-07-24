@@ -2,12 +2,7 @@ import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useCalendar } from "@/lib/useCalendar";
 import { calendarRepo, type CalendarViewState } from "@/data/calendarRepo";
-import {
-  addDays,
-  getWeekStart,
-  groupByDay,
-  visibleForRole,
-} from "@/domain/calendar";
+import { addDays, getWeekStart, groupByDay, visibleForRole } from "@/domain/calendar";
 import type { Role } from "@/domain/household";
 import { WeekNav } from "./WeekNav";
 import { AgendaWeek } from "./AgendaWeek";
@@ -104,10 +99,7 @@ export function WeekCalendarScreen() {
           description="פנו למנהל/ת הבית כדי לקבל הרשאה."
         />
       ) : buckets.every((b) => b.events.length === 0) ? (
-        <EmptyState
-          title="אין אירועים השבוע"
-          description="הוסיפו אירוע חדש, או עברו לשבוע אחר."
-        />
+        <EmptyState title="אין אירועים השבוע" description="הוסיפו אירוע חדש, או עברו לשבוע אחר." />
       ) : (
         <>
           <div className="lg:hidden">

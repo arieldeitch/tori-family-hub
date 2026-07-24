@@ -50,10 +50,7 @@ export interface DayBucket {
   events: CalendarEvent[];
 }
 
-export function groupByDay(
-  events: ReadonlyArray<CalendarEvent>,
-  weekStart: Date,
-): DayBucket[] {
+export function groupByDay(events: ReadonlyArray<CalendarEvent>, weekStart: Date): DayBucket[] {
   const days = weekDays(weekStart);
   return days.map((date) => ({
     date,
@@ -64,9 +61,6 @@ export function groupByDay(
   }));
 }
 
-export function visibleForRole(
-  events: ReadonlyArray<CalendarEvent>,
-  role: Role,
-): CalendarEvent[] {
+export function visibleForRole(events: ReadonlyArray<CalendarEvent>, role: Role): CalendarEvent[] {
   return events.filter((e) => canRoleSee(role, e));
 }
