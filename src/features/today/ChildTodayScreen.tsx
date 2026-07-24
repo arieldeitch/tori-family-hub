@@ -15,9 +15,9 @@ interface Props {
  */
 export function ChildTodayScreen({ dataset }: Props) {
   const tasks = visibleToRole(selectMyTasks(dataset), "child");
-  const transports = visibleToRole(
-    selectTransportsToday(dataset).filter((t) => t.childId === dataset.viewerId),
-    "child",
+  // Transports don't carry adultsOnly — filter to this child only.
+  const transports = selectTransportsToday(dataset).filter(
+    (t) => t.childId === dataset.viewerId,
   );
 
   const viewer = memberById(dataset, dataset.viewerId);
