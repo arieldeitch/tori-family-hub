@@ -1,6 +1,17 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
 
+// The Nitro client output directory differs by build environment: the Lovable
+// sandbox build emits the client bundle to `dist/client`, while a normal local
+// or CI build (cloudflare-module preset) emits it to `.output/public`. Detect
+// the sandbox exactly the way @lovable.dev/vite-tanstack-config does, then point
+// the PWA plugin's `globDirectory` at whichever directory actually holds the
+// built app-shell assets. Without this, a local/CI build globs the empty default
+// vite outDir and precaches nothing (the "glob doesn't match any files" warning).
+const isLovableSandbox =
+  process.env.LOVABLE_SANDBOX === "1" || Boolean(process.env.DEV_SERVER__PROJECT_PATH);
+const pwaGlobDirectory = isLovableSandbox ? "dist/client" : ".output/public";
+
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
@@ -52,6 +63,10 @@ export default defineConfig({
           // same-origin assets. OAuth is excluded from navigation fallback.
           navigateFallback: "/offline.html",
           navigateFallbackDenylist: [/^\/api\//, /^\/~oauth/],
+          // Point Workbox at the real client output dir (see `pwaGlobDirectory`
+          // above) so the hashed app-shell assets are precached instead of
+          // globbing an empty directory.
+          globDirectory: pwaGlobDirectory,
           globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
           cleanupOutdatedCaches: true,
           skipWaiting: true,

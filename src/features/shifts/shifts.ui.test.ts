@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { computePreview } from "@/features/shifts/preview";
 import type { ShiftRule } from "@/data/shiftsRepo";
 import * as shiftsRepo from "@/data/shiftsRepo";
@@ -73,6 +73,103 @@ describe("shifts preview (pure integration)", () => {
     });
     expect(p[0]!.result.selectedProfileId).toBeNull();
     expect(p[0]!.result.reasonCode).toBe("NO_ELIGIBLE_PARTICIPANT");
+  });
+});
+
+// Regression for the timezone-determinism bug: occurrence date keys used to be
+// derived from local midnight and then read as a UTC ISO slice, so in any zone
+// with a non-zero offset the availability lookup missed by a day and the same
+// input produced different assignments per host timezone. These tests exercise
+// the engine under several offsets (zero, positive, negative, and an extreme
+// +14 zone) and assert identical, deterministic results everywhere.
+describe("shifts preview — timezone determinism (regression)", () => {
+  const originalTZ = process.env.TZ;
+  beforeEach(() => shiftsRepo.reset());
+  afterEach(() => {
+    process.env.TZ = originalTZ;
+  });
+
+  // process.env.TZ is honored by V8's Date on the next Date operation, so setting
+  // it before constructing `from` reproduces a host running in that timezone.
+  function runInTZ<T>(tz: string, fn: () => T): T {
+    process.env.TZ = tz;
+    return fn();
+  }
+
+  const ZONES = ["UTC", "Asia/Jerusalem", "America/Los_Angeles", "Pacific/Kiritimati"];
+
+  it("respects per-day unavailability in every timezone", () => {
+    for (const tz of ZONES) {
+      const res = runInTZ(tz, () => {
+        const from = new Date("2026-07-24T00:00:00.000Z");
+        const day0 = from.toISOString().slice(0, 10);
+        return computePreview({
+          rule: rule(),
+          members: MEMBERS,
+          availability: { [day0]: ["a"] },
+          from,
+          count: 1,
+          lastAssigneeIdBefore: "c",
+        });
+      });
+      expect(res[0]!.result.selectedProfileId, `TZ=${tz}`).toBe("b");
+      expect(res[0]!.result.reasonCode, `TZ=${tz}`).toBe("PRIMARY_UNAVAILABLE");
+    }
+  });
+
+  it("returns null when nobody is available in every timezone", () => {
+    for (const tz of ZONES) {
+      const res = runInTZ(tz, () => {
+        const from = new Date("2026-07-24T00:00:00.000Z");
+        const day0 = from.toISOString().slice(0, 10);
+        return computePreview({
+          rule: rule(),
+          members: MEMBERS,
+          availability: { [day0]: ["a", "b", "c"] },
+          from,
+          count: 1,
+        });
+      });
+      expect(res[0]!.result.selectedProfileId, `TZ=${tz}`).toBeNull();
+      expect(res[0]!.result.reasonCode, `TZ=${tz}`).toBe("NO_ELIGIBLE_PARTICIPANT");
+    }
+  });
+
+  it("yields identical assignments, reason codes and algorithm version across all timezones", () => {
+    // Mark "a" unavailable on the 3rd occurrence to exercise the per-occurrence
+    // date-key lookup at a non-first day, where the off-by-one used to surface.
+    const day2 = new Date("2026-07-26T00:00:00.000Z").toISOString().slice(0, 10);
+    const compute = () =>
+      computePreview({
+        rule: rule(),
+        members: MEMBERS,
+        availability: { [day2]: ["a"] },
+        from: new Date("2026-07-24T00:00:00.000Z"),
+        count: 5,
+        lastAssigneeIdBefore: "c",
+      }).map((e) => ({
+        day: e.occurrenceIso.slice(0, 10),
+        weekday: e.weekday,
+        id: e.result.selectedProfileId,
+        reason: e.result.reasonCode,
+        algo: e.result.algorithmVersion,
+      }));
+
+    const baseline = runInTZ("UTC", compute);
+    // Sanity: the seeded day keys are the intended civil dates, not shifted.
+    expect(baseline.map((e) => e.day)).toEqual([
+      "2026-07-24",
+      "2026-07-25",
+      "2026-07-26",
+      "2026-07-27",
+      "2026-07-28",
+    ]);
+    // And the unavailability on day 3 was honored (someone other than "a").
+    expect(baseline[2]!.id).not.toBe("a");
+
+    for (const tz of ZONES.filter((z) => z !== "UTC")) {
+      expect(runInTZ(tz, compute), `TZ=${tz}`).toEqual(baseline);
+    }
   });
 });
 
