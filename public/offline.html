@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2C7A7B" />
+    <title>אין חיבור — Tori</title>
+    <style>
+      :root { color-scheme: light dark; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: "Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #fafaf9;
+        color: #111827;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        line-height: 1.5;
+      }
+      @media (prefers-color-scheme: dark) {
+        body { background: #111827; color: #f3f4f6; }
+        .card { background: #1f2937; }
+      }
+      .card {
+        max-width: 420px;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+        text-align: center;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(44,122,123,0.12);
+        color: #2C7A7B;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+      h1 { font-size: 20px; margin: 0 0 8px; }
+      p { font-size: 15px; margin: 0 0 16px; opacity: 0.85; }
+      button {
+        appearance: none;
+        border: 0;
+        background: #2C7A7B;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:hover { filter: brightness(1.05); }
+      .muted { font-size: 12px; opacity: 0.6; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <main class="card" role="alert" aria-live="polite">
+      <div class="badge">מצב לא מקוון</div>
+      <h1>אין חיבור לרשת כרגע</h1>
+      <p>הצגנו את מסגרת האפליקציה מהמטמון. פעולות משפחתיות שדורשות רשת יחזרו לפעול ברגע שהחיבור יחזור.</p>
+      <button onclick="location.reload()">נסה שוב</button>
+      <p class="muted">בשלב זה אין סנכרון ברקע. שינויים שנעשו אחרי הניתוק אינם נשמרים.</p>
+    </main>
+  </body>
+</html>
