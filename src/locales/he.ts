@@ -21,6 +21,7 @@ export const he = {
     more: "עוד",
     transport: "הסעות",
     followUps: "מעקבים",
+    shifts: "תורנויות",
     household: "בני הבית",
     notifications: "התראות",
     settings: "הגדרות",

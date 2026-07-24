@@ -10,6 +10,7 @@ import {
   Bell,
   Settings,
   Baby,
+  Repeat,
   type LucideIcon,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ export type NavKey =
   | "more"
   | "transport"
   | "followUps"
+  | "shifts"
   | "household"
   | "notifications"
   | "settings"
@@ -44,6 +46,7 @@ export const primaryNav: NavItem[] = [
 export const secondaryNav: NavItem[] = [
   { key: "transport", to: "/transport", labelKey: "nav.transport", icon: Car },
   { key: "followUps", to: "/follow-ups", labelKey: "nav.followUps", icon: ClipboardList },
+  { key: "shifts", to: "/shifts", labelKey: "nav.shifts", icon: Repeat },
   { key: "household", to: "/household", labelKey: "nav.household", icon: Users },
   { key: "notifications", to: "/notifications", labelKey: "nav.notifications", icon: Bell },
   { key: "settings", to: "/settings", labelKey: "nav.settings", icon: Settings },
