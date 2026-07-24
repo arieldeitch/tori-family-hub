@@ -270,3 +270,27 @@ Read-only audit + one proven gap fix. No module rebuild, no other module touched
 **Still requires backend (unchanged, explicit):** sensitivity gating is UX-only — no RLS, no server checks; `canRoleSeeFollowUp` filters the client list only. Persistence is in-memory (state resets on reload). Reminders and next-follow-up dates are not real notifications. `restrictedToMemberIds` is honored client-side only.
 
 **Results:** tsgo ✓ · vitest **100/100** (4 new) ✓ · lint ✓ · build ✓.
+
+## Prompt 10 — Shopping module
+Scope: shopping only. No schedules.
+
+**Domain (`src/domain/shopping.ts`):** types `ShoppingList`, `ShoppingItem` with all requested fields; statuses `needed | claimed | purchased | unavailable | removed`; urgency `low | normal | high`; sync `pending | synced | failed`. Pure helpers: `normalizeName` (lowercase, strip Hebrew niqqud, collapse whitespace, drop common punctuation, remove Hebrew plural suffix `ים`/`ות` on ≥4-char words), `isOpen`, `findSimilarOpen`, `validateItemInput`, `mergeItems`, `canRoleAct`. Errors: `ShoppingValidationFailedError`, `ShoppingPermissionError`.
+
+**Application (`src/application/shoppingService.ts`):** the only mutation surface UI is allowed to import. `createList`, `addItem` (returns `{item, duplicates}` — never auto-merges), `mergeInto`, `updateItem`, `claimBuyer`, `releaseBuyer`, `markPurchased`, `markUnavailable`, `removeItem`, `markSynced`. Every mutation goes through role gating (`canRoleAct`) and, for adds, `validateItemInput`. In offline demo mode every mutation lands as `pending` (or `failed` when `simulateFailure` is on); `syncStatus` flips to `synced` only via `markSynced`.
+
+**Data (`src/data/shoppingRepo.ts`):** in-memory store, `subscribe` / `getSnapshot` for `useSyncExternalStore`, no localStorage, no persistence, no fake concurrency. UI does not import fixtures — the repo owns seed.
+
+**Hook + UI:** `src/lib/useShopping.ts`; features under `src/features/shopping/`: `ShoppingListsScreen`, `ActiveListScreen`, `EditItemDialog`, `DuplicateSuggestionDialog` (Merge / Add anyway / Cancel — user always chooses), `BuyerPickerDialog`, `labels.ts`. Routes: `/shopping` (AppShell layout), `/shopping/` (lists + create), `/shopping/$listId` (active list with quick add, search, purchased section, empty states, per-item pending/failed badge).
+
+**Tests:** `src/domain/shopping.test.ts` (16 — normalize, findSimilar, validate, merge, canRoleAct) + `src/data/shoppingRepo.test.ts` (10 — add item, duplicate suggestion returned, no auto-merge, merge, add-anyway keeps both, claim buyer, purchased, failed sync stays failed until explicit `markSynced`, child blocked from add, guest blocked from claim).
+
+**Results:** vitest **126/126** (26 new) ✓ · `tsgo --noEmit` ✓ · `eslint` ✓ · `build` ✓.
+
+**Limitations (explicit):**
+- No persistence — state resets on refresh.
+- No real sync/backend — `pending`/`failed`/`synced` is UI bookkeeping only; failed sync is toggled via `shoppingRepo.setSimulateFailure(true)` in tests, no retry queue.
+- No real concurrency: `claimBuyer` cannot race a second buyer; conflicts wait on backend.
+- Role gating is UX-only (service refuses child/guest, UI hides actions) — real enforcement requires server RLS.
+- Buyer picker offers owners/adults from the current household; if the household is empty (fresh install) it falls back to a `"seed"` requester id so the demo still functions.
+- Normalization is intentionally naive: no synonyms, no stemming beyond one Hebrew plural suffix, no AI. Duplicates that differ in wording (e.g. "חלב 3%" vs "חלב תנובה") will not be suggested.
+- `ChildHome` / child-mode does not link to `/shopping`; the module lives inside the adult AppShell.
