@@ -1,11 +1,26 @@
 // In-memory repo for follow-up cases. Prototype only — no persistence,
 // no server, no RLS. Real security will be enforced server-side later.
+//
+// Application-layer safety net: create() and update() run validateFollowUp()
+// before mutating state, so the "waiting_external requires next-follow-up
+// or opt-out reason" rule holds even if a caller bypasses the form.
 
 import {
   clearFutureRemindersIfTerminal,
+  validateFollowUp,
   type FollowUpAction,
   type FollowUpCase,
+  type FollowUpValidationError,
 } from "@/domain/followUp";
+
+export class FollowUpValidationFailedError extends Error {
+  readonly errors: ReadonlyArray<FollowUpValidationError>;
+  constructor(errors: ReadonlyArray<FollowUpValidationError>) {
+    super(errors.map((e) => e.message).join("; ") || "Follow-up validation failed");
+    this.name = "FollowUpValidationFailedError";
+    this.errors = errors;
+  }
+}
 
 type Listener = () => void;
 
