@@ -15,7 +15,12 @@ import {
 import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { renderPreview, hasAction, type Notification, type NotificationCategory } from "@/domain/notification";
+import {
+  renderPreview,
+  hasAction,
+  type Notification,
+  type NotificationCategory,
+} from "@/domain/notification";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<NotificationCategory, ReactNode> = {
@@ -52,10 +57,7 @@ export function NotificationRow({
 
   return (
     <Card
-      className={cn(
-        "transition-colors",
-        unread ? "border-primary/40 bg-primary/5" : "bg-card",
-      )}
+      className={cn("transition-colors", unread ? "border-primary/40 bg-primary/5" : "bg-card")}
     >
       <CardContent className="flex items-start gap-3 p-4">
         <div
@@ -76,22 +78,14 @@ export function NotificationRow({
           ) : null}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {hasAction(notification) ? (
-              <Button
-                size="sm"
-                variant="default"
-                onClick={() => onAction?.(notification)}
-              >
+              <Button size="sm" variant="default" onClick={() => onAction?.(notification)}>
                 {notification.action.label}
               </Button>
             ) : (
               <span className="text-xs text-muted-foreground">אין פעולה ישירה זמינה</span>
             )}
             {unread ? (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => onMarkRead(notification.id)}
-              >
+              <Button size="sm" variant="ghost" onClick={() => onMarkRead(notification.id)}>
                 סימון כנקראה
               </Button>
             ) : null}

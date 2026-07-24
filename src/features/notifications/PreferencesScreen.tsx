@@ -36,10 +36,7 @@ export function PreferencesScreen() {
       </div>
 
       <section className="space-y-2">
-        <SectionHeader
-          title="קטגוריות"
-          description="כיבוי קטגוריה יעצור את כל ההתראות מסוג זה."
-        />
+        <SectionHeader title="קטגוריות" description="כיבוי קטגוריה יעצור את כל ההתראות מסוג זה." />
         <Card>
           <CardContent className="divide-y p-0">
             {(Object.keys(CATEGORY_LABEL) as NotificationCategory[]).map((c) => (

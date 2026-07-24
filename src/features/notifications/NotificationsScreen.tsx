@@ -41,8 +41,7 @@ interface Groups {
 function groupByDay(list: Notification[]): Groups {
   const g: Groups = { today: [], yesterday: [], earlier: [] };
   for (const n of list) g[bucketOf(n.createdAt)].push(n);
-  const sortDesc = (a: Notification, b: Notification) =>
-    a.createdAt < b.createdAt ? 1 : -1;
+  const sortDesc = (a: Notification, b: Notification) => (a.createdAt < b.createdAt ? 1 : -1);
   g.today.sort(sortDesc);
   g.yesterday.sort(sortDesc);
   g.earlier.sort(sortDesc);
@@ -93,11 +92,7 @@ export function NotificationsScreen() {
     <div className="flex flex-col gap-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Switch
-            id="lock-preview"
-            checked={lockPreview}
-            onCheckedChange={setLockPreview}
-          />
+          <Switch id="lock-preview" checked={lockPreview} onCheckedChange={setLockPreview} />
           <Label htmlFor="lock-preview" className="text-sm text-muted-foreground">
             תצוגת מסך נעילה (הסתרת פרטים רגישים)
           </Label>

@@ -14,7 +14,9 @@ import {
   type NotificationPreferences,
 } from "./notification";
 
-function n(overrides: Partial<Notification> & { id: string; category: Notification["category"] }): Notification {
+function n(
+  overrides: Partial<Notification> & { id: string; category: Notification["category"] },
+): Notification {
   return {
     id: overrides.id,
     category: overrides.category,
