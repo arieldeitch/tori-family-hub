@@ -41,3 +41,16 @@ Minimal `t()` helper reading from `src/locales/he.ts`. Only Hebrew for now; stru
 - No business modules (today/tasks/calendar/shopping/transport)
 - No product screens
 - No PWA
+
+## Design System (prompt 2)
+- Route: `/design-system` (internal, `noindex`, not linked from main nav).
+- Font: **Heebo** loaded via `<link>` in `src/routes/__root.tsx`; `--font-sans` token points to it.
+- Semantic tokens in `src/styles.css` (light + dark, oklch): `background`, `surface`, `foreground`, `muted-foreground`, `border`, `primary`, `ring`, `success`, `warning`, `error`, `info`, `overdue`, `blocked` (+ shadcn baseline).
+- Family palette (limited to 7 calm colors) exposed via `domain/household.ts::pickColor`. Identification is redundant with initials + name via `PersonAvatar` / `FamilyMemberChip`.
+- Global rules in `styles.css`: `:focus-visible` ring, `prefers-reduced-motion` reset, `font-family` on `html,body`.
+- New wrappers under `src/components/design-system/` (composed on top of shadcn — nothing replaced):
+  `IconButton`, `FormField`, `StatusBadge`, `PersonAvatar`, `FamilyMemberChip`,
+  `ConfirmationDialog`, `EmptyState`, `ErrorState`, `PermissionDeniedState`,
+  `OfflineState`, `SyncStatusIndicator`, `SectionHeader`, `MobilePageHeader`.
+- Sheet uses shadcn Radix primitive; opens from `side="right"` for RTL affordance.
+- Accessibility invariants enforced in the wrappers: `IconButton` requires `aria-label`, min tap target `44×44`; `FormField` wires `htmlFor`/`aria-describedby`/`aria-invalid`; `StatusBadge` always carries a glyph so meaning is not color-only.
