@@ -45,3 +45,17 @@ Explicitly NOT done: Supabase Auth, invitation emails, PIN authentication, devic
 - Verified: `typecheck` (0), `test` (15/15), `lint` (0 errors, 6 pre-existing shadcn warnings), `build` (ok).
 - Dependencies added: **none**. Heebo is loaded from Google Fonts CDN.
 - Known limitations: dark mode tokens defined but there is no theme toggle yet (out of scope for prompt 2). No visual regression tests. Contrast tuned by eye against WCAG AA on the calm palette; a full audit will come with prompt 3 (App Shell).
+
+## Prompt 3 — App Shell & Navigation
+- New shell components in `src/components/shell/`: `AppShell`, `AppHeader`, `BottomNav`, `DesktopSidebar`, `QuickAddSheet`, `PlaceholderPage`, and `navConfig.ts`.
+- Bottom navigation (mobile, <lg): primary destinations היום / לוח / משימות / קניות / עוד, safe-area aware, active state highlighted, min touch target 56px.
+- Desktop sidebar (>=lg): קומפקטי w-60, RTL border-l, מציג את כל היעדים (ראשי + משני) עם active state.
+- Header: שם מסך, שם משק הבית (עדין), Quick Add, כפתור התראות, avatar מקושר להגדרות. safe-area-inset-top מכובד.
+- Quick Add Sheet (bottom sheet): 7 אפשרויות. אלה שלא ממומשות מציגות toast `quickAdd.notAvailable` — ללא הצלחה מזויפת. `נושא למעקב` מנווט ל-`/follow-ups` שכן המודול קיים.
+- Routes נוצרו: `/today`, `/calendar`, `/tasks`, `/shopping`, `/more`, `/transport`, `/notifications`, `/settings`. כל route קיבל `head()` ייעודי + `PlaceholderPage` (כותרת + הסבר + EmptyState) — ללא נתונים מומצאים.
+- Routes קיימים שנעטפו ב-`AppShell`: `/household`, `/follow-ups`. `/child`, `/onboarding`, `/design-system` נשארו standalone (מסכים ייעודיים).
+- `/` הוסב ל-`redirect` אל `/today`.
+- i18n: הוסף מרחב שמות `nav.*`, `quickAdd.*`, `placeholder.*` ב-`src/locales/he.ts`.
+- RTL: כל הרכיבים משתמשים ב-logical properties/utility classes ניטרליות; אין horizontal overflow (בדוק ב-360/390/desktop).
+- Verified: `typecheck` (0), `tests` (15/15), `lint` (0 errors; 6 אזהרות shadcn קיימות), `build` (ok).
+- Known limitations: אין badge של unread על כפתור ההתראות (אין עדיין data source), Quick Add לא כולל טפסים בפועל (מחוץ להיקף), אין persistence של המסך הנבחר.

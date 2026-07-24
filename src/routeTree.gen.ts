@@ -9,17 +9,60 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TransportRouteImport } from './routes/transport'
+import { Route as TodayRouteImport } from './routes/today'
+import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as ShoppingRouteImport } from './routes/shopping'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MoreRouteImport } from './routes/more'
 import { Route as HouseholdRouteImport } from './routes/household'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ChildRouteImport } from './routes/child'
+import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
 import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
 
+const TransportRoute = TransportRouteImport.update({
+  id: '/transport',
+  path: '/transport',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TodayRoute = TodayRouteImport.update({
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShoppingRoute = ShoppingRouteImport.update({
+  id: '/shopping',
+  path: '/shopping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoreRoute = MoreRouteImport.update({
+  id: '/more',
+  path: '/more',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HouseholdRoute = HouseholdRouteImport.update({
@@ -35,6 +78,11 @@ const DesignSystemRoute = DesignSystemRouteImport.update({
 const ChildRoute = ChildRouteImport.update({
   id: '/child',
   path: '/child',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarRoute = CalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -55,29 +103,53 @@ const FollowUpsCaseIdRoute = FollowUpsCaseIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/child': typeof ChildRoute
   '/design-system': typeof DesignSystemRoute
   '/household': typeof HouseholdRoute
+  '/more': typeof MoreRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/tasks': typeof TasksRoute
+  '/today': typeof TodayRoute
+  '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/child': typeof ChildRoute
   '/design-system': typeof DesignSystemRoute
   '/household': typeof HouseholdRoute
+  '/more': typeof MoreRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/tasks': typeof TasksRoute
+  '/today': typeof TodayRoute
+  '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/follow-ups': typeof FollowUpsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/calendar': typeof CalendarRoute
   '/child': typeof ChildRoute
   '/design-system': typeof DesignSystemRoute
   '/household': typeof HouseholdRoute
+  '/more': typeof MoreRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
+  '/settings': typeof SettingsRoute
+  '/shopping': typeof ShoppingRoute
+  '/tasks': typeof TasksRoute
+  '/today': typeof TodayRoute
+  '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
 }
@@ -85,49 +157,130 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/calendar'
     | '/child'
     | '/design-system'
     | '/household'
+    | '/more'
+    | '/notifications'
     | '/onboarding'
+    | '/settings'
+    | '/shopping'
+    | '/tasks'
+    | '/today'
+    | '/transport'
     | '/follow-ups/$caseId'
     | '/follow-ups/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/calendar'
     | '/child'
     | '/design-system'
     | '/household'
+    | '/more'
+    | '/notifications'
     | '/onboarding'
+    | '/settings'
+    | '/shopping'
+    | '/tasks'
+    | '/today'
+    | '/transport'
     | '/follow-ups/$caseId'
     | '/follow-ups'
   id:
     | '__root__'
     | '/'
+    | '/calendar'
     | '/child'
     | '/design-system'
     | '/household'
+    | '/more'
+    | '/notifications'
     | '/onboarding'
+    | '/settings'
+    | '/shopping'
+    | '/tasks'
+    | '/today'
+    | '/transport'
     | '/follow-ups/$caseId'
     | '/follow-ups/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CalendarRoute: typeof CalendarRoute
   ChildRoute: typeof ChildRoute
   DesignSystemRoute: typeof DesignSystemRoute
   HouseholdRoute: typeof HouseholdRoute
+  MoreRoute: typeof MoreRoute
+  NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
+  SettingsRoute: typeof SettingsRoute
+  ShoppingRoute: typeof ShoppingRoute
+  TasksRoute: typeof TasksRoute
+  TodayRoute: typeof TodayRoute
+  TransportRoute: typeof TransportRoute
   FollowUpsCaseIdRoute: typeof FollowUpsCaseIdRoute
   FollowUpsIndexRoute: typeof FollowUpsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/transport': {
+      id: '/transport'
+      path: '/transport'
+      fullPath: '/transport'
+      preLoaderRoute: typeof TransportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/today': {
+      id: '/today'
+      path: '/today'
+      fullPath: '/today'
+      preLoaderRoute: typeof TodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shopping': {
+      id: '/shopping'
+      path: '/shopping'
+      fullPath: '/shopping'
+      preLoaderRoute: typeof ShoppingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/more': {
+      id: '/more'
+      path: '/more'
+      fullPath: '/more'
+      preLoaderRoute: typeof MoreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/household': {
@@ -149,6 +302,13 @@ declare module '@tanstack/react-router' {
       path: '/child'
       fullPath: '/child'
       preLoaderRoute: typeof ChildRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendar': {
+      id: '/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof CalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -177,10 +337,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CalendarRoute: CalendarRoute,
   ChildRoute: ChildRoute,
   DesignSystemRoute: DesignSystemRoute,
   HouseholdRoute: HouseholdRoute,
+  MoreRoute: MoreRoute,
+  NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
+  SettingsRoute: SettingsRoute,
+  ShoppingRoute: ShoppingRoute,
+  TasksRoute: TasksRoute,
+  TodayRoute: TodayRoute,
+  TransportRoute: TransportRoute,
   FollowUpsCaseIdRoute: FollowUpsCaseIdRoute,
   FollowUpsIndexRoute: FollowUpsIndexRoute,
 }

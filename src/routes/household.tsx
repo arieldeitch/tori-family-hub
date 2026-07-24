@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AppShell } from "@/components/shell/AppShell";
 import { HouseholdScreen } from "@/features/household/HouseholdScreen";
+import { t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/household")({
   head: () => ({
@@ -10,5 +12,9 @@ export const Route = createFileRoute("/household")({
       { property: "og:description", content: "ניהול בני הבית ב‑Tori." },
     ],
   }),
-  component: HouseholdScreen,
+  component: () => (
+    <AppShell title={t("nav.household")}>
+      <HouseholdScreen />
+    </AppShell>
+  ),
 });

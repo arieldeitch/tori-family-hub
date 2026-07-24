@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { AppShell } from "@/components/shell/AppShell";
 import { FollowUpListScreen } from "@/features/follow-ups/FollowUpListScreen";
+import { t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/follow-ups/")({
   head: () => ({
@@ -18,5 +20,9 @@ export const Route = createFileRoute("/follow-ups/")({
       { property: "og:type", content: "website" },
     ],
   }),
-  component: FollowUpListScreen,
+  component: () => (
+    <AppShell title={t("nav.followUps")}>
+      <FollowUpListScreen />
+    </AppShell>
+  ),
 });
