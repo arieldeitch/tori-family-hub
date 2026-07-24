@@ -28,9 +28,7 @@ const DEMO_TASKS: ChildTask[] = [
 export function ChildHome() {
   const { members } = useHousehold();
   const children = useMemo(() => members.filter((m) => m.role === "child"), [members]);
-  const [activeChildId, setActiveChildId] = useState<string | null>(
-    () => children[0]?.id ?? null,
-  );
+  const [activeChildId, setActiveChildId] = useState<string | null>(() => children[0]?.id ?? null);
   const activeChild = children.find((c) => c.id === activeChildId) ?? children[0] ?? null;
   const [doneIds, setDoneIds] = useState<Set<string>>(new Set());
   const [approvalIds, setApprovalIds] = useState<Set<string>>(new Set());

@@ -10,7 +10,13 @@ import { householdRepo } from "@/data/householdRepo";
 import { useHousehold } from "@/lib/useHousehold";
 import { MemberCard } from "@/features/household/MemberCard";
 import { AddMemberDialog } from "@/features/household/AddMemberDialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const STEPS = ["welcome", "name", "tz", "owner", "members", "summary"] as const;
 type Step = (typeof STEPS)[number];
@@ -153,9 +159,7 @@ export function OnboardingWizard() {
             </div>
             <div className="space-y-2">
               {members.filter((m) => m.role !== "owner").length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("onboarding.members.empty")}
-                </p>
+                <p className="text-sm text-muted-foreground">{t("onboarding.members.empty")}</p>
               ) : (
                 members
                   .filter((m) => m.role !== "owner")
@@ -179,8 +183,7 @@ export function OnboardingWizard() {
                 {household?.timezone ?? timezone}
               </div>
               <div>
-                <span className="text-muted-foreground">שפה:</span>{" "}
-                {household?.locale ?? locale}
+                <span className="text-muted-foreground">שפה:</span> {household?.locale ?? locale}
               </div>
               <div>
                 <span className="text-muted-foreground">בני בית:</span> {members.length}
@@ -201,9 +204,7 @@ export function OnboardingWizard() {
             </Button>
           ) : null}
           {step === "summary" ? (
-            <Button onClick={() => navigate({ to: "/household" })}>
-              {t("onboarding.finish")}
-            </Button>
+            <Button onClick={() => navigate({ to: "/household" })}>{t("onboarding.finish")}</Button>
           ) : (
             <Button
               onClick={() => {
@@ -213,8 +214,7 @@ export function OnboardingWizard() {
                 next();
               }}
               disabled={
-                (step === "name" && !name.trim()) ||
-                (step === "owner" && !ownerName.trim())
+                (step === "name" && !name.trim()) || (step === "owner" && !ownerName.trim())
               }
             >
               {t("onboarding.next")}

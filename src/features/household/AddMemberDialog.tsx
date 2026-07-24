@@ -60,8 +60,7 @@ export function AddMemberDialog({ kind, trigger }: Props) {
       status: kind === "adult" ? "invited" : kind === "guest" ? "limited" : "active",
       birthDate: kind === "child" && birthDate ? birthDate : undefined,
       pinEnabled: kind === "child" ? pinEnabled : undefined,
-      accessWindow:
-        kind === "guest" && start && end ? { start, end } : undefined,
+      accessWindow: kind === "guest" && start && end ? { start, end } : undefined,
       restrictedToChildIds: kind === "guest" ? restrictedIds : undefined,
     });
     reset();
@@ -163,17 +162,12 @@ export function AddMemberDialog({ kind, trigger }: Props) {
                     {children.map((c) => {
                       const checked = restrictedIds.includes(c.id);
                       return (
-                        <label
-                          key={c.id}
-                          className="flex items-center gap-2 text-sm"
-                        >
+                        <label key={c.id} className="flex items-center gap-2 text-sm">
                           <Checkbox
                             checked={checked}
                             onCheckedChange={(v) =>
                               setRestrictedIds((prev) =>
-                                v === true
-                                  ? [...prev, c.id]
-                                  : prev.filter((id) => id !== c.id),
+                                v === true ? [...prev, c.id] : prev.filter((id) => id !== c.id),
                               )
                             }
                           />

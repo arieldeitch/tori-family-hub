@@ -4,13 +4,7 @@
 // State is process-memory only. No localStorage, no server, no persistence.
 // Subscribers are notified via useSyncExternalStore-compatible API.
 
-import {
-  type Household,
-  type Member,
-  type Role,
-  pickColor,
-  toInitials,
-} from "@/domain/household";
+import { type Household, type Member, type Role, pickColor, toInitials } from "@/domain/household";
 
 interface State {
   household: Household | null;
