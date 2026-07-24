@@ -451,3 +451,21 @@ Mock-only limitations (nothing real is delivered):
 Typecheck נקי · ESLint 0 errors (6 warnings ב־shadcn UI בלבד,
 `react-refresh/only-export-components` — פרימיטיביים שנוצרו ע"י shadcn) ·
 **155/155 tests פוסס** · `bun run build` מצליח (כולל `dist/sw.js`).
+
+## Git readiness & handover docs
+
+- README rewritten (project-focused, replaces Lovable default).
+- New docs:
+  - `docs/LOVABLE_ARCHITECTURE.md` — layering, patterns, server boundary.
+  - `docs/LOVABLE_DECISIONS.md` — 13 ADRs.
+  - `docs/LOVABLE_KNOWN_LIMITATIONS.md`
+  - `docs/LOVABLE_NEXT_STEPS.md` — Supabase → Auth → RLS → repo swap order.
+  - `docs/CLAUDE_HANDOVER.md` — full pickup guide (stack, folders, routes,
+    domain, repos, tests, CI, PWA, security debts, recommended order).
+- `docs/LOVABLE_CURRENT_STATE.md` refreshed with verified facts + verification results.
+- Git readiness verified: `.gitignore` covers build/output/wrangler; `bun.lock`
+  committed; `.env.example` contains no secrets; no `.env` committed; no
+  service_role/tokens/PIN in source, docs, or CI; CI runs install →
+  typecheck → lint → test → build.
+- Verification this pass: typecheck 0 errors · lint 0 errors (6 shadcn
+  warnings) · 155/155 tests · build success.
