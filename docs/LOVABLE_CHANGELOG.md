@@ -72,3 +72,10 @@ Explicitly NOT done: Supabase Auth, invitation emails, PIN authentication, devic
 - Child mode: large text, today only, three actions per task (בוצע / צריך עזרה / רוצה להחליף); `adultsOnly` filtered (UX-only — server must enforce).
 - Tests: `src/domain/today.test.ts` (6 tests). Total 21/21 passing. Typecheck clean, build passes.
 - Known limits: demo actions mutate memory only, no persistence, no server, no RLS.
+
+## Prompt 5 audit — Onboarding / Household / Child (fixes only)
+
+- Extracted child-mode fixtures out of the component: new `src/data/childTasksRepo.ts` (typed repo, `RoleVisibleItem`-compatible). `ChildHome` now consumes via `childTasksRepo.getAll()` — no fixtures imported directly by UI.
+- Fixed onboarding Finish navigation: `/household` → `/today` so the label ("סיום והמשך למסך היום") matches behavior.
+- No other changes: existing types (`Member`, `Household`, `Role`), repo pattern (`householdRepo` via `useSyncExternalStore`), roles/status badges (`MemberCard`), guest access window / restricted children flags, PIN capability flag (no PIN value stored), and the household `permissionsNote` alert all satisfy the audit.
+- Verified: `tsgo` clean, `vitest` 21/21, `eslint` 0 errors, `vite build` passes.
