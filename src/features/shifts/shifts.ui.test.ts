@@ -55,6 +55,7 @@ describe("shifts preview (pure integration)", () => {
       availability: { [day0]: ["a"] },
       from,
       count: 1,
+      lastAssigneeIdBefore: "c",
     });
     expect(p[0]!.result.selectedProfileId).toBe("b");
     expect(p[0]!.result.reasonCode).toBe("PRIMARY_UNAVAILABLE");

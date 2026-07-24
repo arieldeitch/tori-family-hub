@@ -145,9 +145,7 @@ export function RuleFormScreen({ rule, members }: Props) {
   return (
     <div className="space-y-4">
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">
-          {isEdit ? "עריכת כלל תורנות" : "כלל תורנות חדש"}
-        </h1>
+        <h1 className="text-2xl font-semibold">{isEdit ? "עריכת כלל תורנות" : "כלל תורנות חדש"}</h1>
         <p className="text-sm text-muted-foreground">
           הגדרות שנשמרות כאן הן דמו בלבד ואינן נשמרות בין רענונים.
         </p>
@@ -186,12 +184,8 @@ export function RuleFormScreen({ rule, members }: Props) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fixed_sequence">
-                    {STRATEGY_LABEL.fixed_sequence}
-                  </SelectItem>
-                  <SelectItem value="weekday_fixed">
-                    {STRATEGY_LABEL.weekday_fixed}
-                  </SelectItem>
+                  <SelectItem value="fixed_sequence">{STRATEGY_LABEL.fixed_sequence}</SelectItem>
+                  <SelectItem value="weekday_fixed">{STRATEGY_LABEL.weekday_fixed}</SelectItem>
                   <SelectItem value="manual">{STRATEGY_LABEL.manual}</SelectItem>
                 </SelectContent>
               </Select>
@@ -310,10 +304,7 @@ export function RuleFormScreen({ rule, members }: Props) {
           <CardTitle className="text-base">זמינות בסיסית</CardTitle>
         </CardHeader>
         <CardContent>
-          <AvailabilityEditor
-            participantMemberIds={form.participantMemberIds}
-            members={members}
-          />
+          <AvailabilityEditor participantMemberIds={form.participantMemberIds} members={members} />
         </CardContent>
       </Card>
 

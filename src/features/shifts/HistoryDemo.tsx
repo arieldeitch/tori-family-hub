@@ -15,8 +15,7 @@ export function HistoryDemo({ ruleId, members }: Props) {
     () => [...rows].sort((a, b) => (a.occurrenceIso < b.occurrenceIso ? 1 : -1)),
     [rows],
   );
-  const nameOf = (id: string | null) =>
-    id ? members.find((m) => m.id === id)?.name ?? id : "—";
+  const nameOf = (id: string | null) => (id ? (members.find((m) => m.id === id)?.name ?? id) : "—");
 
   if (sorted.length === 0) {
     return (

@@ -2,12 +2,7 @@
 // deterministic list of upcoming assignments by calling the engine once per
 // occurrence. Purely delegates — no selection logic here.
 
-import {
-  selectAssignee,
-  type EngineInput,
-  type EngineResult,
-  type Weekday,
-} from "@/domain/shifts";
+import { selectAssignee, type EngineInput, type EngineResult, type Weekday } from "@/domain/shifts";
 import type { ShiftRule, AvailabilityMap } from "@/data/shiftsRepo";
 
 export interface PreviewEntry {

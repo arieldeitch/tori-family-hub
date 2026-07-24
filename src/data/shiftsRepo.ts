@@ -2,12 +2,7 @@
 // no persistence across refresh, no server, no RLS. All engine calls happen
 // in application-layer helpers (features/shifts/*), never inside repo.
 
-import type {
-  FallbackStrategy,
-  ReasonCode,
-  ShiftStrategy,
-  Weekday,
-} from "@/domain/shifts";
+import type { FallbackStrategy, ReasonCode, ShiftStrategy, Weekday } from "@/domain/shifts";
 
 export interface ShiftRule {
   id: string;
@@ -90,9 +85,7 @@ export function toggleUnavailable(dateIso: string, memberId: string): void {
   emit();
 }
 
-export function createRule(
-  input: Omit<ShiftRule, "id" | "createdAt" | "updatedAt">,
-): ShiftRule {
+export function createRule(input: Omit<ShiftRule, "id" | "createdAt" | "updatedAt">): ShiftRule {
   if (!input.name.trim()) throw new Error("שם התורנות חובה");
   const at = nowIso();
   const rule: ShiftRule = {
@@ -133,9 +126,7 @@ export function deleteRule(id: string): void {
  * flagged `demo: true`. Manual UI overrides append here; they do NOT rewrite
  * earlier rows.
  */
-export function recordHistory(
-  entry: Omit<HistoryEntry, "id" | "demo">,
-): HistoryEntry {
+export function recordHistory(entry: Omit<HistoryEntry, "id" | "demo">): HistoryEntry {
   const row: HistoryEntry = { ...entry, id: uid("hst"), demo: true };
   state = { ...state, history: [...state.history, row] };
   emit();

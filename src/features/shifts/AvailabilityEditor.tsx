@@ -22,9 +22,7 @@ export function AvailabilityEditor({ participantMemberIds, members }: Props) {
   const unavailable = availability[date] ?? [];
 
   if (activeMembers.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground">בחרו משתתפים כדי לסמן חוסר זמינות.</p>
-    );
+    return <p className="text-xs text-muted-foreground">בחרו משתתפים כדי לסמן חוסר זמינות.</p>;
   }
 
   return (
@@ -55,9 +53,7 @@ export function AvailabilityEditor({ participantMemberIds, members }: Props) {
                   aria-label={`${m.name} לא זמין ב־${formatDate(date)}`}
                 />
                 <span className="min-w-0 truncate">{m.name}</span>
-                {off && (
-                  <span className="mr-auto text-xs text-muted-foreground">לא זמין</span>
-                )}
+                {off && <span className="mr-auto text-xs text-muted-foreground">לא זמין</span>}
               </label>
             </li>
           );

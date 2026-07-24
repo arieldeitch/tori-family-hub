@@ -36,10 +36,7 @@ export function WeekdayFixedEditor({
   return (
     <div className="space-y-2">
       {DAYS.map((d) => (
-        <div
-          key={d}
-          className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] items-center gap-2"
-        >
+        <div key={d} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)] items-center gap-2">
           <label className="text-sm text-muted-foreground" htmlFor={`wd-${d}`}>
             {WEEKDAY_LABEL[d]}
           </label>
