@@ -81,6 +81,8 @@ export function update(
   if (idx === -1) return undefined;
   const current = cases[idx]!;
   const merged: FollowUpCase = { ...current, ...patch };
+  const errs = validateFollowUp(merged);
+  if (errs.length > 0) throw new FollowUpValidationFailedError(errs);
   const now = new Date().toISOString();
   const final = clearFutureRemindersIfTerminal(merged, now);
   cases = [...cases.slice(0, idx), final, ...cases.slice(idx + 1)];
