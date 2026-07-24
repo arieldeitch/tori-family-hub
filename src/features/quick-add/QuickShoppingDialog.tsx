@@ -1,8 +1,9 @@
 // Minimal shopping-item form used from Quick Add. Requires a list; if the
 // household has none, offers the built-in "Home" list as fallback.
 // Retains input on failure. Success only after the service returns.
-import { useMemo, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useNavigate } from "@tanstack/react-router";
+
 import {
   Dialog,
   DialogContent,
