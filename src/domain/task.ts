@@ -94,6 +94,11 @@ export interface TaskInstance {
   updatedAt: string; // ISO
   /** Append-only history — see `appendActivity`. Never mutate in place. */
   activity: ReadonlyArray<TaskActivity>;
+  /** For template-generated instances: canonical scheduled instant. */
+  scheduledAt?: string;
+  // -- Soft delete markers.
+  deletedAt?: string;
+  deletedByMemberId?: string;
 }
 
 /** Immutable copy of the template fields at instance creation time. */
