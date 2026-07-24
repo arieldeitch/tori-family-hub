@@ -121,3 +121,42 @@ Rules enforced: `done` unreachable from `planned`/`assigned`/`inbox`; `done` req
 - tsgo typecheck: clean
 - eslint: 0 errors (6 pre-existing shadcn warnings)
 - build: OK
+
+## Tasks — UI & application flow (one-off tasks)
+
+Built on top of the domain from prompt 6.1. No templates, no recurrence, no persistence.
+
+### Files
+- `src/data/tasksRepo.ts` — in-memory repo: `createManualTask`, `updateManualTask`, `assignTask`, `transition` (delegates to domain `transitionTask`), `setSimulateFailure`, subscribe/getAll/getById/clear/reset
+- `src/lib/useTasks.ts` — `useTasks()`, `useTask(id)` hooks (useSyncExternalStore)
+- `src/features/tasks/labels.ts` — status/priority labels + formatters
+- `src/features/tasks/TaskCard.tsx` — list item card
+- `src/features/tasks/TaskListScreen.tsx` — list + filters (status, assignee, date) + tabs (all / unassigned) + view-state picker (loading/empty/error/permission_denied) + simulateFailure toggle
+- `src/features/tasks/TaskDetailsScreen.tsx` — details, assignment change, activity history
+- `src/features/tasks/QuickTaskForm.tsx` — create dialog (title required; assignee, due, priority, note; "more options" reveals adultsOnly)
+- `src/features/tasks/EditTaskDialog.tsx` — field edit (no status)
+- `src/features/tasks/AssignmentPicker.tsx` — reusable assignee select
+- `src/features/tasks/StatusAction.tsx` — renders only domain-allowed next statuses; cancel/skip require reason; done stamps completedAt+completedBy; TaskDomainError messages surfaced as-is
+- `src/features/tasks/UnassignedScreen.tsx` — "requires assignment" view
+- Routes: `src/routes/tasks.tsx` (layout, renders `<Outlet/>`), `tasks.index.tsx` (list), `tasks.$taskId.tsx` (details), `tasks.unassigned.tsx`
+
+### Creation rules (enforced in `createManualTask`)
+- no assignee AND no dueAt → `inbox`
+- dueAt only → `planned` (surfaces in "requires assignment")
+- assignee AND dueAt → `assigned`
+- assignee only (no dueAt) → `inbox` (needs due to leave)
+
+### Guarantees
+- No component sets `status` directly — every status change goes through `tasksRepo.transition` → `transitionTask` (domain)
+- Success toasts fire only after repo update succeeds
+- On save failure, the form input is retained (React state untouched); toast surfaces the error
+- Child viewer filter hides `adultsOnly` tasks (UX filter only; real enforcement is server-side, out of scope)
+- No `localStorage`; state resets on refresh (documented behaviour)
+
+### Tests
+- `src/features/tasks/tasks.application.test.ts` — 8 tests: title-only create, assignee+due create, planned without assignee, invalid transition surfaces `TaskDomainError` and leaves state unchanged, simulateFailure preserves draft, child role filter
+- Domain tests unchanged (see prompt 6.1)
+- Totals: **vitest 45/45**, tsgo clean, eslint 0 errors (6 pre-existing shadcn warnings), build OK
+
+### Not built (per prompt)
+- Templates, recurrence worker, rotation, soft delete, Supabase, notifications

@@ -22,7 +22,10 @@ import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ChildRouteImport } from './routes/child'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TasksIndexRouteImport } from './routes/tasks.index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
+import { Route as TasksUnassignedRouteImport } from './routes/tasks.unassigned'
+import { Route as TasksTaskIdRouteImport } from './routes/tasks.$taskId'
 import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
 
 const TransportRoute = TransportRouteImport.update({
@@ -90,10 +93,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TasksIndexRoute = TasksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TasksRoute,
+} as any)
 const FollowUpsIndexRoute = FollowUpsIndexRouteImport.update({
   id: '/follow-ups/',
   path: '/follow-ups/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TasksUnassignedRoute = TasksUnassignedRouteImport.update({
+  id: '/unassigned',
+  path: '/unassigned',
+  getParentRoute: () => TasksRoute,
+} as any)
+const TasksTaskIdRoute = TasksTaskIdRouteImport.update({
+  id: '/$taskId',
+  path: '/$taskId',
+  getParentRoute: () => TasksRoute,
 } as any)
 const FollowUpsCaseIdRoute = FollowUpsCaseIdRouteImport.update({
   id: '/follow-ups/$caseId',
@@ -112,11 +130,14 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
   '/shopping': typeof ShoppingRoute
-  '/tasks': typeof TasksRoute
+  '/tasks': typeof TasksRouteWithChildren
   '/today': typeof TodayRoute
   '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/tasks/$taskId': typeof TasksTaskIdRoute
+  '/tasks/unassigned': typeof TasksUnassignedRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
+  '/tasks/': typeof TasksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -129,11 +150,13 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
   '/shopping': typeof ShoppingRoute
-  '/tasks': typeof TasksRoute
   '/today': typeof TodayRoute
   '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/tasks/$taskId': typeof TasksTaskIdRoute
+  '/tasks/unassigned': typeof TasksUnassignedRoute
   '/follow-ups': typeof FollowUpsIndexRoute
+  '/tasks': typeof TasksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -147,11 +170,14 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRoute
   '/shopping': typeof ShoppingRoute
-  '/tasks': typeof TasksRoute
+  '/tasks': typeof TasksRouteWithChildren
   '/today': typeof TodayRoute
   '/transport': typeof TransportRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/tasks/$taskId': typeof TasksTaskIdRoute
+  '/tasks/unassigned': typeof TasksUnassignedRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
+  '/tasks/': typeof TasksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -170,7 +196,10 @@ export interface FileRouteTypes {
     | '/today'
     | '/transport'
     | '/follow-ups/$caseId'
+    | '/tasks/$taskId'
+    | '/tasks/unassigned'
     | '/follow-ups/'
+    | '/tasks/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,11 +212,13 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/settings'
     | '/shopping'
-    | '/tasks'
     | '/today'
     | '/transport'
     | '/follow-ups/$caseId'
+    | '/tasks/$taskId'
+    | '/tasks/unassigned'
     | '/follow-ups'
+    | '/tasks'
   id:
     | '__root__'
     | '/'
@@ -204,7 +235,10 @@ export interface FileRouteTypes {
     | '/today'
     | '/transport'
     | '/follow-ups/$caseId'
+    | '/tasks/$taskId'
+    | '/tasks/unassigned'
     | '/follow-ups/'
+    | '/tasks/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -218,7 +252,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   SettingsRoute: typeof SettingsRoute
   ShoppingRoute: typeof ShoppingRoute
-  TasksRoute: typeof TasksRoute
+  TasksRoute: typeof TasksRouteWithChildren
   TodayRoute: typeof TodayRoute
   TransportRoute: typeof TransportRoute
   FollowUpsCaseIdRoute: typeof FollowUpsCaseIdRoute
@@ -318,12 +352,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tasks/': {
+      id: '/tasks/'
+      path: '/'
+      fullPath: '/tasks/'
+      preLoaderRoute: typeof TasksIndexRouteImport
+      parentRoute: typeof TasksRoute
+    }
     '/follow-ups/': {
       id: '/follow-ups/'
       path: '/follow-ups'
       fullPath: '/follow-ups/'
       preLoaderRoute: typeof FollowUpsIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/tasks/unassigned': {
+      id: '/tasks/unassigned'
+      path: '/unassigned'
+      fullPath: '/tasks/unassigned'
+      preLoaderRoute: typeof TasksUnassignedRouteImport
+      parentRoute: typeof TasksRoute
+    }
+    '/tasks/$taskId': {
+      id: '/tasks/$taskId'
+      path: '/$taskId'
+      fullPath: '/tasks/$taskId'
+      preLoaderRoute: typeof TasksTaskIdRouteImport
+      parentRoute: typeof TasksRoute
     }
     '/follow-ups/$caseId': {
       id: '/follow-ups/$caseId'
@@ -334,6 +389,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface TasksRouteChildren {
+  TasksTaskIdRoute: typeof TasksTaskIdRoute
+  TasksUnassignedRoute: typeof TasksUnassignedRoute
+  TasksIndexRoute: typeof TasksIndexRoute
+}
+
+const TasksRouteChildren: TasksRouteChildren = {
+  TasksTaskIdRoute: TasksTaskIdRoute,
+  TasksUnassignedRoute: TasksUnassignedRoute,
+  TasksIndexRoute: TasksIndexRoute,
+}
+
+const TasksRouteWithChildren = TasksRoute._addFileChildren(TasksRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -346,7 +415,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   SettingsRoute: SettingsRoute,
   ShoppingRoute: ShoppingRoute,
-  TasksRoute: TasksRoute,
+  TasksRoute: TasksRouteWithChildren,
   TodayRoute: TodayRoute,
   TransportRoute: TransportRoute,
   FollowUpsCaseIdRoute: FollowUpsCaseIdRoute,
