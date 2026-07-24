@@ -244,11 +244,91 @@ export function subscribe(listener: Listener): () => void {
 }
 
 export function getAll(): ReadonlyArray<TaskInstance> {
+  return state.tasks.filter((t) => !isSoftDeleted(t));
+}
+
+export function getAllIncludingDeleted(): ReadonlyArray<TaskInstance> {
   return state.tasks;
+}
+
+export function getDeleted(): ReadonlyArray<TaskInstance> {
+  return state.tasks.filter((t) => isSoftDeleted(t));
 }
 
 export function getById(id: string): TaskInstance | undefined {
   return state.tasks.find((t) => t.id === id);
+}
+
+// -------- Soft delete / restore (prompt 6.3) --------
+
+export function softDeleteTask(id: string, actorMemberId: string): TaskInstance {
+  if (state.simulateFailure) throw new Error("שמירה נכשלה (מצב סימולציה)");
+  const idx = state.tasks.findIndex((t) => t.id === id);
+  if (idx === -1) throw new Error("משימה לא נמצאה");
+  const cur = state.tasks[idx]!;
+  if (isSoftDeleted(cur)) return cur;
+  const next: TaskInstance = { ...cur, deletedAt: nowIso(), deletedByMemberId: actorMemberId };
+  state = {
+    ...state,
+    tasks: [...state.tasks.slice(0, idx), next, ...state.tasks.slice(idx + 1)],
+  };
+  emit();
+  return next;
+}
+
+export function restoreTask(id: string): TaskInstance {
+  const idx = state.tasks.findIndex((t) => t.id === id);
+  if (idx === -1) throw new Error("משימה לא נמצאה");
+  const cur = state.tasks[idx]!;
+  const { deletedAt: _a, deletedByMemberId: _b, ...rest } = cur;
+  void _a;
+  void _b;
+  const next = rest as TaskInstance;
+  state = {
+    ...state,
+    tasks: [...state.tasks.slice(0, idx), next, ...state.tasks.slice(idx + 1)],
+  };
+  emit();
+  return next;
+}
+
+// -------- Template materialisation (prompt 6.3) --------
+
+/**
+ * Materialise one occurrence of a template at `scheduledAtIso`. Idempotent:
+ * a duplicate templateId+time returns the existing instance instead of
+ * creating a second row. Snapshot freezes template state (title/description
+ * etc.) so future template edits leave history untouched.
+ */
+export function materializeOccurrence(
+  template: TaskTemplate,
+  scheduledAtIso: string,
+  createdByMemberId: string,
+): TaskInstance {
+  if (state.simulateFailure) throw new Error("שמירה נכשלה (מצב סימולציה)");
+  const key = occurrenceKey(template.id, scheduledAtIso);
+  const existing = state.tasks.find(
+    (t) =>
+      t.templateId === template.id &&
+      (t.scheduledAt === scheduledAtIso || t.dueAt === scheduledAtIso),
+  );
+  if (existing) return existing;
+  const created = nowIso();
+  const instance = createTaskInstanceSnapshot(template, {
+    id: `ti_${key}`.replace(/[^\w@.-]/g, "_"),
+    createdAt: created,
+    createdByMemberId,
+    dueAt: scheduledAtIso,
+    source: "recurring",
+  });
+  const withScheduled: TaskInstance = { ...instance, scheduledAt: scheduledAtIso };
+  state = { ...state, tasks: [withScheduled, ...state.tasks] };
+  emit();
+  return withScheduled;
+}
+
+export function getInstancesForTemplate(templateId: string): ReadonlyArray<TaskInstance> {
+  return state.tasks.filter((t) => t.templateId === templateId && !isSoftDeleted(t));
 }
 
 export function getSimulateFailure(): boolean {
