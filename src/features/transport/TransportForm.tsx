@@ -81,7 +81,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <FormField label="ילד/ה" htmlFor="tf-child">
+      <FormField label="ילד/ה" id="tf-child">
         <select
           id="tf-child"
           className="h-11 w-full rounded-md border border-border bg-background px-3 text-sm"
@@ -94,7 +94,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         </select>
       </FormField>
 
-      <FormField label="סוג" htmlFor="tf-direction">
+      <FormField label="סוג" id="tf-direction">
         <div id="tf-direction" className="grid grid-cols-2 gap-2">
           {(["pickup", "dropoff"] as const).map((d) => (
             <Button
@@ -110,7 +110,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         </div>
       </FormField>
 
-      <FormField label="זמן" htmlFor="tf-time">
+      <FormField label="זמן" id="tf-time">
         <input
           id="tf-time"
           type="datetime-local"
@@ -121,7 +121,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         />
       </FormField>
 
-      <FormField label="יציאה מומלצת (אופציונלי)" htmlFor="tf-dep">
+      <FormField label="יציאה מומלצת (אופציונלי)" id="tf-dep">
         <input
           id="tf-dep"
           type="datetime-local"
@@ -131,7 +131,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         />
       </FormField>
 
-      <FormField label="יעד אישור (אופציונלי)" htmlFor="tf-dl">
+      <FormField label="יעד אישור (אופציונלי)" id="tf-dl">
         <input
           id="tf-dl"
           type="datetime-local"
@@ -142,7 +142,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
       </FormField>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <FormField label="מקור" htmlFor="tf-origin">
+        <FormField label="מקור" id="tf-origin">
           <input
             id="tf-origin"
             type="text"
@@ -152,7 +152,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
             required
           />
         </FormField>
-        <FormField label="יעד" htmlFor="tf-dest">
+        <FormField label="יעד" id="tf-dest">
           <input
             id="tf-dest"
             type="text"
@@ -164,7 +164,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         </FormField>
       </div>
 
-      <FormField label="אחראי (אופציונלי)" htmlFor="tf-assignee">
+      <FormField label="אחראי (אופציונלי)" id="tf-assignee">
         <select
           id="tf-assignee"
           className="h-11 w-full rounded-md border border-border bg-background px-3 text-sm"
@@ -178,7 +178,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         </select>
       </FormField>
 
-      <FormField label="גיבוי (placeholder — לא מנוע גיבוי אמיתי)" htmlFor="tf-backup">
+      <FormField label="גיבוי (placeholder — לא מנוע גיבוי אמיתי)" id="tf-backup">
         <input
           id="tf-backup"
           type="text"
@@ -189,7 +189,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         />
       </FormField>
 
-      <FormField label="ציוד (אופציונלי)" htmlFor="tf-eq">
+      <FormField label="ציוד (אופציונלי)" id="tf-eq">
         <input
           id="tf-eq"
           type="text"
@@ -199,7 +199,7 @@ export function TransportForm({ mode, ride, onDone }: Props) {
         />
       </FormField>
 
-      <FormField label="הערות (אופציונלי)" htmlFor="tf-notes">
+      <FormField label="הערות (אופציונלי)" id="tf-notes">
         <textarea
           id="tf-notes"
           className="min-h-20 w-full rounded-md border border-border bg-background p-2 text-sm"

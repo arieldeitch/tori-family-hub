@@ -228,6 +228,7 @@ export function TransportDetailScreen({ ride }: Props) {
           </div>
         }
         confirmLabel="העבר"
+        cancelLabel="ביטול"
         onConfirm={() => {
           try {
             transportRepo.transition(ride.id, "transferred", {
@@ -258,7 +259,8 @@ export function TransportDetailScreen({ ride }: Props) {
           </div>
         }
         confirmLabel="בטל הסעה"
-        destructive
+        cancelLabel="חזרה"
+        tone="destructive"
         onConfirm={() => {
           try {
             transportRepo.transition(ride.id, "cancelled", {
