@@ -103,8 +103,9 @@ describe("todayService — integration with canonical repos", () => {
         requestedByMemberId: DEMO_VIEWER_ID,
         urgency: "high",
       },
-      "owner",
+      { role: "owner" },
     );
+
     const after = buildTodayDataset().shopping;
     expect(after?.itemsCount).toBe(beforeCount + 1);
     expect((after?.urgentCount ?? 0)).toBeGreaterThan(0);
