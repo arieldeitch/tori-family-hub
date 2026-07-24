@@ -211,10 +211,16 @@ export function TodayScreen() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                  {next.kind === "event" ? "אירוע" : next.direction === "pickup" ? "איסוף" : "הורדה"}
+                  {next.kind === "event"
+                    ? "אירוע"
+                    : next.direction === "pickup"
+                      ? "איסוף"
+                      : "הורדה"}
                 </p>
                 <h3 className="mt-1 text-base font-semibold text-foreground">
-                  {next.kind === "event" ? next.title : (memberById(dataset, next.childId)?.name ?? "")}
+                  {next.kind === "event"
+                    ? next.title
+                    : (memberById(dataset, next.childId)?.name ?? "")}
                 </h3>
                 {next.kind === "transport" ? (
                   <p className="text-sm text-muted-foreground">{next.place}</p>
@@ -309,10 +315,7 @@ export function TodayScreen() {
             {followUps.map((f) => {
               const owner = memberById(dataset, f.responsibleId);
               return (
-                <article
-                  key={f.id}
-                  className="rounded-lg border border-border bg-surface p-4"
-                >
+                <article key={f.id} className="rounded-lg border border-border bg-surface p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-base font-semibold text-foreground">{f.title}</h3>

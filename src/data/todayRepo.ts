@@ -23,11 +23,29 @@ export type TodayViewState =
   | "child";
 
 const M = {
-  owner: { id: "m_owner", name: "דנה לוי", role: "owner" as Role, color: "#7BA7C7", initials: "דל" },
-  adult: { id: "m_adult", name: "יואב לוי", role: "adult" as Role, color: "#C79A7B", initials: "יל" },
+  owner: {
+    id: "m_owner",
+    name: "דנה לוי",
+    role: "owner" as Role,
+    color: "#7BA7C7",
+    initials: "דל",
+  },
+  adult: {
+    id: "m_adult",
+    name: "יואב לוי",
+    role: "adult" as Role,
+    color: "#C79A7B",
+    initials: "יל",
+  },
   child1: { id: "m_child1", name: "נועה", role: "child" as Role, color: "#8CB48C", initials: "נו" },
   child2: { id: "m_child2", name: "איתי", role: "child" as Role, color: "#C77B9E", initials: "אי" },
-  guest: { id: "m_guest", name: "מירי (מטפלת)", role: "guest" as Role, color: "#B49B7B", initials: "מי" },
+  guest: {
+    id: "m_guest",
+    name: "מירי (מטפלת)",
+    role: "guest" as Role,
+    color: "#B49B7B",
+    initials: "מי",
+  },
 } satisfies Record<string, TodayMember>;
 
 function todayAt(h: number, min = 0): string {
