@@ -16,6 +16,7 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as ShoppingRouteImport } from './routes/shopping'
 import { Route as ShiftsRouteImport } from './routes/shifts'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MoreRouteImport } from './routes/more'
@@ -82,6 +83,11 @@ const ShiftsRoute = ShiftsRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -256,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/shifts': typeof ShiftsRouteWithChildren
   '/shopping': typeof ShoppingRouteWithChildren
@@ -295,6 +302,7 @@ export interface FileRoutesByTo {
   '/household': typeof HouseholdRoute
   '/more': typeof MoreRoute
   '/onboarding': typeof OnboardingRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/today': typeof TodayRoute
   '/errands/$errandId': typeof ErrandsErrandIdRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/shifts': typeof ShiftsRouteWithChildren
   '/shopping': typeof ShoppingRouteWithChildren
@@ -375,6 +384,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/notifications'
     | '/onboarding'
+    | '/search'
     | '/settings'
     | '/shifts'
     | '/shopping'
@@ -414,6 +424,7 @@ export interface FileRouteTypes {
     | '/household'
     | '/more'
     | '/onboarding'
+    | '/search'
     | '/settings'
     | '/today'
     | '/errands/$errandId'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/notifications'
     | '/onboarding'
+    | '/search'
     | '/settings'
     | '/shifts'
     | '/shopping'
@@ -492,6 +504,7 @@ export interface RootRouteChildren {
   MoreRoute: typeof MoreRoute
   NotificationsRoute: typeof NotificationsRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
+  SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   ShiftsRoute: typeof ShiftsRouteWithChildren
   ShoppingRoute: typeof ShoppingRouteWithChildren
@@ -552,6 +565,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -909,6 +929,7 @@ const rootRouteChildren: RootRouteChildren = {
   MoreRoute: MoreRoute,
   NotificationsRoute: NotificationsRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
+  SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   ShiftsRoute: ShiftsRouteWithChildren,
   ShoppingRoute: ShoppingRouteWithChildren,

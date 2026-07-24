@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, Plus } from "lucide-react";
+import { Bell, Plus, Search } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { IconButton } from "@/components/design-system/IconButton";
 import { PersonAvatar } from "@/components/design-system/PersonAvatar";
@@ -37,6 +37,13 @@ export function AppHeader({ title, householdName, onQuickAdd }: AppHeaderProps) 
           onClick={onQuickAdd}
           className="sm:hidden"
         />
+        <Link
+          to="/search"
+          aria-label="חיפוש"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Search className="h-5 w-5" aria-hidden="true" />
+        </Link>
         <Link
           to="/notifications"
           aria-label={t("nav.notificationsLabel")}
