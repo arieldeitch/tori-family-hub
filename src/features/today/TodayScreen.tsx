@@ -36,7 +36,6 @@ const VIEW_OPTIONS: Array<{ value: TodayViewState; label: string }> = [
   { value: "child", label: "תצוגת ילד" },
 ];
 
-
 export function TodayScreen() {
   const { view, dataset } = useToday();
 

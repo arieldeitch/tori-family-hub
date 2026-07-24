@@ -58,7 +58,9 @@ export function toTaskItem(task: TaskInstance, viewerId: string, nowIso: string)
       status = "open";
   }
   const isOverdue =
-    status !== "done" && !!task.dueAt && new Date(task.dueAt).getTime() < new Date(nowIso).getTime();
+    status !== "done" &&
+    !!task.dueAt &&
+    new Date(task.dueAt).getTime() < new Date(nowIso).getTime();
   if (isOverdue) status = "overdue";
   return {
     id: task.id,
@@ -194,10 +196,7 @@ export function completeTaskAction(taskId: string, actorMemberId: string): void 
     completedAt: at,
     completedByMemberId: actorMemberId,
   });
-
 }
-
-
 
 export function claimTaskAction(taskId: string, memberId: string): void {
   tasksRepo.assignTask(taskId, { memberId, actorMemberId: memberId });

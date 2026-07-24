@@ -5,7 +5,6 @@ import { completeTaskAction } from "@/application/todayService";
 import { Button } from "@/components/ui/button";
 import { formatTime } from "./format";
 
-
 interface Props {
   dataset: TodayDataset;
 }
@@ -75,7 +74,6 @@ export function ChildTodayScreen({ dataset }: Props) {
                       completeTaskAction(task.id, dataset.viewerId);
                       toast.success("סימנו שבוצע!");
                     }}
-
                   >
                     בוצע
                   </Button>
