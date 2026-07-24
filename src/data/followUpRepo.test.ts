@@ -15,9 +15,9 @@ beforeEach(() => repo.resetToSeed());
 describe("followUpRepo application-layer enforcement", () => {
   it("throws when creating a waiting_external case with no next follow-up and no opt-out reason", () => {
     const before = repo.getAll().length;
-    expect(() =>
-      repo.create({ ...base, status: "waiting_external" }),
-    ).toThrow(FollowUpValidationFailedError);
+    expect(() => repo.create({ ...base, status: "waiting_external" })).toThrow(
+      FollowUpValidationFailedError,
+    );
     // Failed save must not mutate state — the user's input is preserved
     // in the caller (form) because no state changed here.
     expect(repo.getAll().length).toBe(before);
@@ -38,9 +38,9 @@ describe("followUpRepo application-layer enforcement", () => {
       ...base,
       status: "action_required",
     });
-    expect(() =>
-      repo.update(c.id, { status: "waiting_external" }),
-    ).toThrow(FollowUpValidationFailedError);
+    expect(() => repo.update(c.id, { status: "waiting_external" })).toThrow(
+      FollowUpValidationFailedError,
+    );
     // Original state is preserved on failed save.
     expect(repo.getById(c.id)?.status).toBe("action_required");
   });
