@@ -291,9 +291,7 @@ function seed(): TaskInstance[] {
       createdAt: now,
       createdByMemberId: "m_owner",
       updatedAt: now,
-      activity: [
-        { id: "act_s1", kind: "created", at: now, byMemberId: "m_owner", to: "assigned" },
-      ],
+      activity: [{ id: "act_s1", kind: "created", at: now, byMemberId: "m_owner", to: "assigned" }],
     },
     {
       id: "ti_demo_2",
@@ -306,9 +304,7 @@ function seed(): TaskInstance[] {
       createdAt: now,
       createdByMemberId: "m_owner",
       updatedAt: now,
-      activity: [
-        { id: "act_s2", kind: "created", at: now, byMemberId: "m_owner", to: "planned" },
-      ],
+      activity: [{ id: "act_s2", kind: "created", at: now, byMemberId: "m_owner", to: "planned" }],
     },
     {
       id: "ti_demo_3",
@@ -321,9 +317,7 @@ function seed(): TaskInstance[] {
       createdAt: now,
       createdByMemberId: "m_owner",
       updatedAt: now,
-      activity: [
-        { id: "act_s3", kind: "created", at: now, byMemberId: "m_owner", to: "inbox" },
-      ],
+      activity: [{ id: "act_s3", kind: "created", at: now, byMemberId: "m_owner", to: "inbox" }],
     },
     {
       id: "ti_demo_4",
@@ -369,9 +363,7 @@ function seed(): TaskInstance[] {
       createdAt: now,
       createdByMemberId: "m_owner",
       updatedAt: now,
-      activity: [
-        { id: "act_s5", kind: "created", at: now, byMemberId: "m_owner", to: "assigned" },
-      ],
+      activity: [{ id: "act_s5", kind: "created", at: now, byMemberId: "m_owner", to: "assigned" }],
     },
   ];
 }

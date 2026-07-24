@@ -79,7 +79,12 @@ export function EditTaskDialog({ open, onOpenChange, task }: Props) {
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="edit-title">כותרת *</Label>
-            <Input id="edit-title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <Input
+              id="edit-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

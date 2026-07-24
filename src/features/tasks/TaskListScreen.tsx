@@ -102,7 +102,10 @@ export function TaskListScreen({ members, currentActorId, viewerRole = "adult" }
       </Tabs>
 
       <div className="grid gap-2 sm:grid-cols-3">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}>
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}
+        >
           <SelectTrigger>
             <SelectValue placeholder="סטטוס" />
           </SelectTrigger>
@@ -172,9 +175,7 @@ function TaskListBody({
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" aria-hidden />
-        <AlertDescription>
-          לא הצלחנו לטעון משימות כרגע. נסו שוב בעוד רגע.
-        </AlertDescription>
+        <AlertDescription>לא הצלחנו לטעון משימות כרגע. נסו שוב בעוד רגע.</AlertDescription>
       </Alert>
     );
   }
@@ -182,9 +183,7 @@ function TaskListBody({
     return (
       <Alert>
         <ShieldAlert className="h-4 w-4" aria-hidden />
-        <AlertDescription>
-          אין לך הרשאה לצפייה במשימות אלו.
-        </AlertDescription>
+        <AlertDescription>אין לך הרשאה לצפייה במשימות אלו.</AlertDescription>
       </Alert>
     );
   }
@@ -208,7 +207,13 @@ function TaskListBody({
   );
 }
 
-function ViewStatePicker({ view, onChange }: { view: ViewState; onChange: (v: ViewState) => void }) {
+function ViewStatePicker({
+  view,
+  onChange,
+}: {
+  view: ViewState;
+  onChange: (v: ViewState) => void;
+}) {
   return (
     <div className="rounded-md border bg-muted/30 p-2 text-xs flex flex-wrap items-center gap-2">
       <WifiOff className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />

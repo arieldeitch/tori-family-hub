@@ -17,7 +17,12 @@ export function UnassignedScreen({ members, viewerRole = "adult" }: Props) {
     () =>
       tasks.filter((t) => {
         if (viewerRole === "child" && t.adultsOnly) return false;
-        return requiresAssignment(t) && t.status !== "done" && t.status !== "cancelled" && t.status !== "skipped";
+        return (
+          requiresAssignment(t) &&
+          t.status !== "done" &&
+          t.status !== "cancelled" &&
+          t.status !== "skipped"
+        );
       }),
     [tasks, viewerRole],
   );

@@ -3,12 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, User, AlertTriangle } from "lucide-react";
 import { isTaskOverdue, type TaskInstance } from "@/domain/task";
-import {
-  STATUS_LABEL,
-  PRIORITY_LABEL,
-  formatDate,
-  resolveMemberName,
-} from "./labels";
+import { STATUS_LABEL, PRIORITY_LABEL, formatDate, resolveMemberName } from "./labels";
 
 interface Props {
   task: TaskInstance;
@@ -30,9 +25,7 @@ export function TaskCard({ task, members }: Props) {
             <Badge variant="outline">{STATUS_LABEL[task.status]}</Badge>
           </div>
           {task.description && (
-            <div className="text-sm text-muted-foreground line-clamp-2">
-              {task.description}
-            </div>
+            <div className="text-sm text-muted-foreground line-clamp-2">{task.description}</div>
           )}
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground pt-1">
             <span className="inline-flex items-center gap-1">

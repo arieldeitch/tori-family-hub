@@ -32,9 +32,7 @@ function TaskDetailsRoute() {
         <Card>
           <CardContent className="py-10 text-center space-y-3">
             <div className="text-lg font-medium">המשימה לא נמצאה</div>
-            <div className="text-sm text-muted-foreground">
-              ייתכן שהיא נמחקה או שה־ID שגוי.
-            </div>
+            <div className="text-sm text-muted-foreground">ייתכן שהיא נמחקה או שה־ID שגוי.</div>
             <Link to="/tasks">
               <Button variant="outline">חזרה למשימות</Button>
             </Link>

@@ -148,11 +148,7 @@ export function TaskDetailsScreen({ task, members, currentActorId }: Props) {
         </CardContent>
       </Card>
 
-      <EditTaskDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        task={task}
-      />
+      <EditTaskDialog open={editOpen} onOpenChange={setEditOpen} task={task} />
     </div>
   );
 }

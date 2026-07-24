@@ -1,5 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { allowedNextStatuses, TaskDomainError, type TaskInstance, type TaskStatus } from "@/domain/task";
+import {
+  allowedNextStatuses,
+  TaskDomainError,
+  type TaskInstance,
+  type TaskStatus,
+} from "@/domain/task";
 import * as tasksRepo from "@/data/tasksRepo";
 import { toast } from "sonner";
 import { STATUS_LABEL } from "./labels";
@@ -30,7 +35,10 @@ export function StatusAction({ task, actorMemberId }: Props) {
   const [cancelOpen, setCancelOpen] = useState<null | TaskStatus>(null);
   const [reason, setReason] = useState("");
 
-  function attempt(to: TaskStatus, extra?: { completedAt?: string; completedByMemberId?: string; cancelReason?: string }) {
+  function attempt(
+    to: TaskStatus,
+    extra?: { completedAt?: string; completedByMemberId?: string; cancelReason?: string },
+  ) {
     try {
       tasksRepo.transition(task.id, {
         to,

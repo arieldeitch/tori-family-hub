@@ -13,18 +13,19 @@ export const STATUS_LABEL: Record<TaskStatus, string> = {
   cancelled: "בוטל",
 };
 
-export const STATUS_TONE: Record<TaskStatus, "neutral" | "info" | "warning" | "success" | "muted"> = {
-  inbox: "neutral",
-  planned: "info",
-  assigned: "info",
-  accepted: "info",
-  in_progress: "warning",
-  waiting: "warning",
-  blocked: "warning",
-  done: "success",
-  skipped: "muted",
-  cancelled: "muted",
-};
+export const STATUS_TONE: Record<TaskStatus, "neutral" | "info" | "warning" | "success" | "muted"> =
+  {
+    inbox: "neutral",
+    planned: "info",
+    assigned: "info",
+    accepted: "info",
+    in_progress: "warning",
+    waiting: "warning",
+    blocked: "warning",
+    done: "success",
+    skipped: "muted",
+    cancelled: "muted",
+  };
 
 export const PRIORITY_LABEL: Record<TaskPriority, string> = {
   low: "נמוכה",

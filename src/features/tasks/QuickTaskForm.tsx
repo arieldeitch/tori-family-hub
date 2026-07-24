@@ -67,9 +67,7 @@ export function QuickTaskForm({ open, onOpenChange, members, currentActorId }: P
       return;
     }
     try {
-      const dueAt = form.dueDate
-        ? new Date(`${form.dueDate}T09:00:00`).toISOString()
-        : null;
+      const dueAt = form.dueDate ? new Date(`${form.dueDate}T09:00:00`).toISOString() : null;
       const task = tasksRepo.createManualTask({
         title: form.title,
         assigneeMemberId: form.assigneeId,
@@ -93,11 +91,16 @@ export function QuickTaskForm({ open, onOpenChange, members, currentActorId }: P
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : (onOpenChange(false), reset()))}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => (o ? onOpenChange(true) : (onOpenChange(false), reset()))}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>משימה חדשה</DialogTitle>
-          <DialogDescription>מלא/י את השדות המרכזיים. ניתן להוסיף אחראי ומועד גם מאוחר יותר.</DialogDescription>
+          <DialogDescription>
+            מלא/י את השדות המרכזיים. ניתן להוסיף אחראי ומועד גם מאוחר יותר.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
