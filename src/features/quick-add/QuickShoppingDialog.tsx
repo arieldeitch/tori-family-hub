@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { addItem, listLists } from "@/application/shoppingService";
+import { shoppingRepo } from "@/data/shoppingRepo";
 import { DEMO_VIEWER_ID } from "@/data/peopleDirectory";
 
 interface Props {
