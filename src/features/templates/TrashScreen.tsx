@@ -49,7 +49,7 @@ export function TrashScreen() {
       <SectionHeader
         title="סל שחזור"
         description="פריטים שנמחקו לאחרונה. חלון שחזור: 48 שעות. אין מחיקה סופית."
-        action={
+        actions={
           <div className="min-w-40">
             <Select value={role} onValueChange={(v) => setRole(v as ViewerRole)}>
               <SelectTrigger>

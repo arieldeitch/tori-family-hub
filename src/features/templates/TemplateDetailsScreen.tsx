@@ -59,7 +59,7 @@ export function TemplateDetailsScreen({ templateId }: Props) {
         <EmptyState
           title="תבנית לא נמצאה"
           description="ייתכן שהיא נמחקה. אפשר לבדוק בסל השחזור."
-          action={
+          actions={
             <Button asChild>
               <Link to="/templates">חזרה לרשימה</Link>
             </Button>
@@ -102,7 +102,7 @@ export function TemplateDetailsScreen({ templateId }: Props) {
       <SectionHeader
         title={tpl.title}
         description={tpl.description ?? tpl.humanRule}
-        action={
+        actions={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={openScope}>
               עריכה

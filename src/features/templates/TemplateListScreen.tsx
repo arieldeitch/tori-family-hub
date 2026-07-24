@@ -17,7 +17,7 @@ export function TemplateListScreen() {
       <SectionHeader
         title="תבניות משימה"
         description="הגדרות חוזרות ליצירת מופעים בזמן אמת"
-        action={
+        actions={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" asChild>
               <Link to="/templates/trash">
@@ -35,7 +35,7 @@ export function TemplateListScreen() {
         <EmptyState
           title="אין עדיין תבניות"
           description="תבנית מגדירה מתי המשימה חוזרת ומי מעורב. אפשר להתחיל עם 'תבנית חדשה'."
-          action={<Button onClick={() => setWizardOpen(true)}>יצירת תבנית</Button>}
+          actions={<Button onClick={() => setWizardOpen(true)}>יצירת תבנית</Button>}
         />
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
