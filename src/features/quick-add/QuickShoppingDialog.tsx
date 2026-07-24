@@ -1,8 +1,9 @@
 // Minimal shopping-item form used from Quick Add. Requires a list; if the
 // household has none, offers the built-in "Home" list as fallback.
 // Retains input on failure. Success only after the service returns.
-import { useMemo, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useNavigate } from "@tanstack/react-router";
+
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { addItem, listLists } from "@/application/shoppingService";
+import { shoppingRepo } from "@/data/shoppingRepo";
 import { DEMO_VIEWER_ID } from "@/data/peopleDirectory";
 
 interface Props {
@@ -32,7 +34,7 @@ interface Props {
 
 export function QuickShoppingDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
-  const lists = useMemo(() => listLists(), [open]);
+  const lists = useSyncExternalStore(shoppingRepo.subscribe, listLists, listLists);
   const [listId, setListId] = useState<string>(lists[0]?.id ?? "");
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
@@ -68,9 +70,7 @@ export function QuickShoppingDialog({ open, onOpenChange }: Props) {
         },
         { role: "adult" },
       );
-      toast.success(
-        duplicates.length > 0 ? "הפריט נוסף. נמצאו פריטים דומים ברשימה" : "הפריט נוסף",
-      );
+      toast.success(duplicates.length > 0 ? "הפריט נוסף. נמצאו פריטים דומים ברשימה" : "הפריט נוסף");
       reset();
       onOpenChange(false);
       void item;
