@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
@@ -16,10 +17,18 @@ function Index() {
           {t("home.title")}
         </h1>
         <p className="mt-3 text-base text-muted-foreground">{t("home.subtitle")}</p>
-        <span className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-          <span className="inline-block h-2 w-2 rounded-full bg-primary" aria-hidden="true" />
-          {t("home.healthy")}
-        </span>
+
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          <Button asChild>
+            <Link to="/onboarding">{t("home.startOnboarding")}</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link to="/household">{t("home.goHousehold")}</Link>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link to="/child">{t("home.goChild")}</Link>
+          </Button>
+        </div>
       </div>
     </main>
   );
