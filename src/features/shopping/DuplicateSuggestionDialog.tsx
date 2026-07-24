@@ -20,13 +20,7 @@ interface Props {
 }
 
 // Never merges automatically. The user must pick Merge or Add anyway.
-export function DuplicateSuggestionDialog({
-  open,
-  newItemId,
-  candidates,
-  onClose,
-  actor,
-}: Props) {
+export function DuplicateSuggestionDialog({ open, newItemId, candidates, onClose, actor }: Props) {
   const primary = candidates[0];
   return (
     <Dialog

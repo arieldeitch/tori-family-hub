@@ -81,10 +81,7 @@ export function createList(input: { name: string }, actor: { role: Role }): Shop
 
 // Adds an item. Does NOT auto-merge; returns any duplicates the UI should
 // show as a suggestion. The caller can then call `mergeInto` or ignore.
-export function addItem(
-  input: AddItemInput,
-  actor: { role: Role },
-): AddItemResult {
+export function addItem(input: AddItemInput, actor: { role: Role }): AddItemResult {
   assertCanAct(actor.role);
   const errs = validateItemInput({
     name: input.name,
@@ -124,11 +121,7 @@ export function addItem(
 
 // Explicit user-confirmed merge. Adds source quantity into target, then
 // removes the source. Never runs automatically.
-export function mergeInto(
-  targetId: string,
-  sourceId: string,
-  actor: { role: Role },
-): ShoppingItem {
+export function mergeInto(targetId: string, sourceId: string, actor: { role: Role }): ShoppingItem {
   assertCanAct(actor.role);
   const state = shoppingRepo.getSnapshot();
   const target = state.items.find((i) => i.id === targetId);
@@ -164,11 +157,7 @@ export function updateItem(
   return updated;
 }
 
-export function claimBuyer(
-  id: string,
-  memberId: string,
-  actor: { role: Role },
-): ShoppingItem {
+export function claimBuyer(id: string, memberId: string, actor: { role: Role }): ShoppingItem {
   return setStatus(id, "claimed", actor, { assignedBuyerMemberId: memberId });
 }
 
@@ -176,11 +165,7 @@ export function releaseBuyer(id: string, actor: { role: Role }): ShoppingItem {
   return setStatus(id, "needed", actor, { assignedBuyerMemberId: undefined });
 }
 
-export function markPurchased(
-  id: string,
-  memberId: string,
-  actor: { role: Role },
-): ShoppingItem {
+export function markPurchased(id: string, memberId: string, actor: { role: Role }): ShoppingItem {
   const now = nowIso();
   return setStatus(id, "purchased", actor, {
     purchasedByMemberId: memberId,

@@ -3,12 +3,7 @@
 // *finds* similar items — the UI must present a suggestion so the user
 // chooses to merge or add anyway.
 
-export type ShoppingItemStatus =
-  | "needed"
-  | "claimed"
-  | "purchased"
-  | "unavailable"
-  | "removed";
+export type ShoppingItemStatus = "needed" | "claimed" | "purchased" | "unavailable" | "removed";
 
 export type ShoppingUrgency = "low" | "normal" | "high";
 
@@ -132,9 +127,8 @@ export function mergeItems(
       target.note && source.note && target.note !== source.note
         ? `${target.note} · ${source.note}`
         : (target.note ?? source.note),
-    urgency: rankUrgency(target.urgency) >= rankUrgency(source.urgency)
-      ? target.urgency
-      : source.urgency,
+    urgency:
+      rankUrgency(target.urgency) >= rankUrgency(source.urgency) ? target.urgency : source.urgency,
     allowSubstitute: target.allowSubstitute && source.allowSubstitute,
     updatedAt: nowIso,
     mergedFromItemIds: [...(target.mergedFromItemIds ?? []), source.id],

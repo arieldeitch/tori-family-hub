@@ -88,9 +88,7 @@ describe("shoppingService.mergeInto (user-confirmed)", () => {
     ).item;
     const open = shoppingRepo
       .getSnapshot()
-      .items.filter(
-        (i) => i.listId === "list_home" && i.normalizedName === a.normalizedName,
-      );
+      .items.filter((i) => i.listId === "list_home" && i.normalizedName === a.normalizedName);
     expect(open.map((i) => i.id).sort()).toEqual([a.id, b.id].sort());
   });
 });

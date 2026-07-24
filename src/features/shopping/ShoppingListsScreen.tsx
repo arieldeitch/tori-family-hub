@@ -86,7 +86,9 @@ export function ShoppingListsScreen() {
                     {openCount === 0 ? "אין פריטים פתוחים" : `${openCount} פריטים פתוחים`}
                   </div>
                 </div>
-                <span aria-hidden className="text-muted-foreground">‹</span>
+                <span aria-hidden className="text-muted-foreground">
+                  ‹
+                </span>
               </Link>
             </li>
           );

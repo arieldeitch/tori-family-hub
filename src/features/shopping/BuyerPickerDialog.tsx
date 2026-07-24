@@ -1,9 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { claimBuyer } from "@/application/shoppingService";
 import type { Role, ShoppingItem } from "@/domain/shopping";
@@ -26,9 +21,7 @@ export function BuyerPickerDialog({ item, members, onClose, actor }: Props) {
           <DialogTitle>מי קונה?</DialogTitle>
         </DialogHeader>
         {eligible.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            אין מבוגרים זמינים במשק הבית.
-          </p>
+          <p className="text-sm text-muted-foreground">אין מבוגרים זמינים במשק הבית.</p>
         ) : (
           <ul className="space-y-2" role="list">
             {eligible.map((m) => (

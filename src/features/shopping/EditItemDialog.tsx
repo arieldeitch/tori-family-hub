@@ -72,11 +72,7 @@ export function EditItemDialog({ item, onClose, actor }: Props) {
         <div className="space-y-3">
           <div>
             <Label htmlFor="ei-name">שם</Label>
-            <Input
-              id="ei-name"
-              value={form.name}
-              onChange={(e) => set("name", e.target.value)}
-            />
+            <Input id="ei-name" value={form.name} onChange={(e) => set("name", e.target.value)} />
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
@@ -141,10 +137,7 @@ export function EditItemDialog({ item, onClose, actor }: Props) {
                 min={0}
                 value={form.estimatedPrice ?? ""}
                 onChange={(e) =>
-                  set(
-                    "estimatedPrice",
-                    e.target.value === "" ? undefined : Number(e.target.value),
-                  )
+                  set("estimatedPrice", e.target.value === "" ? undefined : Number(e.target.value))
                 }
               />
             </div>

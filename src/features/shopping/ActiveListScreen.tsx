@@ -45,16 +45,12 @@ export function ActiveListScreen({ listId }: Props) {
   const q = query.trim().toLowerCase();
   const filtered = q
     ? listItemsAll.filter(
-        (i) =>
-          i.name.toLowerCase().includes(q) ||
-          (i.category?.toLowerCase().includes(q) ?? false),
+        (i) => i.name.toLowerCase().includes(q) || (i.category?.toLowerCase().includes(q) ?? false),
       )
     : listItemsAll;
   const openItems = filtered.filter((i) => isOpen(i.status));
   const purchasedItems = filtered.filter((i) => i.status === "purchased");
-  const otherClosed = filtered.filter(
-    (i) => i.status === "unavailable" || i.status === "removed",
-  );
+  const otherClosed = filtered.filter((i) => i.status === "unavailable" || i.status === "removed");
 
   if (!list) {
     return (
@@ -165,9 +161,7 @@ export function ActiveListScreen({ listId }: Props) {
               <ItemRow
                 key={item.id}
                 item={item}
-                buyerName={
-                  members.find((m) => m.id === item.assignedBuyerMemberId)?.name
-                }
+                buyerName={members.find((m) => m.id === item.assignedBuyerMemberId)?.name}
                 onEdit={() => setEditing(item)}
                 onPickBuyer={() => setPickingBuyerFor(item)}
                 onClaimSelf={() => {

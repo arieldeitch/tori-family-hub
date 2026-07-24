@@ -87,9 +87,7 @@ describe("validateItemInput", () => {
     expect(errs.some((e) => e.field === "requestedByMemberId")).toBe(true);
   });
   it("passes valid input", () => {
-    expect(
-      validateItemInput({ name: "חלב", quantity: 2, requestedByMemberId: "m1" }),
-    ).toEqual([]);
+    expect(validateItemInput({ name: "חלב", quantity: 2, requestedByMemberId: "m1" })).toEqual([]);
   });
 });
 
