@@ -187,7 +187,14 @@ export function completeTaskAction(taskId: string, actorMemberId: string): void 
   if (cur && (cur.status === "assigned" || cur.status === "planned")) {
     tasksRepo.transition(taskId, { to: "accepted", actorMemberId, at });
   }
-  tasksRepo.transition(taskId, { to: "done", actorMemberId, at, completedAt: at });
+  tasksRepo.transition(taskId, {
+    to: "done",
+    actorMemberId,
+    at,
+    completedAt: at,
+    completedByMemberId: actorMemberId,
+  });
+
 }
 
 
