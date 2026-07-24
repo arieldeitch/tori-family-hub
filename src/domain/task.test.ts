@@ -250,8 +250,12 @@ describe("task domain — createTaskInstanceSnapshot", () => {
 
 describe("task domain — misc helpers", () => {
   it("isTaskOverdue: true only for past-due non-terminal", () => {
-    expect(isTaskOverdue({ status: "assigned", dueAt: "2026-07-23T00:00:00.000Z" }, NOW)).toBe(true);
-    expect(isTaskOverdue({ status: "assigned", dueAt: "2026-07-25T00:00:00.000Z" }, NOW)).toBe(false);
+    expect(isTaskOverdue({ status: "assigned", dueAt: "2026-07-23T00:00:00.000Z" }, NOW)).toBe(
+      true,
+    );
+    expect(isTaskOverdue({ status: "assigned", dueAt: "2026-07-25T00:00:00.000Z" }, NOW)).toBe(
+      false,
+    );
     expect(isTaskOverdue({ status: "done", dueAt: "2000-01-01T00:00:00.000Z" }, NOW)).toBe(false);
     expect(isTaskOverdue({ status: "assigned", dueAt: null }, NOW)).toBe(false);
   });

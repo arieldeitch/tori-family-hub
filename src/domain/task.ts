@@ -24,28 +24,15 @@ export type TaskStatus =
 
 export type TaskPriority = "low" | "normal" | "high" | "urgent";
 
-export type TaskSource =
-  | "manual"
-  | "template"
-  | "recurring"
-  | "delegated"
-  | "system"
-  | "import";
+export type TaskSource = "manual" | "template" | "recurring" | "delegated" | "system" | "import";
 
 // A task is "terminal" once it enters one of these states; further
 // transitions are disallowed.
-export const TERMINAL_STATUSES: ReadonlySet<TaskStatus> = new Set([
-  "done",
-  "skipped",
-  "cancelled",
-]);
+export const TERMINAL_STATUSES: ReadonlySet<TaskStatus> = new Set(["done", "skipped", "cancelled"]);
 
 // States in which nobody is actively working the task yet — these are the
 // only states in which a task may sit without an assignee/dueAt.
-export const UNASSIGNED_ALLOWED_STATUSES: ReadonlySet<TaskStatus> = new Set([
-  "inbox",
-  "planned",
-]);
+export const UNASSIGNED_ALLOWED_STATUSES: ReadonlySet<TaskStatus> = new Set(["inbox", "planned"]);
 
 // -------- Core entities --------
 
@@ -194,7 +181,9 @@ export function isTerminal(status: TaskStatus): boolean {
   return TERMINAL_STATUSES.has(status);
 }
 
-export function requiresAssignment(t: Pick<TaskInstance, "status" | "assignment" | "dueAt">): boolean {
+export function requiresAssignment(
+  t: Pick<TaskInstance, "status" | "assignment" | "dueAt">,
+): boolean {
   // A task needs an assignee+dueAt to leave the "unassigned-ok" zone. If it
   // is in a working state without either, it needs assignment.
   if (UNASSIGNED_ALLOWED_STATUSES.has(t.status)) return t.assignment === null || t.dueAt === null;
@@ -202,10 +191,7 @@ export function requiresAssignment(t: Pick<TaskInstance, "status" | "assignment"
 }
 
 /** True iff task has a due date in the past AND is not terminal. */
-export function isTaskOverdue(
-  t: Pick<TaskInstance, "status" | "dueAt">,
-  nowIso: string,
-): boolean {
+export function isTaskOverdue(t: Pick<TaskInstance, "status" | "dueAt">, nowIso: string): boolean {
   if (isTerminal(t.status)) return false;
   if (!t.dueAt) return false;
   return new Date(t.dueAt).getTime() < new Date(nowIso).getTime();
@@ -321,11 +307,7 @@ export function transitionTask(instance: TaskInstance, input: TransitionInput): 
   }
 
   if ((to === "cancelled" || to === "skipped") && !input.cancelReason) {
-    throw new TaskDomainError(
-      "missing_cancel_reason",
-      `${to} requires a cancelReason`,
-      { to },
-    );
+    throw new TaskDomainError("missing_cancel_reason", `${to} requires a cancelReason`, { to });
   }
 
   if (to === "assigned" && instance.assignment === null) {
@@ -358,7 +340,9 @@ export function transitionTask(instance: TaskInstance, input: TransitionInput): 
     updatedAt: at,
     completedAt: to === "done" ? input.completedAt : instance.completedAt,
     completedByMemberId:
-      to === "done" ? input.completedByMemberId ?? instance.completedByMemberId : instance.completedByMemberId,
+      to === "done"
+        ? (input.completedByMemberId ?? instance.completedByMemberId)
+        : instance.completedByMemberId,
     cancelledAt: to === "cancelled" || to === "skipped" ? at : instance.cancelledAt,
     cancelReason:
       to === "cancelled" || to === "skipped" ? input.cancelReason : instance.cancelReason,

@@ -383,4 +383,3 @@ export function TodayScreen() {
     </div>
   );
 }
-
