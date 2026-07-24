@@ -160,3 +160,13 @@ Built on top of the domain from prompt 6.1. No templates, no recurrence, no pers
 
 ### Not built (per prompt)
 - Templates, recurrence worker, rotation, soft delete, Supabase, notifications
+
+## פרומפט 6.3 — תבניות חוזרות, מופעים ומחיקה רכה
+- Domain חדש: `src/domain/recurrence.ts` — `RecurrenceRule`, `MissedAction`, `describeRule`, `generateOccurrences`, `occurrenceKey`, `canRestore`, `withinRestoreWindow` (48 שעות), `EditScope`. הרחבת `TaskTemplate` ו־`TaskInstance` בשדות `recurrence`, `participantMemberIds`, `missedAction`, `humanRule`, `scheduledAt`, `deletedAt`, `deletedByMemberId` (כולם אופציונליים — תואם לאחור).
+- Data: `src/data/templatesRepo.ts` (CRUD + soft delete/restore + hooks). `tasksRepo` הורחב: `softDeleteTask`, `restoreTask`, `getDeleted`, `getAllIncludingDeleted`, `materializeOccurrence` (idempotent לפי `templateId + scheduledAt` — מונע מופע כפול). `getAll` מסנן פריטים מחוקים.
+- Snapshot immutability: עריכת תבנית מעלה `revision` ומעדכנת `humanRule`, אך `templateSnapshot` על מופעים היסטוריים נשאר כפי שהיה — אין שכתוב עבר.
+- UI (`src/features/templates/`): `TemplateListScreen`, `TemplateWizard` (5 שלבים + תיאור אנושי לפני שמירה), `TemplateDetailsScreen` (מופעים עתידיים, היסטוריה, בחירת scope: המופע/העתידיים/התבנית), `TrashScreen` (בורר role להדגמת הגנת UX על restore).
+- Routes: `/templates`, `/templates/$templateId`, `/templates/trash` בתוך `AppShell`.
+- מחיקה רכה: `ConfirmationDialog` בלבד, `deletedAt`/`deletedByMemberId` מסומנים, פריט מוסתר מתצוגה רגילה ומופיע בסל שחזור לפחות 48 שעות. אין purge.
+- בדיקות: `src/features/templates/templates.test.ts` (12) — הפרדת template/instance, snapshot immutability, dedupe מופעים, soft delete + restore, גזירת שחזור לפי role, describe/generate. סה"כ 57/57 עוברות.
+- פערים מוצהרים: הרחבה של recurrence היא prototype (אין BYDAY מלא / EXDATE / RRULE ייצור); בחירת ה־scope באירוע עריכה מוצגת ומתועדת אך לא מבצעת פיצול תבנית פיזי; אין worker/DB/RLS.

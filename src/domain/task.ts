@@ -53,6 +53,16 @@ export interface TaskTemplate {
   updatedAt: string; // ISO
   /** Monotonic revision — bumped whenever the template is edited. */
   revision: number;
+  // -- Recurrence / participants / miss-policy (prompt 6.3). All optional so
+  // pre-existing one-off templates keep working unchanged.
+  recurrence?: import("./recurrence").RecurrenceRule;
+  participantMemberIds?: ReadonlyArray<string>;
+  missedAction?: import("./recurrence").MissedAction;
+  /** Human-readable sentence describing the rule, shown before save. */
+  humanRule?: string;
+  // -- Soft delete markers (prototype only, no purge).
+  deletedAt?: string;
+  deletedByMemberId?: string;
 }
 
 /**
@@ -84,6 +94,11 @@ export interface TaskInstance {
   updatedAt: string; // ISO
   /** Append-only history — see `appendActivity`. Never mutate in place. */
   activity: ReadonlyArray<TaskActivity>;
+  /** For template-generated instances: canonical scheduled instant. */
+  scheduledAt?: string;
+  // -- Soft delete markers.
+  deletedAt?: string;
+  deletedByMemberId?: string;
 }
 
 /** Immutable copy of the template fields at instance creation time. */
