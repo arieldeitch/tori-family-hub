@@ -128,4 +128,17 @@ export const calendarRepo = {
     state = { view, events: eventsFor(view) };
     emit();
   },
+  create(input: Omit<CalendarEvent, "id">): CalendarEvent {
+    const ev: CalendarEvent = {
+      ...input,
+      id: `ev_${Math.random().toString(36).slice(2, 9)}`,
+    };
+    state = { ...state, events: [ev, ...state.events] };
+    emit();
+    return ev;
+  },
+  getById(id: string): CalendarEvent | undefined {
+    return state.events.find((e) => e.id === id);
+  },
 };
+
