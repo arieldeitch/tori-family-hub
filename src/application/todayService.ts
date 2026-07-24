@@ -180,12 +180,16 @@ export function buildTodayDataset(opts: BuildOptions = {}): TodayDataset {
 // -------- Actions (delegate to canonical repos) --------
 
 export function completeTaskAction(taskId: string, actorMemberId: string): void {
-  tasksRepo.transition(taskId, {
-    to: "done",
-    actorMemberId,
-    at: new Date().toISOString(),
-  });
+  const at = new Date().toISOString();
+  const cur = tasksRepo.getById(taskId);
+  // Task domain routes completion through accepted/in_progress. Bridge the
+  // common Today statuses so a single "mark done" click Just Works.
+  if (cur && (cur.status === "assigned" || cur.status === "planned")) {
+    tasksRepo.transition(taskId, { to: "accepted", actorMemberId, at });
+  }
+  tasksRepo.transition(taskId, { to: "done", actorMemberId, at });
 }
+
 
 export function claimTaskAction(taskId: string, memberId: string): void {
   tasksRepo.assignTask(taskId, { memberId, actorMemberId: memberId });
