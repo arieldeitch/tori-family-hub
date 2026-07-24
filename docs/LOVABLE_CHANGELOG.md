@@ -432,3 +432,22 @@ Mock-only limitations (nothing real is delivered):
 - מצבי התצוגה `busy`/`nearly_empty` הוסרו מ־Today (היו fixtures נפרדים).
   מצבי `loading/error/offline/permission_denied/child` נשמרו כמצבי UI
   בלבד ואינם משנים נתונים.
+
+## Audit + Quick Add/Search consolidation
+
+### קוד
+- הוסף `calendarRepo.create` (חסר במעבר Quick Add → אירוע חדש) וגם
+  `getById` לצורך אחידות.
+- Quick Add: הוחלפו stubs של "לא זמין" בטפסים אמיתיים לכל 6 הזרימות
+  (משימה, פריט קניות, איסוף, אירוע, סידור, follow-up). Transport מנתב
+  ל־`/transport/new` הקיים כדי לא לשכפל UI.
+- מסך חיפוש חוצה־מודולים חדש ב־`/search` + כניסה מ־`AppHeader` (Search
+  icon). קורא רק דרך repositories/services קיימים; לא נגע ב־`/today`.
+- תוקנו 2 שגיאות ESLint (prettier). לא נמצאו: `console.log` יתומים,
+  `localStorage` כמקור אמת, TODO קריטי מוסתר, PIN/tokens ב־fixtures,
+  `any` בקוד אפליקציה (רק ב־`routeTree.gen.ts` הנוצר).
+
+### בדיקות
+Typecheck נקי · ESLint 0 errors (6 warnings ב־shadcn UI בלבד,
+`react-refresh/only-export-components` — פרימיטיביים שנוצרו ע"י shadcn) ·
+**155/155 tests פוסס** · `bun run build` מצליח (כולל `dist/sw.js`).
