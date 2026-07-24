@@ -13,6 +13,8 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HouseholdRouteImport } from './routes/household'
 import { Route as ChildRouteImport } from './routes/child'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
+import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -34,18 +36,32 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FollowUpsIndexRoute = FollowUpsIndexRouteImport.update({
+  id: '/follow-ups/',
+  path: '/follow-ups/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FollowUpsCaseIdRoute = FollowUpsCaseIdRouteImport.update({
+  id: '/follow-ups/$caseId',
+  path: '/follow-ups/$caseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/child': typeof ChildRoute
   '/household': typeof HouseholdRoute
   '/onboarding': typeof OnboardingRoute
+  '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/follow-ups/': typeof FollowUpsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/child': typeof ChildRoute
   '/household': typeof HouseholdRoute
   '/onboarding': typeof OnboardingRoute
+  '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/follow-ups': typeof FollowUpsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +69,34 @@ export interface FileRoutesById {
   '/child': typeof ChildRoute
   '/household': typeof HouseholdRoute
   '/onboarding': typeof OnboardingRoute
+  '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
+  '/follow-ups/': typeof FollowUpsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/child' | '/household' | '/onboarding'
+  fullPaths:
+    | '/'
+    | '/child'
+    | '/household'
+    | '/onboarding'
+    | '/follow-ups/$caseId'
+    | '/follow-ups/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/child' | '/household' | '/onboarding'
-  id: '__root__' | '/' | '/child' | '/household' | '/onboarding'
+  to:
+    | '/'
+    | '/child'
+    | '/household'
+    | '/onboarding'
+    | '/follow-ups/$caseId'
+    | '/follow-ups'
+  id:
+    | '__root__'
+    | '/'
+    | '/child'
+    | '/household'
+    | '/onboarding'
+    | '/follow-ups/$caseId'
+    | '/follow-ups/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +104,8 @@ export interface RootRouteChildren {
   ChildRoute: typeof ChildRoute
   HouseholdRoute: typeof HouseholdRoute
   OnboardingRoute: typeof OnboardingRoute
+  FollowUpsCaseIdRoute: typeof FollowUpsCaseIdRoute
+  FollowUpsIndexRoute: typeof FollowUpsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +138,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/follow-ups/': {
+      id: '/follow-ups/'
+      path: '/follow-ups'
+      fullPath: '/follow-ups/'
+      preLoaderRoute: typeof FollowUpsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/follow-ups/$caseId': {
+      id: '/follow-ups/$caseId'
+      path: '/follow-ups/$caseId'
+      fullPath: '/follow-ups/$caseId'
+      preLoaderRoute: typeof FollowUpsCaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +160,8 @@ const rootRouteChildren: RootRouteChildren = {
   ChildRoute: ChildRoute,
   HouseholdRoute: HouseholdRoute,
   OnboardingRoute: OnboardingRoute,
+  FollowUpsCaseIdRoute: FollowUpsCaseIdRoute,
+  FollowUpsIndexRoute: FollowUpsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

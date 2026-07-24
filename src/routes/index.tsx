@@ -28,6 +28,9 @@ function Index() {
           <Button asChild variant="ghost">
             <Link to="/child">{t("home.goChild")}</Link>
           </Button>
+          <Button asChild variant="ghost">
+            <Link to="/follow-ups">מעקבים</Link>
+          </Button>
         </div>
       </div>
     </main>
