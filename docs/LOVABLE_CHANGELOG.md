@@ -370,3 +370,65 @@ Mock-only limitations (nothing real is delivered):
 - `bunx vitest run` — 145/145 passing (17 files).
 - `bunx vite build` — build ok; emits `dist/sw.js`, `manifest.webmanifest`,
   `offline.html`.
+
+## Prompt 15 — אינטגרציה פנימית בין מודולים
+
+**מטרה:** לאחד fixtures/types/state כדי שכל המסכים עובדים מול אותם repositories וservices.
+
+### מה אוחד
+- **`src/data/todayRepo.ts`** — שוכתב מ־fixture-owner לשכבת קומפוזיציה מעל
+  `tasksRepo`, `transportRepo`, `followUpRepo`, `shoppingRepo`. הוסרו כל
+  ה־seed הפנימיים של Today, וכן מצבי התצוגה המדומים `busy` ו־`nearly_empty`
+  שסיפקו כפילויות נתונים.
+- **`src/application/todayService.ts`** (חדש) — Adapters טהורים
+  (`toTaskItem`, `toTransportItem`, `toFollowUpItem`, `toShoppingSummary`),
+  builder דטרמיניסטי `buildTodayDataset`, ופעולות (`completeTaskAction`,
+  `claimTaskAction`, `assignTransportAction`, `approveTransportAction`)
+  המנתבות כל mutation דרך ה־repo הקנוני. השלמת משימה גשר את המעברים
+  `assigned/planned → accepted → done` דרך `transitionTask` כדי שה־state
+  machine בדומיין נשאר הסמכות היחידה.
+- **`src/data/peopleDirectory.ts`** (חדש) — מקור אמת יחיד לזהות חברי משק
+  הבית (5 members) + alias table שממפה `m1..m4` הישנים של
+  transport/calendar לזהויות הקנוניות `m_owner/m_adult/m_child1/m_child2`.
+  בלי לגעת ב־UI של transport.
+
+### כפילויות שהוסרו
+- מבני `TaskItem` / `TransportItem` / `FollowUpDueItem` / `ShoppingSummary`
+  ב־`todayRepo` הוחלפו בהמרה מ־`TaskInstance`/`TransportRide`/
+  `FollowUpCase`/`ShoppingList+ShoppingItem`.
+- 5 טבלאות חברים מקומיות (Today, transport, calendar, tasks seed,
+  followUp seed) התאחדו סביב `peopleDirectory` על ידי מיפוי alias.
+- Actions של Today (`completeTask`, `claimTask`, `assignTransport`,
+  `approveItem`) לא מחזיקים יותר lokal mutation — מפנים ל־service.
+
+### Flows שחוברו end-to-end
+1. יצירת משימה ב־`tasksRepo` → מופיעה ב־`/today` (משימות שלי / דורש הקצאה).
+2. השלמת משימה מ־`/today` → הסטטוס מתעדכן ב־`tasksRepo` והמשימה נעלמת
+   מ־"שלי" (גם ב־`/tasks` דרך אותו repo).
+3. משימה בלי `assignment` → נכנסת ל־"משימות ללא אחראי".
+4. איסוף `unassigned` ב־`transportRepo` → מופיע ב־"דורש תשומת לב" ב־Today.
+5. שיוך איסוף מ־Today → `transportRepo.assign` → מעבר ל־`pending_acceptance`
+   → הכפתור הראשי משתנה בהתאם ל־`primaryActionFor` בדומיין.
+6. `nextFollowUpAt` שהגיע → מופיע ב־"מעקבים שהגיע זמנם".
+7. `addItem` ב־`shoppingService` → תקציר הקניות ב־Today מתעדכן.
+8. מחיקה רכה ב־`tasksRepo` → הפריט יוצא מ־Today ומגיע ל־`TrashScreen`.
+9. `child mode` דוחף `viewerRole="child"` ומסנן `adultsOnly` דרך
+   `visibleToRole` — הן ב־Today הן ב־ChildTodayScreen.
+
+### בדיקות
+- קובץ חדש `src/application/todayService.test.ts` — 10 בדיקות אינטגרציה
+  מול repositories אמיתיים (בזיכרון), אחת לכל flow קריטי מהרשימה + מקרה
+  כשל שלא מקלקל state.
+- סך הכול: **155 tests / 18 files פוסס**. Typecheck ו־build (כולל
+  `dist/sw.js`) עוברים; ESLint נקי משגיאות.
+
+### סיכונים ומגבלות
+- **Persistence:** אין. כל state בזיכרון בלבד; refresh מאפס.
+- **UX-only role gating** נשמר — האכיפה האמיתית תעבור לשרת (RLS)
+  כשה־Cloud יופעל.
+- **Legacy member ids** ב־transport (`m1..m4`) עדיין קיימים בתוך
+  transport UI; ה־alias table מגשר לצורכי תצוגה משותפת. איחוד מלא של
+  הזהויות נדחה כדי לא לגעת ב־UX של transport בפרומפט זה.
+- מצבי התצוגה `busy`/`nearly_empty` הוסרו מ־Today (היו fixtures נפרדים).
+  מצבי `loading/error/offline/permission_denied/child` נשמרו כמצבי UI
+  בלבד ואינם משנים נתונים.

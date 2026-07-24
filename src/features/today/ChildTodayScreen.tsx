@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 import type { TodayDataset } from "@/domain/today";
 import { memberById, selectMyTasks, selectTransportsToday, visibleToRole } from "@/domain/today";
-import { todayRepo } from "@/data/todayRepo";
+import { completeTaskAction } from "@/application/todayService";
 import { Button } from "@/components/ui/button";
 import { formatTime } from "./format";
 
@@ -71,7 +71,7 @@ export function ChildTodayScreen({ dataset }: Props) {
                     size="lg"
                     className="min-h-12 flex-1 text-base"
                     onClick={() => {
-                      todayRepo.completeTask(task.id);
+                      completeTaskAction(task.id, dataset.viewerId);
                       toast.success("סימנו שבוצע!");
                     }}
                   >

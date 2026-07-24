@@ -1,252 +1,87 @@
-// In-memory Today repo. UI must NOT import fixtures directly — always via this repo.
-// State is process-memory only. No localStorage, no server, no persistence.
+// Today repo.
+//
+// Composes the Today dataset from the canonical repos (tasksRepo, transportRepo,
+// followUpRepo, shoppingRepo) via `todayService.buildTodayDataset`. It owns
+// no domain fixtures of its own — that was the source of drift between the
+// Today screen and every other module. Whenever any underlying repo emits,
+// this repo re-emits so `useToday` refreshes.
+//
+// It DOES own the demo view-state toggle used by the Today screen picker
+// (loading / error / offline / permission_denied / normal / child) — that is
+// UI state only, not data.
+//
+// Actions delegate to `todayService`, so success only happens when the
+// canonical repo mutation succeeds.
 
-import type {
-  EventItem,
-  FollowUpDueItem,
-  Role,
-  ShoppingSummary,
-  TaskItem,
-  TodayDataset,
-  TodayMember,
-  TransportItem,
-} from "@/domain/today";
+import * as tasksRepo from "@/data/tasksRepo";
+import { transportRepo } from "@/data/transportRepo";
+import * as followUpRepo from "@/data/followUpRepo";
+import { shoppingRepo } from "@/data/shoppingRepo";
+import type { EventItem, Role, TodayDataset } from "@/domain/today";
+import {
+  assignTransportAction,
+  approveTransportAction,
+  buildTodayDataset,
+  claimTaskAction,
+  completeTaskAction,
+  todayViewerIds,
+} from "@/application/todayService";
 
 export type TodayViewState =
   | "normal"
-  | "busy"
-  | "nearly_empty"
   | "loading"
   | "error"
   | "offline"
   | "permission_denied"
   | "child";
 
-const M = {
-  owner: {
-    id: "m_owner",
-    name: "דנה לוי",
-    role: "owner" as Role,
-    color: "#7BA7C7",
-    initials: "דל",
-  },
-  adult: {
-    id: "m_adult",
-    name: "יואב לוי",
-    role: "adult" as Role,
-    color: "#C79A7B",
-    initials: "יל",
-  },
-  child1: { id: "m_child1", name: "נועה", role: "child" as Role, color: "#8CB48C", initials: "נו" },
-  child2: { id: "m_child2", name: "איתי", role: "child" as Role, color: "#C77B9E", initials: "אי" },
-  guest: {
-    id: "m_guest",
-    name: "מירי (מטפלת)",
-    role: "guest" as Role,
-    color: "#B49B7B",
-    initials: "מי",
-  },
-} satisfies Record<string, TodayMember>;
-
-function todayAt(h: number, min = 0): string {
-  const d = new Date();
-  d.setHours(h, min, 0, 0);
-  return d.toISOString();
-}
-function hoursAgo(h: number): string {
-  return new Date(Date.now() - h * 3600_000).toISOString();
-}
-
-function baseMembers(): TodayMember[] {
-  return [M.owner, M.adult, M.child1, M.child2, M.guest];
-}
-
-function normalFixtures(): Omit<TodayDataset, "viewerId" | "viewerRole" | "now"> {
-  const tasks: TaskItem[] = [
-    {
-      id: "t_normal",
-      kind: "task",
-      title: "לתאם פגישת שיניים לנועה",
-      assigneeId: M.owner.id,
-      dueAt: todayAt(18, 0),
-      status: "open",
-      personal: true,
-    },
-    {
-      id: "t_overdue",
-      kind: "task",
-      title: "לחדש את דרכון של איתי",
-      assigneeId: M.adult.id,
-      dueAt: hoursAgo(30),
-      status: "overdue",
-    },
-    {
-      id: "t_adults",
-      kind: "task",
-      title: "סקירת הוראות קבע",
-      assigneeId: M.owner.id,
-      dueAt: todayAt(21, 30),
-      status: "open",
-      adultsOnly: true,
-      personal: true,
-    },
-    {
-      id: "t_unassigned",
-      kind: "task",
-      title: "להזמין תור למוסך",
-      assigneeId: null,
-      dueAt: todayAt(20, 0),
-      status: "open",
-    },
-    {
-      id: "t_approval",
-      kind: "task",
-      title: "רשימת ציוד לטיול של נועה",
-      assigneeId: M.child1.id,
-      dueAt: todayAt(19, 0),
-      status: "waiting_approval",
-    },
-  ];
-
-  const transports: TransportItem[] = [
-    {
-      id: "tr_unassigned",
-      kind: "transport",
-      childId: M.child2.id,
-      direction: "pickup",
-      place: "גן שקד",
-      timeAt: todayAt(16, 15),
-      responsibleId: null,
-      status: "unassigned",
-      recommendedLeaveAt: todayAt(15, 50),
-    },
-    {
-      id: "tr_approval",
-      kind: "transport",
-      childId: M.child1.id,
-      direction: "pickup",
-      place: "חוג ציור",
-      timeAt: todayAt(17, 30),
-      responsibleId: M.guest.id,
-      status: "waiting_approval",
-      recommendedLeaveAt: todayAt(17, 10),
-    },
-    {
-      id: "tr_ok",
-      kind: "transport",
-      childId: M.child1.id,
-      direction: "dropoff",
-      place: "בית ספר",
-      timeAt: todayAt(7, 45),
-      responsibleId: M.adult.id,
-      status: "confirmed",
-    },
-  ];
-
-  const events: EventItem[] = [
-    {
-      id: "e_meeting",
-      kind: "event",
-      title: "אסיפת הורים כיתה ג'",
-      timeAt: todayAt(20, 0),
-      location: "בית ספר רמון",
-    },
-  ];
-
-  const followUps: FollowUpDueItem[] = [
-    {
-      id: "f_bank",
-      kind: "followup",
-      title: "החזר עמלה מהבנק",
-      externalParty: "בנק דיסקונט",
-      responsibleId: M.owner.id,
-      dueAt: hoursAgo(2),
-    },
-  ];
-
-  const shopping: ShoppingSummary = {
-    activeListName: "סופר השבועי",
-    itemsCount: 12,
-    urgentCount: 2,
-  };
-
-  return { members: baseMembers(), tasks, transports, events, followUps, shopping };
-}
-
-function busyFixtures(): Omit<TodayDataset, "viewerId" | "viewerRole" | "now"> {
-  const base = normalFixtures();
-  const extraTasks: TaskItem[] = Array.from({ length: 5 }).map((_, i) => ({
-    id: `t_busy_${i}`,
-    kind: "task",
-    title: `משימה נוספת ${i + 1}`,
-    assigneeId: i % 2 === 0 ? M.owner.id : M.adult.id,
-    dueAt: todayAt(19 + (i % 3), (i * 7) % 60),
-    status: "open",
-    personal: i % 2 === 0,
-  }));
-  const extraTransport: TransportItem = {
-    id: "tr_busy",
-    kind: "transport",
-    childId: M.child2.id,
-    direction: "pickup",
-    place: "חוג כדורגל",
-    timeAt: todayAt(18, 45),
-    responsibleId: M.owner.id,
-    status: "confirmed",
-  };
-  return {
-    ...base,
-    tasks: [...base.tasks, ...extraTasks],
-    transports: [...base.transports, extraTransport],
-  };
-}
-
-function nearlyEmptyFixtures(): Omit<TodayDataset, "viewerId" | "viewerRole" | "now"> {
-  return {
-    members: baseMembers(),
-    tasks: [
-      {
-        id: "t_one",
-        kind: "task",
-        title: "לקנות חלב",
-        assigneeId: M.owner.id,
-        dueAt: todayAt(19, 0),
-        status: "open",
-        personal: true,
-      },
-    ],
-    transports: [],
-    events: [],
-    followUps: [],
-    shopping: null,
-  };
-}
-
-// -------- Store --------
-
 interface State {
   view: TodayViewState;
   dataset: TodayDataset;
 }
 
-function buildDataset(view: TodayViewState): TodayDataset {
-  const viewerRole: Role = view === "child" ? "child" : "owner";
-  const viewerId = view === "child" ? M.child1.id : M.owner.id;
-  const base =
-    view === "busy"
-      ? busyFixtures()
-      : view === "nearly_empty"
-        ? nearlyEmptyFixtures()
-        : normalFixtures();
-  return { now: new Date().toISOString(), viewerId, viewerRole, ...base };
+// A small demo event so "next in time" surfaces something recognisable.
+function demoEvents(): EventItem[] {
+  const at = new Date();
+  at.setHours(20, 0, 0, 0);
+  return [
+    {
+      id: "e_meeting",
+      kind: "event",
+      title: "אסיפת הורים כיתה ג'",
+      timeAt: at.toISOString(),
+      location: "בית ספר רמון",
+    },
+  ];
 }
 
-let state: State = { view: "normal", dataset: buildDataset("normal") };
+function compose(view: TodayViewState): State {
+  const viewerId = view === "child" ? todayViewerIds.child : todayViewerIds.adult;
+  const viewerRole: Role = view === "child" ? "child" : "owner";
+  const dataset = buildTodayDataset({
+    viewerId,
+    viewerRole,
+    events: demoEvents(),
+  });
+  return { view, dataset };
+}
+
+let state: State = compose("normal");
 const listeners = new Set<() => void>();
 
+function recompose() {
+  state = compose(state.view);
+  for (const l of listeners) l();
+}
+
+// Re-emit whenever any upstream repo changes so subscribers refresh.
+tasksRepo.subscribe(recompose);
+transportRepo.subscribe(recompose);
+followUpRepo.subscribe(recompose);
+shoppingRepo.subscribe(recompose);
+
 function emit() {
-  state = { ...state, dataset: { ...state.dataset } };
-  listeners.forEach((l) => l());
+  for (const l of listeners) l();
 }
 
 export const todayRepo = {
@@ -258,39 +93,25 @@ export const todayRepo = {
     return state;
   },
   setView(view: TodayViewState): void {
-    state = { view, dataset: buildDataset(view) };
+    state = compose(view);
     emit();
   },
-  /** Demo action — mutates in-memory state only. */
-  assignTransport(transportId: string, memberId: string): void {
-    const transports = state.dataset.transports.map((t) =>
-      t.id === transportId ? { ...t, responsibleId: memberId, status: "confirmed" as const } : t,
-    );
-    state = { ...state, dataset: { ...state.dataset, transports } };
-    emit();
+  // -------- Actions (delegate to todayService → canonical repos) --------
+  assignTransport(rideId: string, memberId: string): void {
+    assignTransportAction(rideId, memberId);
   },
   approveItem(id: string): void {
-    const tasks = state.dataset.tasks.map((t) =>
-      t.id === id && t.status === "waiting_approval" ? { ...t, status: "open" as const } : t,
-    );
-    const transports = state.dataset.transports.map((t) =>
-      t.id === id && t.status === "waiting_approval" ? { ...t, status: "confirmed" as const } : t,
-    );
-    state = { ...state, dataset: { ...state.dataset, tasks, transports } };
-    emit();
+    // Today's "waiting approval" only surfaces transports in pending_acceptance
+    // (canonical tasks have no waiting_approval state). Delegate accordingly.
+    const ride = transportRepo.getById(id);
+    if (ride) {
+      approveTransportAction(id, ride.assigneeMemberId ?? state.dataset.viewerId);
+    }
   },
   completeTask(id: string): void {
-    const tasks = state.dataset.tasks.map((t) =>
-      t.id === id ? { ...t, status: "done" as const } : t,
-    );
-    state = { ...state, dataset: { ...state.dataset, tasks } };
-    emit();
+    completeTaskAction(id, state.dataset.viewerId);
   },
   claimTask(id: string, memberId: string): void {
-    const tasks = state.dataset.tasks.map((t) =>
-      t.id === id ? { ...t, assigneeId: memberId } : t,
-    );
-    state = { ...state, dataset: { ...state.dataset, tasks } };
-    emit();
+    claimTaskAction(id, memberId);
   },
 };

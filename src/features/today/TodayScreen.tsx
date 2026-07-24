@@ -29,8 +29,6 @@ import { formatTime } from "./format";
 
 const VIEW_OPTIONS: Array<{ value: TodayViewState; label: string }> = [
   { value: "normal", label: "רגיל" },
-  { value: "busy", label: "עמוס" },
-  { value: "nearly_empty", label: "כמעט ריק" },
   { value: "loading", label: "טעינה" },
   { value: "error", label: "שגיאה" },
   { value: "offline", label: "לא מקוון" },
