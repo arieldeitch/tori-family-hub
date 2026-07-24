@@ -13,11 +13,7 @@ import {
   assignTransportAction,
   todayViewerIds,
 } from "@/application/todayService";
-import {
-  selectMyTasks,
-  selectRisks,
-  selectUnassignedTasks,
-} from "@/domain/today";
+import { selectMyTasks, selectRisks, selectUnassignedTasks } from "@/domain/today";
 import { DEMO_VIEWER_ID } from "@/data/peopleDirectory";
 
 const nowIso = () => new Date().toISOString();
@@ -82,9 +78,7 @@ describe("todayService — integration with canonical repos", () => {
   });
 
   it("assigning a transport via the service moves it out of the unassigned bucket", () => {
-    const ride = transportRepo
-      .getSnapshot()
-      .rides.find((r) => r.status === "unassigned");
+    const ride = transportRepo.getSnapshot().rides.find((r) => r.status === "unassigned");
     expect(ride).toBeDefined();
     assignTransportAction(ride!.id, "m1");
     const ds = buildTodayDataset({ viewerId: DEMO_VIEWER_ID });
@@ -108,7 +102,7 @@ describe("todayService — integration with canonical repos", () => {
 
     const after = buildTodayDataset().shopping;
     expect(after?.itemsCount).toBe(beforeCount + 1);
-    expect((after?.urgentCount ?? 0)).toBeGreaterThan(0);
+    expect(after?.urgentCount ?? 0).toBeGreaterThan(0);
   });
 
   it("soft-deleting a task removes it from the Today dataset", () => {
@@ -137,11 +131,10 @@ describe("todayService — integration with canonical repos", () => {
       viewerId: todayViewerIds.child,
       viewerRole: "child",
     });
-    expect(dsChild.tasks.filter((t) => t.adultsOnly && t.assigneeId === todayViewerIds.child).length)
-      .toBeGreaterThan(0);
     expect(
-      selectMyTasks(dsChild).some((t) => t.title === "לתאם עם רואה החשבון"),
-    ).toBe(false);
+      dsChild.tasks.filter((t) => t.adultsOnly && t.assigneeId === todayViewerIds.child).length,
+    ).toBeGreaterThan(0);
+    expect(selectMyTasks(dsChild).some((t) => t.title === "לתאם עם רואה החשבון")).toBe(false);
   });
 
   it("failed mutation does not corrupt the canonical repo (input preserved)", () => {
