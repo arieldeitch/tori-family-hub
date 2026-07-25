@@ -23,7 +23,9 @@ export function generateDatabaseTypes(): string {
   const header =
     "// GENERATED FILE — do not edit by hand.\n" +
     "// Regenerate with `bun run db:types` from the local Supabase stack.\n" +
-    "// Currently reflects an empty public schema (no business tables until WP3).\n\n";
+    "// Reflects the Identity & Household foundation (WP3). RLS is enabled with\n" +
+    "// no policies and no client grants, so these tables are not reachable from\n" +
+    "// the browser yet — see docs/decisions.md (ADR-023).\n\n";
   // Normalize to LF so the file matches the repo's .gitattributes policy.
   return (header + result.stdout).replace(/\r\n/g, "\n");
 }
