@@ -48,6 +48,20 @@ Source of truth for testing.
 - soft delete
 - unauthorized access
 
+## Family Pilot test requirements
+
+The pilot milestone must add, at minimum:
+
+**Rotation and generation** — deterministic child rotation; the same input and `algorithm_version` always produce the same assignment; no duplicate occurrence is ever generated for the same (template, date); adding a chore creates future instances.
+
+**Completion** — completion persists after refresh; a failed write does **not** render as success and rolls back visibly; completion writes an activity-log entry; template edits never rewrite historical instances.
+
+**Accessibility and layout** — completed vs not-completed is distinguishable **without colour** (icon + "בוצע" text + accessible state); the task card works at **360px and 390px**; full RTL; keyboard operable with a visible focus ring.
+
+**Views** — each child sees their own weekly schedule; the family view shows both children; Sunday→Saturday grouping is correct; the rotation explanation is visible.
+
+**Security** — household isolation with positive **and** negative RLS tests on every new task table; no service-role key in the client bundle (`check:client-secrets`); the pilot bootstrap is **idempotent**; the shared `seed.sql` remains **business-empty** after any bootstrap or test run.
+
 ## Base dataset
 
 - Household A with owner, adult, two children, and a guest.

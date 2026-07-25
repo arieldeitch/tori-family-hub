@@ -1,0 +1,43 @@
+{
+  "_comment": [
+    "TEMPLATE ONLY — placeholders, never real people.",
+    "Copy to pilot-household.local.json (git-ignored) and fill in the real",
+    "pilot household there. Never commit the filled file, and never copy its",
+    "contents into a migration, into supabase/seed.sql, into a committed test",
+    "fixture, into documentation, or into a source-code constant (ADR-034).",
+    "Ages are product context only: there is deliberately no dateOfBirth field",
+    "and no age field — do not add one without an approved, privacy-safe design."
+  ],
+  "household": {
+    "name": "<household name>",
+    "timezone": "Asia/Jerusalem",
+    "locale": "he-IL",
+    "weekStartsOn": 0
+  },
+  "adultPilotIdentity": {
+    "_comment": "The single authenticated adult used for the pilot. The password is supplied at bootstrap time via the environment, never stored here.",
+    "email": "<adult@example.invalid>",
+    "linkedProfileKey": "adult-1"
+  },
+  "profiles": [
+    { "key": "adult-1", "displayName": "<adult one>", "isChild": false },
+    { "key": "adult-2", "displayName": "<adult two>", "isChild": false },
+    { "key": "child-1", "displayName": "<child one>", "isChild": true },
+    { "key": "child-2", "displayName": "<child two>", "isChild": true }
+  ],
+  "rotation": {
+    "_comment": "Fixed, deterministic sequence between the child profiles. Order is significant.",
+    "strategy": "fixed_sequence",
+    "sequence": ["child-1", "child-2"]
+  },
+  "chores": [
+    {
+      "_comment": "Schedule and frequency are approval decisions — these are placeholders, not defaults to ship.",
+      "title": "<chore title>",
+      "byWeekday": [],
+      "timeOfDay": null,
+      "participants": ["child-1", "child-2"],
+      "assignmentStrategy": "fixed_sequence"
+    }
+  ]
+}

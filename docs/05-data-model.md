@@ -46,6 +46,15 @@ An invitation is accepted in an **atomic** operation that verifies token, expiry
 
 Entities: `task_templates` · `task_instances` · `task_assignments` · `task_comments` · `task_activity_log`.
 
+**Clarifications for the Family Pilot** (no schema exists yet — these constrain the WP5B design):
+
+- A generated occurrence needs an **occurrence key** or equivalent unique constraint so re-running generation is idempotent and can never create a duplicate for the same (template, date) — see the recurring-instance rule below.
+- An instance created from a template carries **snapshots** (`title_snapshot`, `description_snapshot`), so editing a template never rewrites historical instances.
+- When an assignment is computed by the rotation engine, the instance or assignment persists the **`algorithm_version`** and **`reason_code`** that produced it, so the choice stays explainable after the engine changes (ADR-006, [`08-rotation-engine.md`](./08-rotation-engine.md)).
+- Completion records **`completed_at`** and **`completed_by`**, and writes a **`task_activity_log`** entry. Undo, if approved, is a further logged transition — never a silent deletion.
+- Every one of these tables carries `household_id` and ships `ENABLE ROW LEVEL SECURITY` in the same migration, with the membership predicate from [`06-security-and-permissions.md`](./06-security-and-permissions.md).
+- **Age is not stored.** The pilot treats children's ages as product context only; `date_of_birth` stays client-inaccessible (ADR-029) and no age column is added.
+
 `task_instances` includes at least:
 `id` · `household_id` · `template_id` · `title_snapshot` · `description_snapshot` · `scheduled_for` · `due_at` · `status` · `priority` · `source` · `completed_at` · `completed_by` · `manual_override` · timestamps · soft-delete fields.
 

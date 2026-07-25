@@ -39,6 +39,16 @@ Auth, Supabase, Storage, Notifications, PWA, Telemetry, Jobs, Integrations.
 - A non-mergeable conflict is shown to the user — no silent overwrite.
 - The initial PWA is app-shell-only. No deliberate caching of tokens or sensitive family data. See [`PWA.md`](./PWA.md).
 
+## Acting on behalf of another profile (Family Pilot)
+
+The Family Pilot runs with **one authenticated adult identity** and a **profile selector** in the UI (ADR-035, [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md)). That selector is a **display and attribution** mechanism, never an authorization mechanism.
+
+- Authority always derives from the **authenticated adult's membership**, exactly as WP4 enforces it. A client-supplied `profile_id` is never trusted.
+- A write made on behalf of a child goes through a **server-side use case or RPC**, which verifies that the authenticated caller belongs to the same household and may act for that profile before writing.
+- The **acting profile is recorded in the activity log** alongside the authenticated actor, so history shows both who was represented and who actually performed the action.
+- The pilot adds **no anonymous write path**, no service-role key in the browser, and no RLS bypass. `localStorage` may cache, never own.
+- The whole pilot mode sits behind an **explicit non-production environment guard**.
+
 ## Server boundary
 
 Sensitive actions must go through an RPC or a server endpoint — see [`06-security-and-permissions.md`](./06-security-and-permissions.md#sensitive-actions).

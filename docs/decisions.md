@@ -38,6 +38,9 @@ This is the canonical decision log. The prototype-era `LOVABLE_DECISIONS.md` rec
 | ADR-030 | `service_role` holds DML on the identity tables for server-side administration and deterministic test fixtures only; its key never reaches the browser. | Accepted |
 | ADR-031 | `household_members.auth_user_id ON DELETE RESTRICT` is deferred to WP4.6, which blocks production account deletion and onboarding until it lands. | Accepted |
 | ADR-032 | The structural and Auth-backed database suites are separated, and the shared `seed.sql` stays business-empty. | Accepted |
+| ADR-033 | Family Pilot (Weekly Child Chores) is the next milestone. In-app user management is deferred **for the pilot only** and the long-term Auth, PIN, invitation and permission requirements stand unchanged. | Accepted |
+| ADR-034 | Personal pilot data never enters a migration or the shared seed. It is loaded by an environment-guarded, idempotent bootstrap, and pilot mode is non-production unless separately hardened and approved. | Accepted |
+| ADR-035 | The temporary pilot access model. | **Proposed** |
 
 ## ADR-021 — Supabase local workflow (WP2)
 
@@ -162,6 +165,37 @@ The database suites are separated by path so they can run in the right order:
 Auth identities are created through the **Auth admin API, never by SQL** against `auth.users`; domain rows are created with `service_role` through PostgREST. Fixture orchestration is idempotent (setup tears down first) and cleans up in a `finally` block so a failing test cannot leave residue. Fixture addresses use the non-routable `@tori.invalid` domain, and passwords are generated per run, never logged and never committed.
 
 Because pgTAP connects as `postgres` — which has `BYPASSRLS` and owns the tables — **every behavioural test asserts `current_user = 'authenticated'` before evaluating policy results.** Without that, the suite would pass regardless of what the policies say. `FORCE ROW LEVEL SECURITY` is deliberately not enabled, so this assertion is the guard.
+
+## ADR-033 — Family Pilot is the next milestone; user management is deferred, not removed
+
+The product owner has changed the immediate execution priority. The next product milestone is **Family Pilot — Weekly Child Chores**: a narrow vertical slice letting the real household see and complete weekly chores. Scope in [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md). This supersedes the plan to begin WP4.5 immediately.
+
+- **Full user-management UI is deferred** for the pilot — onboarding, invitation management, child PIN entry, account management. Transport, shopping and notifications are deferred too.
+- **The long-term requirements remain valid and unchanged**: real Supabase Auth per adult, child limited sessions and PIN with rate limiting, lockout and adult reset, invitation create/revoke/accept, role and ownership RPCs, and full RLS on every family table (PRD §5, [`06-security-and-permissions.md`](./06-security-and-permissions.md), ADR-012, ADR-013, ADR-025, ADR-026, ADR-028). The pilot may not make any of them harder to add and may not weaken what WP4 enforces.
+- **The pilot is explicitly non-production.** It runs behind an environment guard and must be impossible to enable accidentally in production.
+- **PostgreSQL remains the source of truth** (ADR-010). The weekly view reads from the database, not from fixtures, and `localStorage` never becomes the source of truth.
+- **`service_role` never enters browser code** (ADR-030), there are no anonymous writes, and nothing bypasses RLS.
+- **The shared `supabase/seed.sql` remains business-empty** (ADR-032).
+- **WP4.6 must complete before production onboarding or any account-deletion capability** (ADR-031). It does **not** block this pilot, which is non-production and ships no account management and no account deletion.
+
+## ADR-034 — Pilot household data is local and uncommitted
+
+The pilot household is described canonically as **two adults and two children**. The actual names and ages are local pilot data.
+
+They must never appear in a migration, in `supabase/seed.sql`, in committed automated-test fixtures, in documentation examples, or in a source-code constant.
+
+- Real values live in a **git-ignored** `pilot-household.local.json` at the repository root; `pilot-household.example.json` is committed with placeholders only.
+- An **idempotent local bootstrap** reads that file and converges the database on the described household — safe to re-run, creating no duplicates.
+- The bootstrap runs behind an **explicit environment guard**, writes through the normal authorization path, and uses no service-role key in the browser.
+- **Age is product context only.** `date_of_birth` stays client-inaccessible (ADR-029); no age column is added and no dates of birth are fabricated.
+
+## ADR-035 — Temporary pilot access model (Proposed)
+
+**Status: Proposed — awaiting owner approval.** Nothing is implemented until this is accepted.
+
+The recommended model: **one authenticated adult pilot identity**, one household, four member profiles, and a **profile selector inside the pilot UI** that chooses whose week is shown. The selector is a display-and-attribution mechanism, never an authorization mechanism.
+
+Any accepted model must satisfy: writes on behalf of a child go through a **server-side use case or RPC** · the server verifies the authenticated adult belongs to the same household and may act for that profile · a **client-supplied profile id is never trusted** · the acting profile is **recorded in the activity log** · no anonymous writes · no service-role key in browser code · no RLS bypass · `localStorage` is not a source of truth · an explicit non-production environment guard · impossible to enable accidentally in production · and a clear migration path to real per-person accounts.
 
 ## Notes
 

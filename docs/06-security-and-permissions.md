@@ -61,6 +61,17 @@ A denied read returns **zero rows**, never an error that would reveal another ho
 
 Rate limiting, lockout, and reset by an authorized adult are required.
 
+## Family Pilot — temporary access posture
+
+The pilot defers user-management screens but **relaxes no enforcement** (ADR-033).
+
+- One authenticated adult identity; the in-app profile selector chooses whose week is displayed and is **not** an authorization mechanism.
+- Acting for a child profile is a **server-side use case or RPC** that re-verifies household membership and permission; the client's `profile_id` is untrusted input.
+- The acting profile is written to the activity log next to the authenticated actor.
+- Unchanged and non-negotiable: no anonymous writes (`enable_anonymous_sign_ins` stays `false`), no service-role key in browser code, no RLS bypass, `localStorage` is not a source of truth.
+- Pilot mode is **non-production** and guarded by an explicit environment flag that cannot be enabled accidentally in production.
+- Child PIN, device sessions, invitations and onboarding remain **required future work**, merely deferred (ADR-013, ADR-025, ADR-028).
+
 ## Sensitive actions
 
 These require an RPC or a server endpoint (never a client-side write):

@@ -167,7 +167,9 @@
 1. ~~**Merge PR #3** (WP2 → `main`)~~ — בוצע.
 2. ~~**WP3** — Identity and Household Schema~~ — בוצע ומוזג.
 3. ~~**WP4** — RLS and Negative Tests~~ — בוצע ומוזג.
-4. **WP4.5** — Identity RPCs (הצעד הבא). לאחר מכן **WP4.6** — Auth account deletion (⚠️ חוסם את WP5).
+4. **Family Pilot — Weekly Child Chores** (הצעד הבא): WP5A→WP5E. ראה [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) ו־ADR-033. תכנון בלבד בשלב זה.
+5. **WP4.5** — Identity RPCs (נדרש, אך לא הבא בתור).
+6. **WP4.6** — Auth account deletion (⚠️ חוסם onboarding בפרודקשן ומחיקת חשבון; אינו חוסם את הפיילוט הלא־פרודקשן).
 4. **WP5** — Real Onboarding (חיבור onboarding לנתונים אמיתיים).
 5. לאחר מכן — הרחבת backend למודולים עסקיים, **מודול אחד בכל פעם**.
 

@@ -29,7 +29,9 @@ Operational instructions for Claude Code working on Tori.
 
 ## Current stage
 
-**WP4 is merged to `main`.** Next is **WP4.5 — Identity RPCs**, then **WP4.6 — Auth account deletion** (see [`todo.md`](./todo.md)).
+**WP4 is merged to `main`.** The product owner then changed the immediate priority: the next milestone is the **Family Pilot — Weekly Child Chores** (WP5A → WP5E), see [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) and ADR-033. Planning only — no task schema, bootstrap or UI exists yet.
+
+WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are no longer immediately next.
 
 ⚠️ **WP4.6 is blocking.** `household_members.auth_user_id` is still `ON DELETE CASCADE`: deleting an Auth account silently deletes membership rows and can leave a household ownerless. It must become `ON DELETE RESTRICT` with a controlled deletion workflow **before** WP5 ships production onboarding (ADR-031).
 
@@ -41,6 +43,8 @@ Operational instructions for Claude Code working on Tori.
 - Every RLS change requires positive **and** negative tests.
 - Authorization helpers live in `private`, are SECURITY DEFINER with `search_path = ''`, and **never take a user id** (ADR-027). Never add one to `public`.
 - Membership and invitation mutations are **RPC-only** (ADR-028). Never grant a client INSERT/UPDATE/DELETE on `household_members` or `household_invitations`.
+- **Never commit pilot household data** — real names/ages live only in the git-ignored `pilot-household.local.json`, never in a migration, the shared seed, a committed fixture, documentation or a source constant (ADR-034).
+- The pilot profile selector is **display and attribution only**; authority always comes from the authenticated adult's membership, verified server-side (ADR-035).
 - **Never hand-edit a generated file** — `src/routeTree.gen.ts` (regenerate with `bun run build`) and `src/infrastructure/supabase/database.types.ts` (regenerate with `bun run db:types`). Both are committed and CI-verified fresh.
 - No service role in the browser; no `localStorage` as a source of truth; no success before persistence.
 - At the end of every task, update [`project-status.md`](./project-status.md), [`todo.md`](./todo.md), [`claude-context.md`](./claude-context.md), and [`gpt-handover.md`](./gpt-handover.md).
@@ -48,4 +52,4 @@ Operational instructions for Claude Code working on Tori.
 
 ## Next after WP4
 
-WP4.5 — Identity RPCs, then WP4.6 — Auth account deletion (blocking for WP5). See [`todo.md`](./todo.md). Do not start them in this task.
+The **Family Pilot — Weekly Child Chores** (see [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md)). Do not start implementation before the Architecture Approval Brief is approved, and do not start WP4.5/WP4.6 or any unrelated module ahead of it.
