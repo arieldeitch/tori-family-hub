@@ -26,6 +26,12 @@ jobs:
       - name: Verify generated route tree is up to date
         run: bun run routes:check
 
+      # Scans src/ AND the freshly built .output/ + dist/ for service-role key
+      # names, the sb_secret_ prefix and VITE_*SERVICE_ROLE variables. The
+      # browser bundle must never carry service-role material.
+      - name: Check no service-role material reaches the client
+        run: bun run check:client-secrets
+
   database:
     # Validates the local Supabase infrastructure: migrations, seed, generated
     # types freshness, and a public-key-only API smoke test. Local-only — no
@@ -64,11 +70,32 @@ jobs:
       - name: Smoke test (public URL + key only)
         run: bun run db:smoke
 
-      # pgTAP structural/constraint tests via the locked Supabase CLI. Each file
-      # is transactional and rolls back, so the tests leave no residue and can
-      # run in any order.
-      - name: Database schema tests (pgTAP)
-        run: bun run db:test
+      # Structural + policy-catalog pgTAP. Runs BEFORE any fixture exists,
+      # because it asserts the shared seed is business-empty. Each file is
+      # transactional and rolls back, so it leaves no residue.
+      - name: Structural and policy-catalog tests (pgTAP)
+        run: bun run db:test:structure
+
+      # WP4 Auth-backed suite: creates deterministic Auth identities via the
+      # Auth admin API and domain rows via service_role, runs the behavioural
+      # RLS pgTAP tests and the publishable-key integration tests, then cleans
+      # up in a finally block.
+      #
+      # The service-role key is masked before any command can emit it, is passed
+      # only to this step's process, and is never written to GITHUB_ENV, a file
+      # or a VITE_* variable.
+      - name: Auth-backed RLS suite (behavioural pgTAP + integration)
+        run: |
+          JSON="$(bunx supabase status -o json)"
+          KEY="$(echo "$JSON" | jq -r '.SERVICE_ROLE_KEY // .SECRET_KEY')"
+          echo "::add-mask::$KEY"
+          SUPABASE_SERVICE_ROLE_KEY="$KEY" bun run db:test:auth-suite
+          SUPABASE_SERVICE_ROLE_KEY="$KEY" bun run check:client-secrets
+
+      # Fixture teardown must have restored the business-empty state: re-running
+      # the structural suite proves seed.sql is still business-empty.
+      - name: Confirm the shared seed is still business-empty
+        run: bun run db:test:structure
 
       - name: Stop Supabase
         if: always()
