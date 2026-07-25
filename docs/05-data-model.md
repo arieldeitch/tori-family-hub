@@ -6,7 +6,9 @@ Source of truth for the data model. The future source of truth is **PostgreSQL**
 
 ## Identity & Household
 
-Built in WP3 with RLS enabled, zero policies and no client privileges — see [`decisions.md`](./decisions.md) ADR-023.
+Built in WP3; RLS policies and the minimum grants added in WP4. Access is column-level only — see [`06-security-and-permissions.md`](./06-security-and-permissions.md) for the policy matrix and [`decisions.md`](./decisions.md) ADR-027…ADR-032.
+
+**Client-inaccessible columns** (never granted to `anon` or `authenticated`): `member_profiles.date_of_birth`, `household_invitations.token_hash` and `created_by`, `household_members.auth_user_id`, and the `created_by` / `deleted_at` / `deleted_by` audit columns.
 
 ### `households`
 `id` · `name` · `timezone` · `locale` · `week_starts_on` · quiet-hours defaults · `created_by` · timestamps · soft-delete fields.
@@ -16,7 +18,9 @@ Hebrew-first defaults: `Asia/Jerusalem`, `he-IL`, `week_starts_on = 0`.
 ### `member_profiles`
 `id` · `household_id` · `display_name` · `avatar_path` · `color_token` · `date_of_birth` · `is_child` · `is_active` · `pin_auth_enabled` · timestamps · soft-delete fields.
 
-> **No `pin_hash`.** An earlier version of this document placed `pin_hash` on this row; that design was **deliberately dropped** in WP3 — see [`decisions.md`](./decisions.md) **ADR-025**. Household members will eventually be able to read profile rows, so no credential material may live here. `pin_auth_enabled` is non-sensitive configuration metadata only (default `false`) and authenticates nothing. Future PIN credentials live in an unexposed `private.member_pin_credentials` with no client grants, reachable only through a secured server/RPC boundary, and enabling PIN must be atomic with creating a valid credential.
+> **No `pin_hash`.** An earlier version of this document placed `pin_hash` on this row; that design was **deliberately dropped** in WP3 — see [`decisions.md`](./decisions.md) **ADR-025**. Household members can read profile rows, so no credential material may live here. `pin_auth_enabled` is non-sensitive configuration metadata only (default `false`), readable but **not writable** by clients, and authenticates nothing. Future PIN credentials live in an unexposed `private.member_pin_credentials` with no client grants, reachable only through a secured server/RPC boundary, and enabling PIN must be atomic with creating a valid credential.
+
+> **`date_of_birth` is not client-accessible.** WP4 grants neither SELECT nor UPDATE on it, and deliberately created **no** accessor function and **no** view (ADR-029). Read and write behaviour is deferred to a future sensitive-profile RPC or permission model; do not assume every adult is authorized to see it. Tracked in [`todo.md`](./todo.md).
 
 A profile is a **person, independent of any login**: children have profiles but no account (ADR-013). Auth linkage lives on `household_members`, never here.
 

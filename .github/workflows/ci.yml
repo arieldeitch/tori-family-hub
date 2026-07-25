@@ -26,6 +26,12 @@ jobs:
       - name: Verify generated route tree is up to date
         run: bun run routes:check
 
+      # Scans src/ AND the freshly built .output/ + dist/ for service-role key
+      # names, the sb_secret_ prefix and VITE_*SERVICE_ROLE variables. The
+      # browser bundle must never carry service-role material.
+      - name: Check no service-role material reaches the client
+        run: bun run check:client-secrets
+
   database:
     # Validates the local Supabase infrastructure: migrations, seed, generated
     # types freshness, and a public-key-only API smoke test. Local-only — no
@@ -41,11 +47,30 @@ jobs:
       # Start only the containers needed for schema + REST validation. Excludes
       # studio, storage, realtime, functions and the analytics/vector logging
       # stack to keep CI lean and avoid flaky logging containers.
+      # `supabase start` prints the local keys on success, so its output is
+      # captured rather than echoed. The secret-bearing values are masked
+      # immediately afterwards, before anything — including the failure dump
+      # below — can emit them. These are well-known local dev defaults with no
+      # remote project behind them, but they are masked anyway so the habit
+      # holds once a remote environment exists.
       - name: Start local Supabase (DB + API only)
-        run: >-
-          bunx supabase start
-          -x studio,imgproxy,inbucket,realtime,storage,edge-runtime,functions,analytics,vector,meta
-          --ignore-health-check
+        run: |
+          set +e
+          bunx supabase start \
+            -x studio,imgproxy,inbucket,realtime,storage,edge-runtime,functions,analytics,vector,meta \
+            --ignore-health-check > "$RUNNER_TEMP/supabase-start.log" 2>&1
+          START_STATUS=$?
+          set -e
+          JSON="$(bunx supabase status -o json 2>/dev/null || true)"
+          for KEY_NAME in SERVICE_ROLE_KEY SECRET_KEY JWT_SECRET S3_PROTOCOL_ACCESS_KEY_SECRET; do
+            VALUE="$(echo "$JSON" | jq -r --arg k "$KEY_NAME" '.[$k] // empty')"
+            if [ -n "$VALUE" ]; then echo "::add-mask::$VALUE"; fi
+          done
+          if [ "$START_STATUS" -ne 0 ]; then
+            cat "$RUNNER_TEMP/supabase-start.log"
+            exit "$START_STATUS"
+          fi
+          echo "Local Supabase started; secret-bearing keys masked."
 
       - name: Reset database (apply migrations + seed)
         run: bunx supabase db reset
@@ -64,11 +89,32 @@ jobs:
       - name: Smoke test (public URL + key only)
         run: bun run db:smoke
 
-      # pgTAP structural/constraint tests via the locked Supabase CLI. Each file
-      # is transactional and rolls back, so the tests leave no residue and can
-      # run in any order.
-      - name: Database schema tests (pgTAP)
-        run: bun run db:test
+      # Structural + policy-catalog pgTAP. Runs BEFORE any fixture exists,
+      # because it asserts the shared seed is business-empty. Each file is
+      # transactional and rolls back, so it leaves no residue.
+      - name: Structural and policy-catalog tests (pgTAP)
+        run: bun run db:test:structure
+
+      # WP4 Auth-backed suite: creates deterministic Auth identities via the
+      # Auth admin API and domain rows via service_role, runs the behavioural
+      # RLS pgTAP tests and the publishable-key integration tests, then cleans
+      # up in a finally block.
+      #
+      # The service-role key is masked before any command can emit it, is passed
+      # only to this step's process, and is never written to GITHUB_ENV, a file
+      # or a VITE_* variable.
+      - name: Auth-backed RLS suite (behavioural pgTAP + integration)
+        run: |
+          JSON="$(bunx supabase status -o json)"
+          KEY="$(echo "$JSON" | jq -r '.SERVICE_ROLE_KEY // .SECRET_KEY')"
+          echo "::add-mask::$KEY"
+          SUPABASE_SERVICE_ROLE_KEY="$KEY" bun run db:test:auth-suite
+          SUPABASE_SERVICE_ROLE_KEY="$KEY" bun run check:client-secrets
+
+      # Fixture teardown must have restored the business-empty state: re-running
+      # the structural suite proves seed.sql is still business-empty.
+      - name: Confirm the shared seed is still business-empty
+        run: bun run db:test:structure
 
       - name: Stop Supabase
         if: always()

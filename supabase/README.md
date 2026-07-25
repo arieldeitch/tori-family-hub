@@ -1,8 +1,8 @@
-# Supabase — local workflow (WP2) + Identity & Household schema (WP3)
+# Supabase — local workflow (WP2), Identity & Household schema (WP3), RLS (WP4)
 
 Local-first Supabase for Tori. **Local development only — there is no remote project and no Auth.** The app still runs entirely on in-memory mock repositories; the Supabase client is infrastructure scaffold only (see `src/infrastructure/supabase/`).
 
-WP3 added the Identity & Household schema (`households`, `member_profiles`, `household_members`, `household_invitations`). Those tables are **deliberately locked down**: RLS is enabled, there are **zero policies**, and all privileges are revoked from `PUBLIC`, `anon` and `authenticated`, so nothing is reachable through the Data API. WP4 adds the minimum grants together with the complete policy set — see `../docs/decisions.md` (ADR-023).
+WP3 added the Identity & Household schema (`households`, `member_profiles`, `household_members`, `household_invitations`). **WP4 enforced RLS on it**: three `SECURITY DEFINER` helpers in a non-exposed `private` schema, minimum **column-level** grants and six policies, shipped in one migration. `anon` holds nothing; `household_members` and `household_invitations` are client-read-only; `date_of_birth`, `token_hash` and `auth_user_id` are ungranted. See `../docs/06-security-and-permissions.md` for the policy matrix and `../docs/decisions.md` (ADR-027…ADR-032).
 
 ## Prerequisites
 
@@ -21,8 +21,10 @@ WP3 added the Identity & Household schema (`households`, `member_profiles`, `hou
 | `bun run db:reset` | Reset the local DB → runs migrations then `seed.sql`. |
 | `bun run db:types` | Regenerate `src/infrastructure/supabase/database.types.ts`. |
 | `bun run db:smoke` | Hit the local REST health endpoint using the public URL + key only. |
-| `bun run db:test` | Run the pgTAP schema tests in `tests/database/` via `supabase test db`. |
-| `bun run db:verify` | Reset → check types are up to date → smoke → pgTAP tests. |
+| `bun run db:test:structure` | pgTAP in `tests/database/` — structure, policy catalog, GRANT matrix, helper properties. No fixtures. |
+| `bun run db:test:rls` | pgTAP in `tests/rls/` — behavioural RLS. **Requires fixtures.** |
+| `bun run db:test:auth-suite` | Fixtures → `db:test:rls` → publishable-key integration tests → cleanup. |
+| `bun run db:verify` | Reset → types → smoke → structural pgTAP → full Auth-backed suite. |
 
 ## Rules
 
@@ -31,11 +33,17 @@ WP3 added the Identity & Household schema (`households`, `member_profiles`, `hou
 - The service role key must never reach browser/client code.
 - **Never write to `auth.users` with SQL** — reference it by foreign key only. Test users are created through the Auth admin API (WP4).
 - Every `CREATE TABLE public.*` ships `ENABLE ROW LEVEL SECURITY` in the same migration. A table must never exist in a reachable state without policies.
+- Authorization helpers belong in `private`, never `public` — `public` is exposed as the Data API. They take no user id (ADR-027).
+- Never grant a client INSERT/UPDATE/DELETE on `household_members` or `household_invitations` (ADR-028).
+- The service-role key is server-side only: never in a `VITE_*` variable, client code, build output or `.env.local` written by CI (ADR-030).
 
 ## Files
 
 - `config.toml` — local stack configuration (tracked).
-- `migrations/` — schema migrations (tracked): the WP2 empty foundation migration and the WP3 Identity & Household migration.
+- `migrations/` — schema migrations (tracked): WP2 empty foundation, WP3 Identity & Household schema, WP4 RLS/grants/helpers.
 - `seed.sql` — post-reset seed (tracked; **business-empty on purpose**). Fixtures live in the tests and are rolled back; the Household A/B dataset needs real Auth users and arrives with WP4.
-- `tests/database/` — pgTAP tests (tracked). Every file is wrapped in `begin … rollback`, so tests are transactional, independent and leave no residue.
+- `tests/database/` — structural + policy-catalog pgTAP (tracked). Runs **before** any fixture exists, because it asserts the seed is business-empty.
+- `tests/rls/` — behavioural RLS pgTAP (tracked). Requires Auth-backed fixtures. Every behavioural test asserts `current_user = 'authenticated'` first, because pgTAP connects as a `BYPASSRLS` owner.
+
+Every pgTAP file is wrapped in `begin … rollback`, so tests are transactional, independent and leave no residue.
 - `.gitignore` — ignores CLI temp/branch state and local env files.

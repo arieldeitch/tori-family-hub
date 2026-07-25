@@ -2,7 +2,7 @@
 
 **Tori is a Family Operations Hub** — Hebrew-first (RTL), mobile-first. The product promise: *the house knows who does what.* The Today screen is the center of the product.
 
-> ⚠️ **No real backend yet.** All business data lives in in-memory mock repositories and is lost on refresh. There is **no authentication, no RLS policy, and no real persistence**. A **local-only** Supabase dev workflow exists (WP2) and the Identity & Household schema exists (WP3), but those tables are deliberately locked down — RLS enabled with zero policies and no client grants — and **no module reads or writes them**. Roles and PIN are UX guards only — not security.
+> ⚠️ **No real backend wired in yet.** All business data lives in in-memory mock repositories and is lost on refresh. There is **no authentication flow and no real persistence in the app**. A **local-only** Supabase dev workflow exists (WP2), the Identity & Household schema exists (WP3), and **RLS is now enforced on it with positive and negative tests** (WP4) — but **no module reads or writes those tables**. Roles and PIN in the UI are UX guards only — not security.
 
 ## Status
 
@@ -11,7 +11,8 @@
 - **WP2 (Supabase Local Workflow)** — complete and **merged to `main`** (PR #3): locked Supabase CLI dev dependency + `@supabase/supabase-js`, `supabase/` (config + empty foundation migration + business-empty seed), a typed infrastructure-only client, `db:*` scripts, and a CI `database` job. Local-only — no remote project, no schema, no Auth/RLS. **162/162 tests pass** across 19 test files; lint 0 errors / 6 known shadcn warnings; build and CI green.
 - **Post-WP2 consistency pass** — the committed generated route tree (`src/routeTree.gen.ts`) is in sync with the generator and CI verifies its freshness (see [`docs/decisions.md`](./docs/decisions.md), ADR-022).
 - **WP3 (Identity & Household Schema)** — complete and merged: enums `household_role` + `household_membership_status` and tables `households`, `member_profiles`, `household_members`, `household_invitations`, with household consistency enforced by composite foreign keys. **RLS is enabled with zero policies and no client grants** (ADR-023) — the tables are unreachable until WP4. **102 pgTAP tests** run in CI.
-- Next: WP4 — RLS & Negative Tests (see [`docs/todo.md`](./docs/todo.md)).
+- **WP4 (Identity & Household RLS)** — complete and merged: three `SECURITY DEFINER` authorization helpers in a non-exposed `private` schema, minimum **column-level** grants, six RLS policies, and negative-access tests. `anon` holds nothing; membership and invitation mutations are RPC-only; `date_of_birth`, `token_hash` and `auth_user_id` are unreachable by clients. **181 structural + 117 behavioural pgTAP tests and 34 Auth-backed integration assertions** run in CI.
+- Next: WP4.5 — Identity RPCs, then WP4.6 — Auth account deletion (**blocking for WP5**). See [`docs/todo.md`](./docs/todo.md).
 
 ## Stack
 
@@ -46,8 +47,10 @@ Package manager: **Bun** (`bun.lock` committed; CI uses `oven-sh/setup-bun@v2`).
 | `bun run db:reset` | Reset local DB → run migrations + `seed.sql` |
 | `bun run db:types` | Regenerate `src/infrastructure/supabase/database.types.ts` |
 | `bun run db:smoke` | Public-key-only local REST health check |
-| `bun run db:test` | pgTAP schema tests (`supabase test db`, transactional) |
-| `bun run db:verify` | Reset → check types are current → smoke → pgTAP tests |
+| `bun run db:test:structure` | Structural + policy-catalog pgTAP (no fixtures needed) |
+| `bun run db:test:auth-suite` | Auth fixtures → behavioural RLS pgTAP → integration tests → cleanup |
+| `bun run check:client-secrets` | Fail if service-role material reaches `src/` or the build output |
+| `bun run db:verify` | Reset → types current → smoke → structural pgTAP → full Auth-backed suite |
 
 ## Environment
 
@@ -55,7 +58,7 @@ Copy `.env.example` to `.env.local`. Only public `VITE_*` values live there. No 
 
 ## Local Supabase (development)
 
-WP2 added a **local-only** Supabase workflow; WP3 added the Identity & Household schema. There is still no Auth, no RLS policy, and the client is not wired to any module (all modules still use mock repositories). The WP3 tables have RLS enabled with **zero policies and no privileges for `anon`/`authenticated`**, so they are not reachable through the Data API until WP4.
+WP2 added a **local-only** Supabase workflow, WP3 the Identity & Household schema, and WP4 the RLS policies and minimum grants. There is still no Auth flow and the client is not wired to any module (all modules still use mock repositories). Access is column-level only: `anon` holds nothing, `authenticated` reads its own household, and every membership or invitation mutation remains RPC-only.
 
 1. Start Docker Desktop (or a compatible engine).
 2. `bun run supabase:start` — starts the local stack (Supabase CLI is a locked dev dependency; run via `bunx supabase`).

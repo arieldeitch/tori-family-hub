@@ -77,8 +77,9 @@
 - **WP1** — Knowledge Pack: מוזג ל־`main`.
 - **WP2** — Supabase Local Workflow: הושלם ו**מוזג ל־`main`** (PR #3, merge commit `9e691c9`).
 - **Post-WP2 consistency pass** — ה־route tree המגונרר (`src/routeTree.gen.ts`) סונכרן עם הגנרטור, CI מאמת את טריותו (`routes:check`, ADR-022), ומספרים ישנים בתיעוד תוקנו.
-- **WP3** — Identity & Household Schema: הושלם ומוזג ל־`main`. טבלאות נעולות (RLS enabled, אפס policies, אפס הרשאות ללקוח).
-- **162 app tests** ב־19 קבצים + **102 pgTAP tests** ב־7 קבצים; CI כולל שני jobs: **verify** ו־**database**.
+- **WP3** — Identity & Household Schema: הושלם ומוזג ל־`main`.
+- **WP4** — RLS, grants ובדיקות שליליות: הושלם ומוזג ל־`main`. שלושה helpers ב־schema `private`, grants ברמת עמודה, שש policies.
+- **162 app tests** ב־19 קבצים + **181 structural pgTAP** + **117 behavioural RLS pgTAP** + **34 Auth-backed integration assertions**; CI כולל שני jobs: **verify** ו־**database**.
 - WP0 כלל תיקון באג **timezone** במנוע התורנויות ומדיניות **LF** (`.gitattributes`).
 - WP2 כלל **local Supabase workflow**, **generated database types**, ו־**public-key-only smoke test**.
 
@@ -93,10 +94,10 @@
 ## 8. Current backend state
 
 - Supabase הוא **local-only**; **אין remote project**, אין `login`/`link`, אין `db push`.
-- **אין Auth**, **אין RLS policies**, **אין persistence** למודולי המוצר.
+- **אין Auth flow**, **אין RPC**, **אין persistence** למודולי המוצר.
 - **mock repositories עדיין פעילים** לכל המודולים העסקיים.
-- שתי migrations: `20260724153731_wp2_foundation.sql` (ריקה) ו־`20260725143927_wp3_identity_household.sql` (**Identity & Household**: enums `household_role` + `household_membership_status`, טבלאות `households`, `member_profiles`, `household_members`, `household_invitations`).
-- טבלאות WP3 **נעולות בכוונה** (ADR-023): RLS enabled, **אפס policies**, וכל ההרשאות נשללו מ־`PUBLIC`/`anon`/`authenticated`. אין גישה דרך ה־Data API. WP4 פותח אותן.
+- שלוש migrations: `20260724153731_wp2_foundation.sql` (ריקה), `20260725143927_wp3_identity_household.sql` ו־`20260725154640_wp4_identity_household_rls.sql` (**Identity & Household**: enums `household_role` + `household_membership_status`, טבלאות `households`, `member_profiles`, `household_members`, `household_invitations`).
+- **WP4**: RLS נאכף. `anon` לא מקבל כלום. `authenticated` קורא רק את משק הבית שלו, עם grants **ברמת עמודה**. `household_members` ו־`household_invitations` הם **לקריאה בלבד** ללקוח — כל שינוי הוא RPC ב־WP4.5 (ADR-028). `date_of_birth`, `token_hash` ו־`auth_user_id` אינם נגישים ללקוח (ADR-029).
 - **אין schema עסקי** מעבר ל־Identity/Household (אין tasks/calendar/transport/shopping וכו').
 - `supabase/seed.sql` **ריק מבחינה עסקית**; fixtures הם טרנזקציוניים בתוך הבדיקות.
 - **102 בדיקות pgTAP** ב־`supabase/tests/database/` (`bun run db:test`), רצות ב־CI job `database`.
@@ -123,8 +124,10 @@
 | DB types generate | `bun run db:types` |
 | DB types freshness check | `bun run db:types:check` |
 | DB smoke (public key only) | `bun run db:smoke` |
-| DB schema tests (pgTAP) | `bun run db:test` |
-| DB verify (reset + types + smoke + pgTAP) | `bun run db:verify` |
+| DB structural pgTAP | `bun run db:test:structure` |
+| DB Auth-backed RLS suite | `bun run db:test:auth-suite` |
+| Client secret scan | `bun run check:client-secrets` |
+| DB verify (הכול) | `bun run db:verify` |
 
 ## 10. Quality gates
 
@@ -136,7 +139,9 @@
 - migration reset (`db:reset`).
 - generated type freshness (`db:types:check`).
 - public-key-only smoke (`db:smoke`).
-- pgTAP schema tests (`db:test`, 102/102).
+- structural pgTAP (`db:test:structure`, 181/181).
+- behavioural RLS pgTAP + integration (`db:test:auth-suite`, 117 + 34).
+- client secret scan (`check:client-secrets`).
 - CI **verify** job.
 - CI **database** job (ראה [`../.github/workflows/ci.yml`](../.github/workflows/ci.yml)).
 - secret scan (ידני לפני commit).
@@ -161,15 +166,16 @@
 
 1. ~~**Merge PR #3** (WP2 → `main`)~~ — בוצע.
 2. ~~**WP3** — Identity and Household Schema~~ — בוצע ומוזג.
-3. **WP4** — RLS and Negative Tests (הצעד הבא, לא חסום).
+3. ~~**WP4** — RLS and Negative Tests~~ — בוצע ומוזג.
+4. **WP4.5** — Identity RPCs (הצעד הבא). לאחר מכן **WP4.6** — Auth account deletion (⚠️ חוסם את WP5).
 4. **WP5** — Real Onboarding (חיבור onboarding לנתונים אמיתיים).
 5. לאחר מכן — הרחבת backend למודולים עסקיים, **מודול אחד בכל פעם**.
 
 פירוט מלא ב־[`todo.md`](./todo.md).
 
-## 13. Exact scope of WP4 (הבא)
+## 13. Exact scope of WP4.5 (הבא)
 
-WP3 הושלם ומוזג. WP4 הוא **שלב הפתיחה** של הטבלאות הנעולות.
+WP4 הושלם ומוזג. WP4.5 מוסיף את ה־RPCs שמבצעים כל שינוי סמכות.
 
 **In scope**:
 
@@ -214,15 +220,15 @@ WP3 הושלם ומוזג. WP4 הוא **שלב הפתיחה** של הטבלאו�
 
 ## 16. Last verified results
 
-נכון לסגירת WP3:
+נכון לסגירת WP4:
 
 - **162/162 app tests** עוברים (19 קבצים).
-- **102/102 pgTAP tests** עוברים (7 קבצים) — טרנזקציוניים ובלתי תלויים.
+- **181/181 structural pgTAP** (9 קבצים) + **117/117 behavioural RLS pgTAP** (6 קבצים) + **34/34 integration assertions**.
 - **typecheck**: 0 errors.
 - **lint**: 0 errors + 6 warnings (shadcn).
 - **build**: success.
 - **routes:check**: passed.
-- **database verification** (`db:verify`): passed (reset → type freshness → smoke → pgTAP).
+- **database verification** (`db:verify`): passed (reset → types → smoke → structural → fixtures → RLS → integration → cleanup).
 
 ## 17. Trust and memory boundary
 

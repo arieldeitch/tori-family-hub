@@ -1,7 +1,7 @@
 -- WP3 — migrations apply cleanly and the seed stays business-empty.
 -- Transactional and independent: every test file rolls back at the end.
 begin;
-select plan(7);
+select plan(8);
 
 -- Migrations apply from a clean database, in order, on top of WP2.
 select ok(
@@ -12,10 +12,19 @@ select ok(
   exists (select 1 from supabase_migrations.schema_migrations where version = '20260725143927'),
   'WP3 identity/household migration is applied'
 );
+select ok(
+  exists (select 1 from supabase_migrations.schema_migrations where version = '20260725154640'),
+  'WP4 RLS migration is applied'
+);
+-- Ordering matters: WP3 must apply on top of the WP2 foundation, and WP4 on top
+-- of WP3. Asserting the sorted sequence proves both without pinning "newest",
+-- which every later work package would otherwise have to edit.
 select is(
-  (select version from supabase_migrations.schema_migrations order by version desc limit 1),
-  '20260725143927',
-  'WP3 migration is the newest applied migration, i.e. it applies after the WP2 foundation'
+  (select array_agg(version order by version)
+     from supabase_migrations.schema_migrations
+    where version in ('20260724153731', '20260725143927', '20260725154640')),
+  array['20260724153731', '20260725143927', '20260725154640'],
+  'migrations apply in order: WP2 foundation, then WP3 schema, then WP4 RLS'
 );
 
 -- seed.sql must remain business-empty (decision D4): fixtures are transactional
