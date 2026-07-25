@@ -77,7 +77,8 @@
 - **WP1** — Knowledge Pack: מוזג ל־`main`.
 - **WP2** — Supabase Local Workflow: הושלם ו**מוזג ל־`main`** (PR #3, merge commit `9e691c9`).
 - **Post-WP2 consistency pass** — ה־route tree המגונרר (`src/routeTree.gen.ts`) סונכרן עם הגנרטור, CI מאמת את טריותו (`routes:check`, ADR-022), ומספרים ישנים בתיעוד תוקנו.
-- **162 tests** עוברים ב־19 קבצי בדיקה; CI כולל שני jobs: **verify** ו־**database**.
+- **WP3** — Identity & Household Schema: הושלם ומוזג ל־`main`. טבלאות נעולות (RLS enabled, אפס policies, אפס הרשאות ללקוח).
+- **162 app tests** ב־19 קבצים + **102 pgTAP tests** ב־7 קבצים; CI כולל שני jobs: **verify** ו־**database**.
 - WP0 כלל תיקון באג **timezone** במנוע התורנויות ומדיניות **LF** (`.gitattributes`).
 - WP2 כלל **local Supabase workflow**, **generated database types**, ו־**public-key-only smoke test**.
 
@@ -85,18 +86,20 @@
 
 > ⚠️ זהו snapshot נכון לרגע הכתיבה. **אל תניח שהמצב זהה** — הפעולה הראשונה בסשן הבא היא לבדוק בפועל (`git status`, `gh pr view 3`), לא להסתמך על קובץ זה.
 
-- `main` מכיל את **WP0**, **WP1** ו־**WP2**.
-- PR: **#3** — base **`main`** — **MERGED** (merge commit `9e691c9`, checks green).
-- ה־local Supabase stack **נעצר** (0 containers של Tori).
-- URL של ה־PR: https://github.com/arieldeitch/tori-family-hub/pull/3
+- `main` מכיל את **WP0**, **WP1**, **WP2**, ה־post-WP2 consistency pass ו־**WP3**.
+- PR **#3** (WP2) — **MERGED** (`9e691c9`). PR **#4** (post-WP2 consistency) — **MERGED** (`17647b4`). WP3 נמסר ב־PR נפרד משלו (ראה `git log` על `main`).
+- ה־local Supabase stack רץ בטווח `553xx` כשהוא מופעל; **Docker נדרש**.
 
 ## 8. Current backend state
 
 - Supabase הוא **local-only**; **אין remote project**, אין `login`/`link`, אין `db push`.
-- **אין Auth**, **אין RLS**, **אין schema עסקי**, **אין persistence** למודולי המוצר.
+- **אין Auth**, **אין RLS policies**, **אין persistence** למודולי המוצר.
 - **mock repositories עדיין פעילים** לכל המודולים העסקיים.
-- קיימת **foundation migration** ריקה בלבד: `supabase/migrations/20260724153731_wp2_foundation.sql`.
-- `supabase/seed.sql` **ריק מבחינה עסקית**.
+- שתי migrations: `20260724153731_wp2_foundation.sql` (ריקה) ו־`20260725143927_wp3_identity_household.sql` (**Identity & Household**: enums `household_role` + `household_membership_status`, טבלאות `households`, `member_profiles`, `household_members`, `household_invitations`).
+- טבלאות WP3 **נעולות בכוונה** (ADR-023): RLS enabled, **אפס policies**, וכל ההרשאות נשללו מ־`PUBLIC`/`anon`/`authenticated`. אין גישה דרך ה־Data API. WP4 פותח אותן.
+- **אין schema עסקי** מעבר ל־Identity/Household (אין tasks/calendar/transport/shopping וכו').
+- `supabase/seed.sql` **ריק מבחינה עסקית**; fixtures הם טרנזקציוניים בתוך הבדיקות.
+- **102 בדיקות pgTAP** ב־`supabase/tests/database/` (`bun run db:test`), רצות ב־CI job `database`.
 - Local project ID: `tori-family-hub`; app dev URL: `http://localhost:8080`; ports בטווח **`553xx`** (כדי לא להתנגש בפרויקט local אחר).
 - **Docker נדרש** להרצת ה־stack המקומי.
 - Supabase client הוא **infrastructure scaffold בלבד** (`src/infrastructure/supabase/`, Auth inert), לא מחובר לשום module.
@@ -120,7 +123,8 @@
 | DB types generate | `bun run db:types` |
 | DB types freshness check | `bun run db:types:check` |
 | DB smoke (public key only) | `bun run db:smoke` |
-| DB verify (reset + types + smoke) | `bun run db:verify` |
+| DB schema tests (pgTAP) | `bun run db:test` |
+| DB verify (reset + types + smoke + pgTAP) | `bun run db:verify` |
 
 ## 10. Quality gates
 
@@ -128,10 +132,11 @@
 - `typecheck` (0 errors).
 - `lint` (0 errors; 6 warnings מוכרים של shadcn).
 - `test` (162/162).
-- `build`.
+- `build` + `routes:check` (route tree טרי).
 - migration reset (`db:reset`).
 - generated type freshness (`db:types:check`).
 - public-key-only smoke (`db:smoke`).
+- pgTAP schema tests (`db:test`, 102/102).
 - CI **verify** job.
 - CI **database** job (ראה [`../.github/workflows/ci.yml`](../.github/workflows/ci.yml)).
 - secret scan (ידני לפני commit).
@@ -155,37 +160,32 @@
 ## 12. Roadmap
 
 1. ~~**Merge PR #3** (WP2 → `main`)~~ — בוצע.
-2. **WP3** — Identity and Household Schema (הצעד הבא, לא חסום).
-3. **WP4** — RLS and Negative Tests.
+2. ~~**WP3** — Identity and Household Schema~~ — בוצע ומוזג.
+3. **WP4** — RLS and Negative Tests (הצעד הבא, לא חסום).
 4. **WP5** — Real Onboarding (חיבור onboarding לנתונים אמיתיים).
 5. לאחר מכן — הרחבת backend למודולים עסקיים, **מודול אחד בכל פעם**.
 
 פירוט מלא ב־[`todo.md`](./todo.md).
 
-## 13. Exact scope of WP3
+## 13. Exact scope of WP4 (הבא)
 
-**In scope** (foundation בלבד):
+WP3 הושלם ומוזג. WP4 הוא **שלב הפתיחה** של הטבלאות הנעולות.
 
-- `households`
-- `member_profiles`
-- `household_members`
-- `household_invitations`
-- enums
-- indexes
-- constraints
-- migration(s) ב־`supabase/migrations/`
-- regenerate `src/infrastructure/supabase/database.types.ts`
-- schema tests
+**In scope**:
 
-**Out of scope** (ל־WP3):
+- ה־`GRANT`־ים המינימליים ל־`anon`/`authenticated` **יחד עם** מערך ה־RLS policies המלא, באותה migration (ADR-023)
+- membership predicate: `EXISTS (SELECT 1 FROM household_members WHERE household_id = x AND auth_user_id = auth.uid() AND status = 'active')`
+- `has_household_role` כ־SECURITY DEFINER עם `search_path` קבוע ובטוח (ADR-024) — **בלי** טבלת `user_roles`
+- בדיקות **חיוביות ושליליות**: משתמש מחוץ למשק הבית מקבל אפס שורות / נכשל
+- משתמשי Auth דרך **Auth admin API בלבד — לעולם לא SQL**
+- Household A/B base dataset מ־[`09-testing-strategy.md`](./09-testing-strategy.md)
+
+**Out of scope** (ל־WP4):
 
 - UI changes
-- onboarding wiring
-- child PIN authentication
-- invitation acceptance flow
-- full RLS policies (→ WP4)
-- task schema
-- מודולים עסקיים אחרים
+- onboarding wiring / חיבור modules ל־DB (→ WP5)
+- child PIN verification (credentials עתידיים ב־`private.member_pin_credentials`, ADR-025)
+- task schema ומודולים עסקיים אחרים
 
 ## 14. Working rules for GPT
 
@@ -209,21 +209,20 @@
 3. לבדוק את ה־branch הנוכחי.
 4. `git fetch` — למשוך את מצב GitHub.
 5. לסנכרן `main` (`git checkout main && git pull --ff-only`) — WP2 כבר מוזג.
-6. להריץ את שערי האיכות (typecheck / lint / test / build / `routes:check`).
+6. להריץ את שערי האיכות (typecheck / lint / test / build / `routes:check`), ואם Docker פעיל גם `bun run db:verify`.
 7. **רק אז** להכין את הפרומפט ל־**WP3**.
 
 ## 16. Last verified results
 
-נכון לסגירת סשן WP2:
+נכון לסגירת WP3:
 
-- **162/162 tests** עוברים.
+- **162/162 app tests** עוברים (19 קבצים).
+- **102/102 pgTAP tests** עוברים (7 קבצים) — טרנזקציוניים ובלתי תלויים.
 - **typecheck**: 0 errors.
 - **lint**: 0 errors + 6 warnings (shadcn).
 - **build**: success.
-- **PWA precache**: 140 entries.
-- **PR #3**: merged (checks `verify` + `database` green).
-- **routes:check**: passed (committed route tree matches the build output).
-- **database verification** (`db:verify`): passed (reset + type freshness + smoke).
+- **routes:check**: passed.
+- **database verification** (`db:verify`): passed (reset → type freshness → smoke → pgTAP).
 
 ## 17. Trust and memory boundary
 

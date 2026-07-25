@@ -28,6 +28,10 @@ This is the canonical decision log. The prototype-era `LOVABLE_DECISIONS.md` rec
 | ADR-020 | A coding agent works in a closed task and updates the handover. | Accepted |
 | ADR-021 | Supabase runs local-first: the CLI is a locked dev dependency, migrations in the repo are the only way to change schema, and remote projects are configured separately later. | Accepted |
 | ADR-022 | Generated files are committed as source, reproducibly generated, CI-verified fresh, and never hand-edited. | Accepted |
+| ADR-023 | WP3 ships schema with RLS enabled, zero policies and no client privileges; WP4 opens access with the minimum GRANTs and the complete policy set together. | Accepted |
+| ADR-024 | The household role lives on `household_members`, which is the dedicated membership/authorization table. There is no `user_roles` table. | Accepted |
+| ADR-025 | PIN credential material is never stored on `member_profiles`. Future credentials live in an unexposed `private.member_pin_credentials`, reachable only through a secured server/RPC boundary. | Accepted |
+| ADR-026 | A household may have multiple active owners. Protecting the last active owner is the responsibility of future RPCs, not a database constraint. | Accepted |
 
 ## ADR-021 — Supabase local workflow (WP2)
 
@@ -50,6 +54,46 @@ Applies to every generated file the app compiles against — currently `src/rout
 - **No new dependency.** The check uses the installed toolchain and `git diff`; no route-generator CLI was added.
 
 Background: before this decision, `src/routeTree.gen.ts` was committed without the TanStack Start `Register` module augmentation that the build generates, so every `vite build` left an unexpected tracked modification in the working tree. This is a tooling/build decision under the existing development principles; it introduced no business ADR and changed none.
+
+## ADR-023 — WP3 ships locked down; WP4 opens access (WP3)
+
+The Identity & Household migration creates tables in a deliberately unreachable state:
+
+- **RLS is enabled** on `households`, `member_profiles`, `household_members` and `household_invitations`.
+- **Zero RLS policies exist.** With RLS enabled and no policies, every row is denied to any non-bypassing role — the schema fails closed rather than open.
+- **All table privileges are revoked from `PUBLIC`, `anon` and `authenticated`**, which also strips the Supabase default privileges that would otherwise expose these tables through the Data API. WP3 grants no Data API access at all.
+- Privileges of `postgres`, the table owner, `service_role` and other Supabase infrastructure roles are **not** indiscriminately revoked — migrations, type generation and pgTAP must keep working.
+
+**WP4 is the opening step**: it adds the *minimum* required `GRANT` statements together with the complete RLS policy set, in the same migration, with positive **and** negative tests.
+
+This is a sequencing decision under [`06-security-and-permissions.md`](./06-security-and-permissions.md), which requires that a table never exist in a reachable state without policies. Splitting the work this way is stricter than granting first and adding policies later: between WP3 and WP4 the tables are reachable by nobody.
+
+## ADR-024 — The membership row is the authorization table (WP3)
+
+`household_members` carries `role`, and is the dedicated membership/authorization table.
+
+- The role is **household-scoped**, not global: the same person can be `owner` in one household and `guest` in another.
+- The role is **never** stored on `member_profiles` — a profile is a person, not a permission.
+- There is **no `user_roles` table**. `household_members` already is the dedicated table that [`06-security-and-permissions.md`](./06-security-and-permissions.md) calls for; adding a second one would split the same fact across two places.
+- `has_household_role` and related `SECURITY DEFINER` helpers are **deferred to WP4**. When they arrive they must use a fixed, safe `search_path` (as the WP3 trigger functions already do) so they cannot be hijacked.
+
+## ADR-025 — PIN credentials never live on the profile row (WP3)
+
+**This deliberately supersedes the `pin_hash` field shown on `member_profiles` in earlier drafts of [`05-data-model.md`](./05-data-model.md).** The data-model document has been corrected; the old design is not silently retained.
+
+- `member_profiles` has **no `pin_hash`** and no other credential column. Household members will eventually be able to read profile rows, and credential material must never sit on a row with that reach.
+- `member_profiles.pin_auth_enabled` remains as **non-sensitive configuration metadata only**, defaulting to `false`. It authenticates nothing.
+- Future PIN credentials belong in an **unexposed `private.member_pin_credentials`** table with **no client grants**, reachable only through a secured server/RPC boundary that owns rate limiting and lockout.
+- **Enabling PIN must later be atomic with creating a valid credential**, so `pin_auth_enabled = true` can never mean "PIN is on but no credential exists".
+- No PIN verification and no credential creation exists in WP3.
+
+## ADR-026 — Multiple active owners are legal (WP3)
+
+A household may have more than one active `owner`.
+
+- No partial unique index restricts a household to a single active owner.
+- WP3 attempts **no** cross-row "at least one active owner" constraint. Expressing it correctly in SQL requires either a deferred constraint trigger or serialized writes, and it would block legitimate ownership handover.
+- Instead, the future role-change, suspend and revoke RPCs **must prevent removal of the final active owner unless ownership is transferred atomically** in the same transaction.
 
 ## Notes
 
