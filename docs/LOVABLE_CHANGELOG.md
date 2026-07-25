@@ -1,5 +1,18 @@
 # Changelog
 
+## WP2 — Supabase local workflow (infrastructure scaffold only)
+Local-first Supabase setup. No business schema, no Auth, no RLS, no remote project, no UI/behavior change. Business modules still use the in-memory mock repositories.
+
+- **Dependencies.** Added `supabase` (locked **dev** dependency — the CLI, run via `bunx supabase`; no global install) and `@supabase/supabase-js` (runtime). Non-beta, `bun.lock` updated.
+- **Local stack.** `supabase init` → `supabase/config.toml` (`project_id = "tori-family-hub"`, `auth.site_url = http://localhost:8080` to match the Vite dev port, ports remapped to the **553xx** range to coexist with other local Supabase stacks). `supabase/migrations/` holds one empty foundation migration; `supabase/seed.sql` is business-empty. No external providers, no OAuth, no remote link, no `db push`.
+- **Infrastructure client.** New `src/infrastructure/supabase/`: `env.ts` (lazy, Zod-validated public env — never logs key values, never throws at import), `client.ts` (`createClient` singleton cached on `globalThis`; Auth intentionally inert — no session persistence/refresh/URL detection), `database.types.ts` (generated), `index.ts`, and `env.test.ts` (4 tests). Scaffold only — not wired to any module, no service role.
+- **Scripts.** Cross-platform `db:*`/`supabase:*` scripts under `scripts/` (spawn the CLI via the current runtime's `x supabase`, so paths with spaces work on Windows): `supabase:start|stop|status`, `db:reset`, `db:types`, `db:types:check`, `db:smoke`, `db:verify`.
+- **Env.** `.env.example` adds public `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY` only; `.env.local` is git-ignored. `.gitignore` ignores `supabase/.temp`, `.branches`, and local env files.
+- **CI.** New `database` job: starts a lean local stack (DB + API only), applies migrations + seed, verifies generated types are current, runs a public-key-only smoke test, and stops the stack. No secrets, no remote project.
+- **Tooling.** `eslint.config.js` gets a Node-globals block for `scripts/**` and ignores the generated types file; `.prettierignore` ignores it too.
+
+Verification (post-WP2): `bun install --frozen-lockfile` ✓ · `typecheck` 0 ✓ · `lint` 0 errors / 6 warnings ✓ · `test` **162/162** ✓ · `build` ✓ · `db:reset` ✓ · `db:types`/`db:types:check` ✓ · `db:smoke` HTTP 200 ✓.
+
 ## WP0 — Foundation fixes (reproducible, timezone-independent quality gates)
 Focused maintenance pass. No UX, routes, data models, business scope, Supabase, auth, RLS or persistence changed.
 

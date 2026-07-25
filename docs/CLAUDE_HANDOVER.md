@@ -47,8 +47,8 @@ domain/          pure types + rules + engines (task, followUp, shopping,
                  today, household) — most have a .test.ts sibling (recurrence.ts has none)
 features/        feature slices (one folder per module)
 hooks/           only use-mobile.tsx today; the modular data hooks live under lib/
-infrastructure/  INTENDED for logging/config adapters — currently EMPTY (.gitkeep only);
-                 those concerns currently live under lib/
+infrastructure/  supabase/ scaffold (WP2: env, client, generated types) + .gitkeep;
+                 other logging/config concerns currently live under lib/
 lib/             framework-agnostic utilities, i18n, pwa/register, AND the modular
                  hooks (useTasks, useToday, useShopping, …)
 locales/         he.ts (only Hebrew shipped)
@@ -57,9 +57,9 @@ test/            vitest setup
 styles.css       Tailwind v4 tokens (OKLCH)
 ```
 
-> Structure note (WP1): `src/app/` and `src/infrastructure/` are empty placeholders; the
-> modular hooks currently sit under `src/lib/`, not `src/hooks/`. This is documented, not
-> refactored — see `project-status.md`. No structural refactor is in scope for WP1.
+> Structure note: `src/app/` is still an empty placeholder; `src/infrastructure/` now holds the
+> WP2 Supabase scaffold under `src/infrastructure/supabase/`. The modular hooks still sit under
+> `src/lib/`, not `src/hooks/` — documented, not refactored (see `project-status.md`).
 
 ## Routes
 
@@ -109,12 +109,13 @@ Each `src/domain/*.ts` module owns its state machine or engine:
 
 ## Tests
 
-158 tests across 18 files. Runs via `bun run test`. Covers domain rules, key repositories, several UI dialogs, the today-service integration, and shift-engine timezone determinism (regression).
+162 tests across 19 files. Runs via `bun run test`. Covers domain rules, key repositories, several UI dialogs, the today-service integration, shift-engine timezone determinism (regression), and Supabase public-env validation (WP2).
 
 ## CI
 
-`.github/workflows/ci.yml` — on push to `main` + all PRs:
-`bun install --frozen-lockfile` → `typecheck` → `lint` → `test` → `build`.
+`.github/workflows/ci.yml` — on push to `main` + all PRs. Two jobs:
+- `verify`: `bun install --frozen-lockfile` → `typecheck` → `lint` → `test` → `build`.
+- `database` (WP2): lean local Supabase → migrations + seed → generated-types freshness check → public-key-only smoke test → stop. No secrets, no remote project.
 
 ## PWA status
 
@@ -122,7 +123,7 @@ Basic app-shell PWA only. `vite-plugin-pwa` `generateSW`, `NetworkFirst` HTML, `
 
 ## What is NOT connected
 
-- No Supabase project, no Lovable Cloud, no database.
+- Supabase is **local-only scaffold** (WP2): local stack + infrastructure client exist, but no business schema, no remote project, and nothing is wired to the modules. No Lovable Cloud.
 - No authentication (Supabase Auth, OAuth, magic link, …).
 - No RLS, no server-side validation.
 - No `createServerFn` handlers, no `src/routes/api/*` routes.

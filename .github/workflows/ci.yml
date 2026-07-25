@@ -18,3 +18,45 @@ jobs:
       - run: bun run lint
       - run: bun run test
       - run: bun run build
+
+  database:
+    # Validates the local Supabase infrastructure: migrations, seed, generated
+    # types freshness, and a public-key-only API smoke test. Local-only — no
+    # remote project, no secrets, no `db push`, no deploy.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+
+      # Start only the containers needed for schema + REST validation. Excludes
+      # studio, storage, realtime, functions and the analytics/vector logging
+      # stack to keep CI lean and avoid flaky logging containers.
+      - name: Start local Supabase (DB + API only)
+        run: >-
+          bunx supabase start
+          -x studio,imgproxy,inbucket,realtime,storage,edge-runtime,functions,analytics,vector,meta
+          --ignore-health-check
+
+      - name: Reset database (apply migrations + seed)
+        run: bunx supabase db reset
+
+      - name: Verify generated database types are up to date
+        run: bun run db:types:check
+
+      # Public values only — the local publishable key is a well-known dev value,
+      # never the service role key.
+      - name: Export public Supabase env
+        run: |
+          JSON="$(bunx supabase status -o json)"
+          echo "VITE_SUPABASE_URL=$(echo "$JSON" | jq -r '.API_URL')" >> "$GITHUB_ENV"
+          echo "VITE_SUPABASE_PUBLISHABLE_KEY=$(echo "$JSON" | jq -r '.PUBLISHABLE_KEY // .ANON_KEY')" >> "$GITHUB_ENV"
+
+      - name: Smoke test (public URL + key only)
+        run: bun run db:smoke
+
+      - name: Stop Supabase
+        if: always()
+        run: bunx supabase stop --no-backup

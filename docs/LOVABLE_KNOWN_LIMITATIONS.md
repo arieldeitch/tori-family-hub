@@ -10,7 +10,10 @@
 - **No RLS, no server validation.** Every "permission" check is client-side and bypassable via devtools.
 
 ## Backend
-- No Supabase, no server functions (`createServerFn`), no `src/routes/api/*` endpoints.
+- **Supabase is local-only scaffold (WP2).** A local Supabase workflow exists (`supabase/`, a typed infrastructure client under `src/infrastructure/supabase/`, `db:*` scripts, a CI `database` job), but there is **no business schema, no Auth, no RLS, and no remote project**, and the client is **not connected to any module** — modules still read/write the in-memory mocks. Requires Docker to run locally.
+- **No remote Supabase environments.** No remote staging or production project has been created; local-only, no `db push`, no linking.
+- The local `vector`/analytics logging container may be unstable (restart loop) on some Docker setups. It is **not required** for the current workflow — migrations, type generation, and the REST smoke test do not use it, and CI excludes it.
+- No server functions (`createServerFn`), no `src/routes/api/*` endpoints.
 - No email, no notifications, no cron. Notification screen is UI-only.
 
 ## PWA

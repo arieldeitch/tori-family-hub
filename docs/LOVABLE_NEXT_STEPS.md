@@ -2,9 +2,12 @@
 
 Recommended order. Each step is one focused prompt/PR.
 
+> **Status note (WP tracking).** The live, authoritative roadmap is [`todo.md`](./todo.md) / [`project-status.md`](./project-status.md). Mapping to the packages below: WP0/WP1 (foundation + docs) are merged. **WP2 delivered a local-first Supabase workflow** (local CLI, migrations, seed, generated types, smoke, CI `database` job) — the local half of step 1 below; PR #3 is open pending merge. Still pending: a **remote** Supabase project, Auth (step 2), business schema + RLS (step 3 → WP3 schema foundation, WP4 RLS), and repository swaps (step 4 → WP5+). No remote project, Auth, or RLS exists yet.
+
 ## 1. Enable Lovable Cloud (Supabase)
 - Provision the project, generate `src/integrations/supabase/*` clients.
 - Add `.env` entries (`VITE_SUPABASE_URL`, publishable key). No service role in the app.
+- **WP2 done (local):** local Supabase workflow + typed infrastructure client (`src/infrastructure/supabase/`) exist. **Remote provisioning is still future.**
 
 ## 2. Auth
 - Supabase email + (optionally) Google OAuth.

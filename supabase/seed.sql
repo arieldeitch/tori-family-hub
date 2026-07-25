@@ -1,0 +1,12 @@
+-- WP2 — Supabase local seed (business-empty).
+--
+-- Run automatically after migrations during `supabase db reset`
+-- (see [db.seed] sql_paths in supabase/config.toml).
+--
+-- Intentionally contains NO business data. Do not add mock users, households,
+-- members, or any family data here. Realistic seed data (Household A/B, adults,
+-- children, a guest, etc. — see docs/09-testing-strategy.md) is only introduced
+-- once the Identity & Household model exists (WP3+), so seeds match the real
+-- schema and RLS.
+
+-- (no seed data yet)
