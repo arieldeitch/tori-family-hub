@@ -19,6 +19,13 @@ jobs:
       - run: bun run test
       - run: bun run build
 
+      # `vite build` regenerates src/routeTree.gen.ts (TanStack Start route
+      # generation). That file is committed generated runtime source, so a clean
+      # checkout must build to an identical file. If the build changed it, the
+      # committed route tree is stale — see docs/decisions.md (ADR-022).
+      - name: Verify generated route tree is up to date
+        run: bun run routes:check
+
   database:
     # Validates the local Supabase infrastructure: migrations, seed, generated
     # types freshness, and a public-key-only API smoke test. Local-only — no

@@ -32,8 +32,8 @@ The `LOVABLE_*` documents and [`CLAUDE_HANDOVER.md`](./CLAUDE_HANDOVER.md) descr
 1. [`01-product-requirements.md`](./01-product-requirements.md) — what Tori is and must do.
 2. [`decisions.md`](./decisions.md) — the accepted decisions that constrain everything else.
 3. [`02-ux-ui-guidelines.md`](./02-ux-ui-guidelines.md) → [`09-testing-strategy.md`](./09-testing-strategy.md) — domain rules.
-4. [`project-status.md`](./project-status.md) — verified current state (post-WP0).
-5. [`todo.md`](./todo.md) — what happens next (WP2 → WP5).
+4. [`project-status.md`](./project-status.md) — verified current state.
+5. [`todo.md`](./todo.md) — what happens next (WP3 → WP5).
 6. [`claude-context.md`](./claude-context.md) / [`gpt-handover.md`](./gpt-handover.md) — agent working context.
 
 ## Change discipline

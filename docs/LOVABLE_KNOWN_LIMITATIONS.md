@@ -25,7 +25,7 @@
 - Hebrew only. `t()` scaffolding present but no other locales bundled.
 
 ## Testing
-- 158 unit/integration tests, mostly domain + a few repo/UI. No E2E (Playwright/Cypress). No visual regression.
+- 162 unit/integration tests across 19 files, mostly domain + a few repo/UI. No E2E (Playwright/Cypress). No visual regression.
 - Accessibility is enforced via DS wrapper invariants; not audited with axe.
 - Shift-engine timezone determinism is now covered by regression tests (WP0): the preview previously mixed local midnight with a UTC date key, producing different assignments per host timezone. Fixed to use the UTC calendar; tests assert identical results across UTC, Asia/Jerusalem, America/Los_Angeles and Pacific/Kiritimati.
 

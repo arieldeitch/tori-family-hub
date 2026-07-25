@@ -2,16 +2,16 @@
 
 **Verified facts only.** When a canonical requirement differs from the code, the gap is recorded here and in [`todo.md`](./todo.md) — the requirement is not rewritten and the code is not changed outside a dedicated task. Business truth lives in [`01-product-requirements.md`](./01-product-requirements.md).
 
-_Last updated: WP2 session closeout (before a machine reboot), on top of WP0 + WP1._
+_Last updated: post-WP2 consistency pass, after WP2 was merged to `main`. On top of WP0 + WP1._
 
-## Session closeout snapshot (resume here)
+## Current snapshot (resume here)
 
-Point-in-time state so work can resume after a reboot without relying on chat history.
+Point-in-time state so work can resume without relying on chat history.
 
-- **Branch:** `wp2-supabase-local-workflow` · **PR #3** → base `main` — **OPEN, not merged**, both checks (`verify`, `database`) **green**. Working tree clean.
-- **Done & merged to `main`:** WP0 (foundation fixes), WP1 (knowledge pack). **Done, PR-pending:** WP2 (Supabase local workflow).
-- **Next step: WP3 — Identity & Household Schema** (only after PR #3 is merged). Scope in [`todo.md`](./todo.md).
-- **Quality gates (local):** typecheck 0 · lint 0 errors / 6 shadcn warnings · **test 162/162** · build ✓.
+- **`main` contains WP0 + WP1 + WP2.** PR #3 (`wp2-supabase-local-workflow` → `main`) was **merged** as merge commit `9e691c9`, with both checks (`verify`, `database`) green. WP2 is closed.
+- **Done & merged to `main`:** WP0 (foundation fixes), WP1 (knowledge pack), WP2 (Supabase local workflow).
+- **Next step: WP3 — Identity & Household Schema** — no longer blocked. Scope in [`todo.md`](./todo.md).
+- **Quality gates (local):** typecheck 0 · lint 0 errors / 6 shadcn warnings · **test 162/162 across 19 files** · build ✓ · `routes:check` ✓.
 - **WP2 facts:** Supabase CLI `2.109.1` (locked dev dep), `@supabase/supabase-js` `2.110.8` (runtime), package manager **Bun 1.3.14**. Local `project_id = tori-family-hub`, app dev URL `http://localhost:8080`, Supabase local ports remapped to the **553xx** range (to avoid clashing with another local stack). Foundation migration: `supabase/migrations/20260724153731_wp2_foundation.sql` (empty). `supabase/seed.sql` has no business data. Generated types: `src/infrastructure/supabase/database.types.ts`. Client is scaffold only. Public env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`. No service role in frontend, no remote link, no `db push`. CI has a separate `database` job; `db:verify` = reset + type freshness + smoke.
 - **Local stack:** stopped at session closeout. To resume: start Docker, then `bun run supabase:start` (ports `553xx`), copy URL + publishable key from `bun run supabase:status` into `.env.local`.
 
@@ -21,8 +21,7 @@ Point-in-time state so work can resume after a reboot without relying on chat hi
 - GitHub is connected.
 - Claude Code is active.
 - The Repository Acceptance Audit is complete.
-- **WP0 (Foundation Fixes) and WP1 (Knowledge Pack) are complete and merged to `main`** (PR #1 and PR #2).
-- **WP2 (Supabase Local Workflow) is complete** on branch `wp2-supabase-local-workflow`.
+- **WP0 (Foundation Fixes), WP1 (Knowledge Pack) and WP2 (Supabase Local Workflow) are complete and merged to `main`** (PR #1, PR #2 and PR #3).
 - A local-first Supabase dev environment now exists: `supabase/` (config, one empty foundation migration, business-empty seed) plus an infrastructure-only typed client. It is **not connected to any business module** — all modules still use the in-memory mock repositories.
 
 ## Verified state after WP0
@@ -44,8 +43,15 @@ Point-in-time state so work can resume after a reboot without relying on chat hi
 - The local stack starts, `bun run db:reset` applies migrations + seed cleanly, `bun run db:types` regenerates `src/infrastructure/supabase/database.types.ts`, and `bun run db:smoke` passes a public-key-only REST health check.
 - A typed infrastructure client (`src/infrastructure/supabase/`) exists with lazy, Zod-validated public env — **infrastructure scaffold only, not wired to any business module**.
 - CI has a separate `database` job validating migrations, seed, type freshness, and the smoke test. No secrets, no remote project.
-- **162 of 162 tests pass** (158 + 4 new public-env validation tests).
+- **162 of 162 tests pass** across 19 test files (158 + 4 new public-env validation tests).
 - `typecheck`, `lint` (0 errors, 6 known warnings), and `build` remain green.
+
+## Verified state after the post-WP2 consistency pass
+
+- **`src/routeTree.gen.ts` is committed generated runtime source and is now in sync with the generator.** Previously, `vite build` regenerated the file with a TanStack Start `Register` module augmentation that was missing from the committed version, so every build left an unexpected tracked diff. The regenerated file is committed, and generation is a verified fixed point (two consecutive builds produce an identical file).
+- **CI now fails if the committed route tree is stale.** The `verify` job runs `bun run routes:check` immediately after `build`; the check asserts the build left `src/routeTree.gen.ts` untouched. See [`decisions.md`](./decisions.md) ADR-022.
+- No dependency was added — the project's own build is the generator.
+- Documentation counts were re-verified against the repository (tests, test files, route files, CI jobs).
 
 ## Not yet present
 
@@ -62,7 +68,8 @@ Roles and PIN are **UX guards only** and are not security.
 
 ## Additional verified facts
 
-- There are **41 route files** under `src/routes/`, but not all are standalone navigation screens (`__root.tsx` is the root layout; several are pathless layout wrappers).
+- There are **41 route modules** (`.tsx`) under `src/routes/` — 42 tracked files in total, since `src/routes/README.md` is documentation, not a route. Not all 41 are standalone navigation screens: `__root.tsx` is the root layout, and several are layout wrappers paired with an `.index.tsx` child (e.g. `tasks.tsx` + `tasks.index.tsx`).
+- `src/routeTree.gen.ts` is **generated** from `src/routes/` by TanStack Start during `vite build`. It is committed and CI-verified — never edit it by hand (ADR-022).
 - `src/app/` is empty (`.gitkeep` only). `src/infrastructure/` now contains the Supabase scaffold under `src/infrastructure/supabase/` (WP2); the `.gitkeep` remains.
 - The modular hooks currently live mostly under `src/lib/` (e.g. `useTasks`, `useToday`), not `src/hooks/` (which holds only `use-mobile.tsx`).
 - A temporary alias exists in the people directory for transport IDs (`peopleDirectory` `ALIAS_TO_CANONICAL`, `m1..m4`).
