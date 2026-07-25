@@ -10,14 +10,15 @@ Prioritized future work. **Do not open several business modules in parallel befo
 - ✅ **Post-WP2 consistency pass — complete.** Committed generated route tree brought in sync with the generator, CI freshness check added (ADR-022), stale documentation counts corrected. No business schema, Auth or RLS.
 - ✅ **WP3 — Identity & Household Schema — complete.** Two enums + four tables with structural household consistency, RLS enabled with **zero policies and no client grants** (ADR-023), 102 pgTAP tests in CI. No Auth, no policies, no RPC, no module wiring.
 - ✅ **WP4 — RLS & Negative Tests — complete.** Three `private` authorization helpers, minimum column-level grants, six policies, 181 structural + 117 behavioural pgTAP tests and 34 Auth-backed integration assertions (ADR-027…ADR-032). No RPC, no Auth UI, no app wiring.
-- ▶️ **Family Pilot — Weekly Child Chores — NEXT (WP5A → WP5E).** The product owner changed the immediate priority; see [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) and ADR-033. Planning is approved-pending; implementation starts only after the Architecture Approval Brief is accepted.
+- ✅ **WP5A — Pilot access and local bootstrap — complete.** Environment-guarded idempotent bootstrap, one authenticated adult identity, four profiles, local sign-in and a profile selector. No migration and no RLS change were needed (ADR-035).
+- ▶️ **WP5B — Task and recurrence foundation — NEXT.** See [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md); approved schedules in ADR-036.
 - ⏸️ **WP4.5 — Identity RPCs — still required, no longer immediately next.**
 - ⏸️ **WP4.6 — Auth account deletion — still required and still BLOCKING before production onboarding or account deletion** (ADR-031). It does not block the non-production pilot, which ships no account management and no account deletion.
 
 ## Next work packages (in order)
 
 1. **Family Pilot — Weekly Child Chores (NEXT).** Five mergeable packages; full definitions in [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) §12 and the Architecture Approval Brief:
-   - **WP5A** — pilot access and local bootstrap: environment guard, one authenticated adult identity, household + four profiles from a **git-ignored** `pilot-household.local.json`, no user-management UI, no shared seed data (ADR-034, ADR-035).
+   - ✅ **WP5A** — pilot access and local bootstrap: **done** (ADR-034, ADR-035).
    - **WP5B** — task and recurrence foundation: `task_templates`, `task_instances`, `task_assignments`, `task_activity_log`, deterministic occurrence keys, RLS with positive **and** negative tests.
    - **WP5C** — child rotation foundation: `rotation_rules`, `rotation_members`, `rotation_assignment_log`, deterministic assignment reusing `shifts.v1`, persisted `algorithm_version` + `reason_code`, concurrency/idempotency tests.
    - **WP5D** — weekly chores UI and completion: Sunday→Saturday family and per-child views, completion with confirmed persistence and visible rollback, accessibility and RTL.

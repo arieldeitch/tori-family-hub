@@ -37,12 +37,26 @@ const rules: Rule[] = [
     test: (c) => /SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE_KEY|service_role_key/.test(c),
   },
   {
-    label: "Supabase secret key prefix (sb_secret_)",
-    test: (c) => /sb_secret_/.test(c),
+    // Require an actual key-shaped value, not the bare prefix: supabase-js
+    // itself ships `key.startsWith("sb_secret_")` and a doc comment mentioning
+    // the prefix, and flagging the library's own guard would be a false alarm
+    // that trains people to ignore this check.
+    label: "a Supabase secret key value (sb_secret_…)",
+    test: (c) => /sb_secret_[A-Za-z0-9_-]{10,}/.test(c),
   },
   {
     label: "a VITE_-prefixed service role variable",
     test: (c) => /VITE_[A-Z_]*SERVICE_ROLE/.test(c),
+  },
+  {
+    // The pilot password is server-only: it must never be VITE_-prefixed and
+    // must never be read from client code (ADR-034).
+    label: "a client-exposed pilot password variable",
+    test: (c) => /VITE_[A-Z_]*(PILOT_PASSWORD|PASSWORD)/.test(c),
+  },
+  {
+    label: "the pilot password env name read from client code",
+    test: (c) => /TORI_PILOT_PASSWORD/.test(c),
   },
 ];
 
@@ -51,6 +65,14 @@ if (serviceRoleKey && serviceRoleKey.length >= 20) {
   rules.push({
     label: "the literal service-role key value",
     test: (c) => c.includes(serviceRoleKey),
+  });
+}
+
+const pilotPassword = process.env.TORI_PILOT_PASSWORD;
+if (pilotPassword && pilotPassword.length >= 8) {
+  rules.push({
+    label: "the literal pilot password value",
+    test: (c) => c.includes(pilotPassword),
   });
 }
 

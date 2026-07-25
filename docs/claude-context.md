@@ -29,7 +29,9 @@ Operational instructions for Claude Code working on Tori.
 
 ## Current stage
 
-**WP4 is merged to `main`.** The product owner then changed the immediate priority: the next milestone is the **Family Pilot — Weekly Child Chores** (WP5A → WP5E), see [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) and ADR-033. Planning only — no task schema, bootstrap or UI exists yet.
+**WP5A is merged to `main`.** The Family Pilot has a working local access slice: an environment-guarded idempotent bootstrap (`pilot:bootstrap` / `pilot:status` / `pilot:cleanup` / `pilot:test`), one authenticated adult identity, four member profiles, a local sign-in and a profile selector. It needed **no migration and no RLS change**.
+
+Next is **WP5B — Task and recurrence foundation**. No task or rotation table exists yet.
 
 WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are no longer immediately next.
 
@@ -43,7 +45,9 @@ WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are 
 - Every RLS change requires positive **and** negative tests.
 - Authorization helpers live in `private`, are SECURITY DEFINER with `search_path = ''`, and **never take a user id** (ADR-027). Never add one to `public`.
 - Membership and invitation mutations are **RPC-only** (ADR-028). Never grant a client INSERT/UPDATE/DELETE on `household_members` or `household_invitations`.
-- **Never commit pilot household data** — real names/ages live only in the git-ignored `pilot-household.local.json`, never in a migration, the shared seed, a committed fixture, documentation or a source constant (ADR-034).
+- **Never commit pilot household data** — real names/ages live only in the git-ignored `pilot-household.local.json`, never in a migration, the shared seed, a committed fixture, documentation or a source constant (ADR-034). `bun run check:pilot-privacy` enforces this.
+- **Never conflate the authenticated actor with the selected perspective profile.** `authenticatedActor` is authority (from `auth.uid()`); `selectedPerspectiveProfile` is display and attribution only. Never name either `currentUser` (ADR-035).
+- The structural pgTAP suite asserts a **freshly reset** database. Run `pilot:cleanup` or `db:reset` before running it standalone with a local pilot household bootstrapped.
 - The pilot profile selector is **display and attribution only**; authority always comes from the authenticated adult's membership, verified server-side (ADR-035).
 - **Never hand-edit a generated file** — `src/routeTree.gen.ts` (regenerate with `bun run build`) and `src/infrastructure/supabase/database.types.ts` (regenerate with `bun run db:types`). Both are committed and CI-verified fresh.
 - No service role in the browser; no `localStorage` as a source of truth; no success before persistence.

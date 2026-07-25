@@ -24,7 +24,20 @@ WP3 added the Identity & Household schema (`households`, `member_profiles`, `hou
 | `bun run db:test:structure` | pgTAP in `tests/database/` — structure, policy catalog, GRANT matrix, helper properties. No fixtures. |
 | `bun run db:test:rls` | pgTAP in `tests/rls/` — behavioural RLS. **Requires fixtures.** |
 | `bun run db:test:auth-suite` | Fixtures → `db:test:rls` → publishable-key integration tests → cleanup. |
-| `bun run db:verify` | Reset → types → smoke → structural pgTAP → full Auth-backed suite. |
+| `bun run db:verify` | Reset → types → smoke → structural pgTAP → Auth-backed suite → pilot bootstrap suite. |
+
+### Family Pilot (WP5A) — local only
+
+| Script | What it does |
+| --- | --- |
+| `bun run pilot:bootstrap` | Idempotently converge the local DB on the pilot household from `pilot-household.local.json`. |
+| `bun run pilot:status` | Report the converged state (counts and roles only — never a name). |
+| `bun run pilot:cleanup` | Remove only the configured pilot household and its single Auth identity. |
+| `bun run pilot:test` | Guard, convergence, idempotency and cleanup tests against a **placeholder** household. |
+
+All four fail closed unless `TORI_PILOT_MODE=local` **and** the Supabase target independently proves to be the local CLI stack. The password comes from `TORI_PILOT_PASSWORD` and is never written to the configuration file. Real household data lives only in the git-ignored `pilot-household.local.json` (ADR-034).
+
+> The structural pgTAP suite asserts a **freshly reset** database. After `pilot:bootstrap`, run `pilot:cleanup` or `db:reset` before running `db:test:structure` on its own. `db:verify` resets first and is the supported entry point.
 
 ## Rules
 

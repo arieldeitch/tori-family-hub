@@ -47,17 +47,21 @@ An **idempotent local bootstrap** reads that file and converges the database on 
 - **Failed persistence must never render as success** — it rolls back with a visible error.
 - Adding a chore is a simple form: **no code change and no config-file edit**.
 
-## 4. Initial chore templates
+## 4. Initial chore templates — approved defaults
 
-- פינוי מדיח כלים
-- העמסת מדיח כלים
-- פינוי פח אשפה
+Approved (ADR-036). **Editable pilot defaults, not permanent product rules.** Implementation belongs to WP5B (schedule) and WP5C (rotation).
 
-**Scheduling is not decided.** The owner specified no weekdays or frequency, so none are assumed. Schedule and frequency are approval decisions (§10); the implementation must use configurable defaults, never hard-coded guesses.
+| Chore | Schedule | Rotation starts with |
+| --- | --- | --- |
+| פינוי מדיח כלים | every day, no fixed time | the **first** child profile |
+| העמסת מדיח כלים | every day, no fixed time | the **second** child profile |
+| פינוי פח אשפה | Sunday, Tuesday, Thursday, no fixed time | the **first** child profile |
 
-## 5. Temporary pilot-access model (default recommendation)
+**Each chore keeps its own rotation cursor**, staggered so that on any day one child unloads and the other loads. **The cursor continues across weeks and never resets on Sunday**, so the trash chore alternates by occurrence and a week may end 9–8 with the split reversing next week. No catch-up after an absence, and no randomness.
 
-No user-management screens in the pilot. The recommended model:
+## 5. Temporary pilot-access model — approved and implemented (WP5A)
+
+Approved as ADR-035 and implemented in WP5A. No user-management screens in the pilot:
 
 - **one authenticated adult pilot identity** (a real Supabase Auth user, password sign-in),
 - **one household**, **four member profiles**,
@@ -68,7 +72,11 @@ No user-management screens in the pilot. The recommended model:
 - **no anonymous writes**, **no service-role key in the browser**, **no RLS bypass**, **`localStorage` never the source of truth**,
 - an **explicit non-production environment guard**, impossible to enable accidentally in production.
 
-The profile selector is a **display and attribution** mechanism, not an authorization mechanism. Authority always comes from the authenticated adult's membership, exactly as WP4 enforces it. Alternatives considered — separate Auth identities per person, a shared-device session, and a fully anonymous pilot mode — are compared in the Architecture Approval Brief.
+The profile selector is a **display and attribution** mechanism, not an authorization mechanism. Authority always comes from the authenticated adult's membership, exactly as WP4 enforces it.
+
+**WP5A required no migration and no RLS change**: the existing WP4 policies already let the signed-in adult read their household and all four profiles. Verified before any code was written.
+
+Local commands: `bun run pilot:bootstrap`, `bun run pilot:status`, `bun run pilot:cleanup`, `bun run pilot:test`. All fail closed unless `TORI_PILOT_MODE=local` **and** the Supabase target independently proves to be the local CLI stack.
 
 ## 6. Rotation
 
@@ -138,7 +146,7 @@ Recorded, not assumed. Each has a recommended default in the Architecture Approv
 
 | WP | Title | Core deliverable |
 | --- | --- | --- |
-| **WP5A** | Pilot access and local bootstrap | Environment guard, one authenticated pilot identity, household + four profiles from the git-ignored local file, no user-management UI, no shared seed data |
+| ✅ **WP5A** | Pilot access and local bootstrap | **Done.** Environment guard, one authenticated pilot identity, household + four profiles from the git-ignored local file, sign-in, profile selector, no user-management UI, no shared seed data |
 | **WP5B** | Task and recurrence foundation | Templates, instances, assignments, activity log, occurrence generation, constraints, RLS, structural + negative tests |
 | **WP5C** | Child rotation foundation | `rotation_rules`, `rotation_members`, `rotation_assignment_log`, deterministic assignment, `algorithm_version`, `reason_code`, explanation, concurrency/idempotency tests |
 | **WP5D** | Weekly chores UI and completion | Family + child views, Sunday→Saturday layout, persistent completion, rollback on failure, accessibility and RTL |
