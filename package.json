@@ -21,7 +21,8 @@
     "db:types": "bun scripts/db-types.ts",
     "db:types:check": "bun scripts/db-types-check.ts",
     "db:smoke": "bun scripts/db-smoke.ts",
-    "db:verify": "supabase db reset && bun scripts/db-types-check.ts && bun scripts/db-smoke.ts"
+    "db:test": "supabase test db --local supabase/tests/database",
+    "db:verify": "supabase db reset && bun scripts/db-types-check.ts && bun scripts/db-smoke.ts && supabase test db --local supabase/tests/database"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
