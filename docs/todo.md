@@ -6,12 +6,13 @@ Prioritized future work. **Do not open several business modules in parallel befo
 
 - ✅ **WP0 — Foundation Fixes — complete, merged to `main`.**
 - ✅ **WP1 — Knowledge Pack — complete, merged to `main`.**
-- 🟡 **WP2 — Supabase Local Workflow — implementation complete; PR #3 merge PENDING** (`wp2-supabase-local-workflow` → `main`, checks green). Not yet on `main`.
-- ▶️ **WP3 — Identity & Household Schema — NEXT** (start only after PR #3 merges).
+- ✅ **WP2 — Supabase Local Workflow — complete, merged to `main`** (PR #3, merge commit `9e691c9`).
+- ✅ **Post-WP2 consistency pass — complete.** Committed generated route tree brought in sync with the generator, CI freshness check added (ADR-022), stale documentation counts corrected. No business schema, Auth or RLS.
+- ▶️ **WP3 — Identity & Household Schema — NEXT.** Not blocked.
 
 ## Next work packages (in order)
 
-1. **WP3 — Identity & Household Schema (NEXT, after PR #3 merges).** Foundation only:
+1. **WP3 — Identity & Household Schema (NEXT).** Foundation only:
    - Tables: `households`, `member_profiles`, `household_members`, `household_invitations`.
    - Enums, constraints, indexes.
    - One migration in `supabase/migrations/`, regenerate `src/infrastructure/supabase/database.types.ts`.

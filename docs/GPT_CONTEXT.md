@@ -75,8 +75,9 @@
 - Repository Acceptance Audit הושלם.
 - **WP0** — Foundation Fixes: מוזג ל־`main`.
 - **WP1** — Knowledge Pack: מוזג ל־`main`.
-- **WP2** — Supabase Local Workflow: implementation הושלם; **PR #3 פתוח וירוק** (טרם מוזג).
-- **162 tests** עוברים; CI כולל שני jobs: **verify** ו־**database**.
+- **WP2** — Supabase Local Workflow: הושלם ו**מוזג ל־`main`** (PR #3, merge commit `9e691c9`).
+- **Post-WP2 consistency pass** — ה־route tree המגונרר (`src/routeTree.gen.ts`) סונכרן עם הגנרטור, CI מאמת את טריותו (`routes:check`, ADR-022), ומספרים ישנים בתיעוד תוקנו.
+- **162 tests** עוברים ב־19 קבצי בדיקה; CI כולל שני jobs: **verify** ו־**database**.
 - WP0 כלל תיקון באג **timezone** במנוע התורנויות ומדיניות **LF** (`.gitattributes`).
 - WP2 כלל **local Supabase workflow**, **generated database types**, ו־**public-key-only smoke test**.
 
@@ -84,10 +85,9 @@
 
 > ⚠️ זהו snapshot נכון לרגע הכתיבה. **אל תניח שהמצב זהה** — הפעולה הראשונה בסשן הבא היא לבדוק בפועל (`git status`, `gh pr view 3`), לא להסתמך על קובץ זה.
 
-- `main` מכיל את **WP0** ואת **WP1**.
-- WP2 branch: **`wp2-supabase-local-workflow`**.
-- PR: **#3** — base **`main`** — **OPEN** — checks **green** — **טרם מוזג**.
-- ה־local Supabase stack **נעצר** לפני האתחול (0 containers של Tori).
+- `main` מכיל את **WP0**, **WP1** ו־**WP2**.
+- PR: **#3** — base **`main`** — **MERGED** (merge commit `9e691c9`, checks green).
+- ה־local Supabase stack **נעצר** (0 containers של Tori).
 - URL של ה־PR: https://github.com/arieldeitch/tori-family-hub/pull/3
 
 ## 8. Current backend state
@@ -154,8 +154,8 @@
 
 ## 12. Roadmap
 
-1. **Merge PR #3** (WP2 → `main`).
-2. **WP3** — Identity and Household Schema.
+1. ~~**Merge PR #3** (WP2 → `main`)~~ — בוצע.
+2. **WP3** — Identity and Household Schema (הצעד הבא, לא חסום).
 3. **WP4** — RLS and Negative Tests.
 4. **WP5** — Real Onboarding (חיבור onboarding לנתונים אמיתיים).
 5. לאחר מכן — הרחבת backend למודולים עסקיים, **מודול אחד בכל פעם**.
@@ -208,11 +208,9 @@
 2. `git status` — לוודא working tree ו־branch.
 3. לבדוק את ה־branch הנוכחי.
 4. `git fetch` — למשוך את מצב GitHub.
-5. לאמת את **PR #3** (`gh pr view 3` + `gh pr checks 3`).
-6. אם PR #3 עדיין **פתוח וירוק** — **למזג אותו דרך Claude Code**.
-7. לסנכרן `main` (`git checkout main && git pull --ff-only`).
-8. להריץ את שערי האיכות (typecheck / lint / test / build).
-9. **רק אז** להכין את הפרומפט ל־**WP3**.
+5. לסנכרן `main` (`git checkout main && git pull --ff-only`) — WP2 כבר מוזג.
+6. להריץ את שערי האיכות (typecheck / lint / test / build / `routes:check`).
+7. **רק אז** להכין את הפרומפט ל־**WP3**.
 
 ## 16. Last verified results
 
@@ -223,7 +221,8 @@
 - **lint**: 0 errors + 6 warnings (shadcn).
 - **build**: success.
 - **PWA precache**: 140 entries.
-- **PR #3 checks**: green (`verify`, `database`).
+- **PR #3**: merged (checks `verify` + `database` green).
+- **routes:check**: passed (committed route tree matches the build output).
 - **database verification** (`db:verify`): passed (reset + type freshness + smoke).
 
 ## 17. Trust and memory boundary

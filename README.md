@@ -8,8 +8,9 @@
 
 - Prototype built in Lovable; GitHub connected; Claude Code active.
 - **WP0 (foundation fixes)** and **WP1 (Knowledge Pack)** complete and merged to `main`.
-- **WP2 (Supabase Local Workflow)**: locked Supabase CLI dev dependency + `@supabase/supabase-js`, `supabase/` (config + empty foundation migration + business-empty seed), a typed infrastructure-only client, `db:*` scripts, and a CI `database` job. Local-only — no remote project, no schema, no Auth/RLS. **162/162 tests pass**; lint 0 errors / 6 known shadcn warnings; build and CI green. Delivered on **PR #3** (`wp2-supabase-local-workflow` → `main`) — **open, pending merge**.
-- Next: WP3 — Identity & Household Schema (see [`docs/todo.md`](./docs/todo.md)), after PR #3 merges.
+- **WP2 (Supabase Local Workflow)** — complete and **merged to `main`** (PR #3): locked Supabase CLI dev dependency + `@supabase/supabase-js`, `supabase/` (config + empty foundation migration + business-empty seed), a typed infrastructure-only client, `db:*` scripts, and a CI `database` job. Local-only — no remote project, no schema, no Auth/RLS. **162/162 tests pass** across 19 test files; lint 0 errors / 6 known shadcn warnings; build and CI green.
+- **Post-WP2 consistency pass** — the committed generated route tree (`src/routeTree.gen.ts`) is in sync with the generator and CI verifies its freshness (see [`docs/decisions.md`](./docs/decisions.md), ADR-022).
+- Next: WP3 — Identity & Household Schema (see [`docs/todo.md`](./docs/todo.md)).
 
 ## Stack
 
@@ -38,6 +39,7 @@ Package manager: **Bun** (`bun.lock` committed; CI uses `oven-sh/setup-bun@v2`).
 | `bun run lint` | ESLint |
 | `bun run test` | Vitest (single run) |
 | `bun run test:watch` | Vitest watch |
+| `bun run routes:check` | Assert the committed `src/routeTree.gen.ts` is current — run **after** `bun run build`, which regenerates it (ADR-022) |
 | `bun run format` | Prettier |
 | `bun run supabase:start` / `:stop` / `:status` | Local Supabase stack (Docker) |
 | `bun run db:reset` | Reset local DB → run migrations + `seed.sql` |
