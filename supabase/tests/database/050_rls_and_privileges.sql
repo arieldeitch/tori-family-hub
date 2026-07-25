@@ -1,13 +1,17 @@
--- WP3 — the deliberate locked-down state (decision D1 / ADR-023):
--- RLS enabled on every WP3 table, ZERO policies, and no table privileges for
--- PUBLIC, anon or authenticated.
+-- WP3 — RLS is enabled on every identity table, and no client role ever
+-- receives blanket table privileges.
 --
--- This does NOT test household isolation. There are no policies yet, so there
--- is no isolation behaviour to test — that is WP4's job.
+-- SUPERSEDED IN PART BY WP4: this file originally also asserted zero policies
+-- and zero privileges for `authenticated`. WP4 deliberately opened the minimum
+-- necessary access (ADR-023), so those assertions now live in
+-- 070_wp4_policies_and_grants.sql, which pins the exact policy set and the exact
+-- column-level GRANT matrix. What remains here is the part that must hold
+-- forever: RLS on, `anon` with nothing, PUBLIC with nothing.
 begin;
-select plan(18);
+select plan(13);
 
--- RLS enabled on all four tables.
+-- RLS enabled on all four tables. If a future migration ever creates one of
+-- these without RLS, this fails.
 select is((select relrowsecurity from pg_class where oid = 'public.households'::regclass),
   true, 'RLS is enabled on households');
 select is((select relrowsecurity from pg_class where oid = 'public.member_profiles'::regclass),
@@ -17,27 +21,8 @@ select is((select relrowsecurity from pg_class where oid = 'public.household_mem
 select is((select relrowsecurity from pg_class where oid = 'public.household_invitations'::regclass),
   true, 'RLS is enabled on household_invitations');
 
--- Zero policies: with RLS enabled this denies every row to any non-bypassing
--- role. WP4 adds the policy set together with the matching GRANTs.
-select policies_are('public', 'households', array[]::name[],
-  'households has no RLS policies in WP3');
-select policies_are('public', 'member_profiles', array[]::name[],
-  'member_profiles has no RLS policies in WP3');
-select policies_are('public', 'household_members', array[]::name[],
-  'household_members has no RLS policies in WP3');
-select policies_are('public', 'household_invitations', array[]::name[],
-  'household_invitations has no RLS policies in WP3');
-
-select is(
-  (select count(*) from pg_policies
-    where schemaname = 'public'
-      and tablename in ('households', 'member_profiles', 'household_members', 'household_invitations')),
-  0::bigint,
-  'no RLS policy exists on any WP3 table'
-);
-
--- No client-role privileges. anon and authenticated are the Data API roles;
--- revoking them removes these tables from the Data API entirely.
+-- `anon` is never granted anything on the identity tables. There is no
+-- unauthenticated surface in this domain, in WP3 or WP4.
 select table_privs_are('public', 'households', 'anon', array[]::text[],
   'anon has no privileges on households');
 select table_privs_are('public', 'member_profiles', 'anon', array[]::text[],
@@ -47,16 +32,19 @@ select table_privs_are('public', 'household_members', 'anon', array[]::text[],
 select table_privs_are('public', 'household_invitations', 'anon', array[]::text[],
   'anon has no privileges on household_invitations');
 
+-- No blanket table-level privileges for `authenticated`: access is granted at
+-- column level only, so a column added later is unreadable until deliberately
+-- granted (fail closed). The exact matrix is asserted in 070.
 select table_privs_are('public', 'households', 'authenticated', array[]::text[],
-  'authenticated has no privileges on households');
+  'authenticated holds no table-wide privileges on households — column-level only');
 select table_privs_are('public', 'member_profiles', 'authenticated', array[]::text[],
-  'authenticated has no privileges on member_profiles');
+  'authenticated holds no table-wide privileges on member_profiles — column-level only');
 select table_privs_are('public', 'household_members', 'authenticated', array[]::text[],
-  'authenticated has no privileges on household_members');
+  'authenticated holds no table-wide privileges on household_members — column-level only');
 select table_privs_are('public', 'household_invitations', 'authenticated', array[]::text[],
-  'authenticated has no privileges on household_invitations');
+  'authenticated holds no table-wide privileges on household_invitations — column-level only');
 
--- PUBLIC (grantee oid 0) holds no privileges on any WP3 table either.
+-- PUBLIC (grantee oid 0) holds no privileges on any WP3 table.
 select is(
   (select count(*)
      from pg_class c
@@ -66,8 +54,7 @@ select is(
       and c.relname in ('households', 'member_profiles', 'household_members', 'household_invitations')
       and a.grantee = 0),
   0::bigint,
-  'PUBLIC holds no privileges on any WP3 table'
-);
+  'PUBLIC holds no privileges on any WP3 table');
 
 select * from finish();
 rollback;
