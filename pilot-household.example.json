@@ -5,39 +5,87 @@
     "pilot household there. Never commit the filled file, and never copy its",
     "contents into a migration, into supabase/seed.sql, into a committed test",
     "fixture, into documentation, or into a source-code constant (ADR-034).",
-    "Ages are product context only: there is deliberately no dateOfBirth field",
-    "and no age field — do not add one without an approved, privacy-safe design."
+    "",
+    "NO PASSWORD LIVES HERE. The pilot password comes from the server-only",
+    "environment variable TORI_PILOT_PASSWORD and is never written to this file.",
+    "",
+    "Ages are product context only: there is deliberately no dateOfBirth and no",
+    "age field. Do not add one without an approved, privacy-safe design.",
+    "",
+    "The `id` values are stable UUIDs. Bootstrap upserts on them, which is what",
+    "makes repeated runs converge instead of duplicating."
   ],
   "household": {
+    "id": "00000000-0000-4000-8000-000000000001",
     "name": "<household name>",
     "timezone": "Asia/Jerusalem",
     "locale": "he-IL",
     "weekStartsOn": 0
   },
   "adultPilotIdentity": {
-    "_comment": "The single authenticated adult used for the pilot. The password is supplied at bootstrap time via the environment, never stored here.",
-    "email": "<adult@example.invalid>",
-    "linkedProfileKey": "adult-1"
+    "_comment": "The single authenticated adult for the pilot. Password comes from TORI_PILOT_PASSWORD.",
+    "email": "pilot-owner@tori.local",
+    "linkedProfileKey": "adult-owner"
   },
   "profiles": [
-    { "key": "adult-1", "displayName": "<adult one>", "isChild": false },
-    { "key": "adult-2", "displayName": "<adult two>", "isChild": false },
-    { "key": "child-1", "displayName": "<child one>", "isChild": true },
-    { "key": "child-2", "displayName": "<child two>", "isChild": true }
-  ],
-  "rotation": {
-    "_comment": "Fixed, deterministic sequence between the child profiles. Order is significant.",
-    "strategy": "fixed_sequence",
-    "sequence": ["child-1", "child-2"]
-  },
-  "chores": [
     {
-      "_comment": "Schedule and frequency are approval decisions — these are placeholders, not defaults to ship.",
-      "title": "<chore title>",
-      "byWeekday": [],
-      "timeOfDay": null,
-      "participants": ["child-1", "child-2"],
-      "assignmentStrategy": "fixed_sequence"
+      "key": "adult-owner",
+      "id": "00000000-0000-4000-8000-000000000101",
+      "displayName": "<adult one>",
+      "isChild": false,
+      "role": "owner"
+    },
+    {
+      "key": "adult-second",
+      "id": "00000000-0000-4000-8000-000000000102",
+      "displayName": "<adult two>",
+      "isChild": false,
+      "role": "adult"
+    },
+    {
+      "key": "child-first",
+      "id": "00000000-0000-4000-8000-000000000103",
+      "displayName": "<child one>",
+      "isChild": true,
+      "role": "child"
+    },
+    {
+      "key": "child-second",
+      "id": "00000000-0000-4000-8000-000000000104",
+      "displayName": "<child two>",
+      "isChild": true,
+      "role": "child"
     }
-  ]
+  ],
+  "_futureWorkPackages": {
+    "_comment": [
+      "Recorded for WP5B/WP5C. NOT read or applied by the WP5A bootstrap —",
+      "no task or rotation tables exist yet.",
+      "Each chore keeps its own rotation cursor, which continues across weeks",
+      "and never resets on Sunday."
+    ],
+    "chores": [
+      {
+        "title": "<daily chore A>",
+        "frequency": "daily",
+        "byWeekday": null,
+        "timeOfDay": null,
+        "rotation": { "strategy": "fixed_sequence", "startsWith": "child-first" }
+      },
+      {
+        "title": "<daily chore B>",
+        "frequency": "daily",
+        "byWeekday": null,
+        "timeOfDay": null,
+        "rotation": { "strategy": "fixed_sequence", "startsWith": "child-second" }
+      },
+      {
+        "title": "<thrice-weekly chore>",
+        "frequency": "weekly",
+        "byWeekday": [0, 2, 4],
+        "timeOfDay": null,
+        "rotation": { "strategy": "fixed_sequence", "startsWith": "child-first" }
+      }
+    ]
+  }
 }

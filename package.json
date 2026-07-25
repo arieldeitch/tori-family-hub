@@ -27,7 +27,12 @@
     "db:test:auth-suite": "bun scripts/db-auth-suite.ts",
     "db:fixtures": "bun scripts/db-auth-fixtures.ts",
     "check:client-secrets": "bun scripts/check-client-secrets.ts",
-    "db:verify": "supabase db reset && bun scripts/db-types-check.ts && bun scripts/db-smoke.ts && supabase test db --local supabase/tests/database && bun scripts/db-auth-suite.ts"
+    "check:pilot-privacy": "bun scripts/check-pilot-privacy.ts",
+    "pilot:bootstrap": "bun scripts/pilot-bootstrap.ts",
+    "pilot:status": "bun scripts/pilot-status.ts",
+    "pilot:cleanup": "bun scripts/pilot-cleanup.ts",
+    "pilot:test": "bun scripts/pilot-tests.ts",
+    "db:verify": "supabase db reset && bun scripts/db-types-check.ts && bun scripts/db-smoke.ts && supabase test db --local supabase/tests/database && bun scripts/db-auth-suite.ts && bun scripts/pilot-tests.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
