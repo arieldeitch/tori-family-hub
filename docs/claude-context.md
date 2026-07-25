@@ -24,7 +24,9 @@ Operational instructions for Claude Code working on Tori.
 
 ## Current stage
 
-**WP2 is complete.** The next stage is **WP3 — Identity & Household Schema** (see [`todo.md`](./todo.md)). WP3 is the first work package that introduces business schema — it must ship migrations plus RLS groundwork, not ad-hoc tables.
+**WP2 implementation is complete; PR #3 (`wp2-supabase-local-workflow` → `main`) is OPEN and not yet merged** (both checks green). The local Supabase stack is **stopped** at session closeout — restart with Docker + `bun run supabase:start` (ports `553xx`).
+
+The next stage is **WP3 — Identity & Household Schema** (see [`todo.md`](./todo.md)), but **only after PR #3 merges**. WP3 is the first work package that introduces business schema — it must ship migrations plus the Identity/Household foundation (tables, enums, constraints, indexes, generated types, schema tests), not ad-hoc tables. Full RLS + negative tests are WP4.
 
 ## Hard rules
 

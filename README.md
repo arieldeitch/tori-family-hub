@@ -8,8 +8,8 @@
 
 - Prototype built in Lovable; GitHub connected; Claude Code active.
 - **WP0 (foundation fixes)** and **WP1 (Knowledge Pack)** complete and merged to `main`.
-- **WP2 (Supabase Local Workflow, this change)**: locked Supabase CLI dev dependency + `@supabase/supabase-js`, `supabase/` (config + empty foundation migration + business-empty seed), a typed infrastructure-only client, `db:*` scripts, and a CI `database` job. Local-only — no remote project, no schema, no Auth/RLS. **162/162 tests pass**; lint 0 errors / 6 known shadcn warnings; build and CI green.
-- Next: WP3 — Identity & Household Schema (see [`docs/todo.md`](./docs/todo.md)).
+- **WP2 (Supabase Local Workflow)**: locked Supabase CLI dev dependency + `@supabase/supabase-js`, `supabase/` (config + empty foundation migration + business-empty seed), a typed infrastructure-only client, `db:*` scripts, and a CI `database` job. Local-only — no remote project, no schema, no Auth/RLS. **162/162 tests pass**; lint 0 errors / 6 known shadcn warnings; build and CI green. Delivered on **PR #3** (`wp2-supabase-local-workflow` → `main`) — **open, pending merge**.
+- Next: WP3 — Identity & Household Schema (see [`docs/todo.md`](./docs/todo.md)), after PR #3 merges.
 
 ## Stack
 

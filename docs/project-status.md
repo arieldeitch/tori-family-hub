@@ -2,7 +2,18 @@
 
 **Verified facts only.** When a canonical requirement differs from the code, the gap is recorded here and in [`todo.md`](./todo.md) — the requirement is not rewritten and the code is not changed outside a dedicated task. Business truth lives in [`01-product-requirements.md`](./01-product-requirements.md).
 
-_Last updated: after WP2 (Supabase Local Workflow), on top of WP0 + WP1._
+_Last updated: WP2 session closeout (before a machine reboot), on top of WP0 + WP1._
+
+## Session closeout snapshot (resume here)
+
+Point-in-time state so work can resume after a reboot without relying on chat history.
+
+- **Branch:** `wp2-supabase-local-workflow` · **PR #3** → base `main` — **OPEN, not merged**, both checks (`verify`, `database`) **green**. Working tree clean.
+- **Done & merged to `main`:** WP0 (foundation fixes), WP1 (knowledge pack). **Done, PR-pending:** WP2 (Supabase local workflow).
+- **Next step: WP3 — Identity & Household Schema** (only after PR #3 is merged). Scope in [`todo.md`](./todo.md).
+- **Quality gates (local):** typecheck 0 · lint 0 errors / 6 shadcn warnings · **test 162/162** · build ✓.
+- **WP2 facts:** Supabase CLI `2.109.1` (locked dev dep), `@supabase/supabase-js` `2.110.8` (runtime), package manager **Bun 1.3.14**. Local `project_id = tori-family-hub`, app dev URL `http://localhost:8080`, Supabase local ports remapped to the **553xx** range (to avoid clashing with another local stack). Foundation migration: `supabase/migrations/20260724153731_wp2_foundation.sql` (empty). `supabase/seed.sql` has no business data. Generated types: `src/infrastructure/supabase/database.types.ts`. Client is scaffold only. Public env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`. No service role in frontend, no remote link, no `db push`. CI has a separate `database` job; `db:verify` = reset + type freshness + smoke.
+- **Local stack:** stopped at session closeout. To resume: start Docker, then `bun run supabase:start` (ports `553xx`), copy URL + publishable key from `bun run supabase:status` into `.env.local`.
 
 ## Where the project is
 

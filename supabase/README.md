@@ -7,6 +7,8 @@ Local-first Supabase scaffold for Tori. **Local development only — there is no
 - Docker Desktop (or a compatible engine) running.
 - Bun. The Supabase CLI is a locked dev dependency — run it via `bunx supabase …` (no global install needed).
 
+> Ports: this stack is remapped to the **553xx** range in `config.toml` (API `55321`, DB `55322`, Studio `55323`, …) so it can coexist with other local Supabase stacks that use the default `543xx` ports. `auth.site_url` is `http://localhost:8080` to match the Vite dev server.
+
 ## Commands
 
 | Script | What it does |
