@@ -19,9 +19,16 @@ type ClientCache = { [CACHE_KEY]?: SupabaseClient<Database> };
 const globalCache = globalThis as unknown as ClientCache;
 
 /**
- * Lazily create (once) and return the scaffold Supabase browser client.
- * Auth is intentionally inert: no session persistence, no auto-refresh, no URL
- * session detection — nothing should create hidden auth state before Auth lands.
+ * Lazily create (once) and return the Supabase browser client.
+ *
+ * WP5A enabled real Auth sessions for the local Family Pilot sign-in. Session
+ * persistence and refresh use Supabase Auth's own supported browser storage —
+ * that stores the access/refresh token only. It is NOT application state: every
+ * piece of household data still comes from PostgreSQL under RLS, so
+ * `localStorage` never becomes a source of truth (PRD §1).
+ *
+ * `detectSessionInUrl` stays off: there is no OAuth or magic-link flow, and the
+ * pilot deliberately ships no signup, recovery or invitation entry point.
  */
 export function getSupabaseClient(): SupabaseClient<Database> {
   const existing = globalCache[CACHE_KEY];
@@ -30,8 +37,8 @@ export function getSupabaseClient(): SupabaseClient<Database> {
   const env = getSupabasePublicEnv();
   const client = createClient<Database>(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_PUBLISHABLE_KEY, {
     auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+      persistSession: true,
+      autoRefreshToken: true,
       detectSessionInUrl: false,
     },
   });
