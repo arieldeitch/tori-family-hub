@@ -47,11 +47,30 @@ jobs:
       # Start only the containers needed for schema + REST validation. Excludes
       # studio, storage, realtime, functions and the analytics/vector logging
       # stack to keep CI lean and avoid flaky logging containers.
+      # `supabase start` prints the local keys on success, so its output is
+      # captured rather than echoed. The secret-bearing values are masked
+      # immediately afterwards, before anything — including the failure dump
+      # below — can emit them. These are well-known local dev defaults with no
+      # remote project behind them, but they are masked anyway so the habit
+      # holds once a remote environment exists.
       - name: Start local Supabase (DB + API only)
-        run: >-
-          bunx supabase start
-          -x studio,imgproxy,inbucket,realtime,storage,edge-runtime,functions,analytics,vector,meta
-          --ignore-health-check
+        run: |
+          set +e
+          bunx supabase start \
+            -x studio,imgproxy,inbucket,realtime,storage,edge-runtime,functions,analytics,vector,meta \
+            --ignore-health-check > "$RUNNER_TEMP/supabase-start.log" 2>&1
+          START_STATUS=$?
+          set -e
+          JSON="$(bunx supabase status -o json 2>/dev/null || true)"
+          for KEY_NAME in SERVICE_ROLE_KEY SECRET_KEY JWT_SECRET S3_PROTOCOL_ACCESS_KEY_SECRET; do
+            VALUE="$(echo "$JSON" | jq -r --arg k "$KEY_NAME" '.[$k] // empty')"
+            if [ -n "$VALUE" ]; then echo "::add-mask::$VALUE"; fi
+          done
+          if [ "$START_STATUS" -ne 0 ]; then
+            cat "$RUNNER_TEMP/supabase-start.log"
+            exit "$START_STATUS"
+          fi
+          echo "Local Supabase started; secret-bearing keys masked."
 
       - name: Reset database (apply migrations + seed)
         run: bunx supabase db reset
