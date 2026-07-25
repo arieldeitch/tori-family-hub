@@ -10,7 +10,8 @@
 - **No RLS, no server validation.** Every "permission" check is client-side and bypassable via devtools.
 
 ## Backend
-- No Supabase, no server functions (`createServerFn`), no `src/routes/api/*` endpoints.
+- **Supabase is local-only scaffold (WP2).** A local Supabase workflow exists (`supabase/`, a typed infrastructure client under `src/infrastructure/supabase/`, `db:*` scripts, a CI `database` job), but there is **no business schema, no Auth, no RLS, and no remote project**, and the client is **not connected to any module** — modules still read/write the in-memory mocks. Requires Docker to run locally.
+- No server functions (`createServerFn`), no `src/routes/api/*` endpoints.
 - No email, no notifications, no cron. Notification screen is UI-only.
 
 ## PWA

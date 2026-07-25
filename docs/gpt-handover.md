@@ -8,11 +8,10 @@ Continuity for GPT conversations about Tori. Read alongside [`claude-context.md`
 - **GitHub is connected.**
 - **Claude Code is active.**
 - The **Repository Acceptance Audit is complete.**
-- **WP0 is complete** (typecheck via `tsc`, `.gitattributes` LF, rotation timezone fix, 158/158 tests, green gates).
-- **PR #1 is still open** (not yet merged).
-- **WP1 is being delivered as a stacked branch** (`wp1-knowledge-pack-sync`, PR base temporarily `wp0-foundation-fixes`).
-- **Supabase has not been set up yet.**
-- **The next action after WP1 is WP2** (Supabase Local Workflow).
+- **WP0 (Foundation Fixes) and WP1 (Knowledge Pack) are complete and merged to `main`.**
+- **WP2 (Supabase Local Workflow) is complete** on `wp2-supabase-local-workflow` (PR base `main`).
+- **Supabase is set up local-only**: locked CLI dev dependency, `supabase/` (config + empty foundation migration + business-empty seed), a typed infrastructure-only client, `db:*` scripts, and a CI `database` job. **No remote project, no business schema, no Auth, no RLS**, and the client is not wired to any module. **162/162 tests pass**; gates green.
+- **The next action after WP2 is WP3** (Identity & Household Schema).
 
 ## Ground rules for any GPT-authored task
 

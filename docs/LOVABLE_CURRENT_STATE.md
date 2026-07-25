@@ -54,7 +54,7 @@ Hebrew only. Scaffolding (`lib/i18n.ts` + `locales/he.ts`) allows adding locales
 
 ## Tests
 
-`bun run test`: **158 passed / 158 (18 files)**. Includes 3 timezone-determinism regression tests for the shift engine (UTC, Asia/Jerusalem, negative-offset and +14 zones).
+`bun run test`: **162 passed / 162 (19 files)**. Includes 3 timezone-determinism regression tests for the shift engine (UTC, Asia/Jerusalem, negative-offset and +14 zones) and 4 Supabase public-env validation tests (WP2).
 
 ## Verification (WP0 pass)
 
@@ -66,7 +66,7 @@ Hebrew only. Scaffolding (`lib/i18n.ts` + `locales/he.ts`) allows adding locales
 
 ## Explicitly NOT connected
 
-- No Supabase / Lovable Cloud
+- Supabase is **local-only scaffold** (WP2): local stack + infrastructure client exist, but no business schema, no remote project, and the client is not wired to any module. Business data is still 100% in-memory mocks.
 - No authentication (Supabase Auth, OAuth, PIN-as-credential)
 - No RLS, no server-side validation
 - No `createServerFn` handlers, no `src/routes/api/*` routes

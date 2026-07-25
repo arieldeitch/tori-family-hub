@@ -4,8 +4,8 @@ Prioritized future work. **Do not open several business modules in parallel befo
 
 ## Next work packages (in order)
 
-1. **WP2 — Supabase Local Workflow.** Provision local Supabase (CLI, `supabase/` init), integration client, `.env` with `VITE_SUPABASE_URL` + publishable key only. No service role in the frontend.
-2. **WP3 — Identity & Household Schema.** Migrations for `households`, `household_members` (role enum), `member_profiles`, `user_roles`, `has_role` SECURITY DEFINER — one migration with `GRANT` + `ENABLE ROW LEVEL SECURITY`.
+1. ✅ **WP2 — Supabase Local Workflow — DONE.** Locked Supabase CLI dev dep + `@supabase/supabase-js`; `supabase/` (config, empty foundation migration, business-empty seed); infrastructure-only typed client with Zod-validated public env; `db:*` scripts; CI `database` job; `.env.example` with public keys only. No remote project, no schema, no Auth/RLS.
+2. **WP3 — Identity & Household Schema (NEXT).** Migrations for `households`, `household_members` (role enum), `member_profiles`, `user_roles`, `has_role` SECURITY DEFINER — one migration with `GRANT` + `ENABLE ROW LEVEL SECURITY`. Regenerate `database.types.ts`.
 3. **WP4 — RLS & Negative Tests.** Policies on the Identity/Household tables (membership predicate), positive and negative tests (a user outside the household gets zero rows / fails).
 4. **WP5 — Connect Onboarding to real data.** Replace `householdRepo` + `peopleDirectory` while keeping the `subscribe()` surface; onboarding writes to the DB. Other modules stay mock.
 5. **Only then** extend the backend to further business modules, one module at a time.
