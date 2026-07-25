@@ -1,0 +1,18 @@
+-- WP2 — Supabase local workflow foundation.
+--
+-- This is an intentionally empty foundation migration. It establishes the
+-- migrations workflow (supabase/migrations is the ONLY way to change schema —
+-- see docs/decisions.md) without introducing any business schema.
+--
+-- No business tables, profiles, memberships, invitations, user roles, task
+-- tables, policies, or RPCs are created here. Those arrive in later work
+-- packages:
+--   * WP3 — Identity & Household schema (households, member_profiles,
+--           household_members, household_invitations, user_roles) + migrations.
+--   * WP4 — RLS policies + positive/negative tests.
+--
+-- Keeping this file lets `supabase db reset` and CI exercise the full
+-- migration -> seed -> type-generation path against a real (currently empty)
+-- public schema.
+
+-- (no-op)
