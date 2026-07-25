@@ -17,6 +17,7 @@ import { Route as ShoppingRouteImport } from './routes/shopping'
 import { Route as ShiftsRouteImport } from './routes/shifts'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as PilotRouteImport } from './routes/pilot'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MoreRouteImport } from './routes/more'
@@ -31,6 +32,7 @@ import { Route as TemplatesIndexRouteImport } from './routes/templates.index'
 import { Route as TasksIndexRouteImport } from './routes/tasks.index'
 import { Route as ShoppingIndexRouteImport } from './routes/shopping.index'
 import { Route as ShiftsIndexRouteImport } from './routes/shifts.index'
+import { Route as PilotIndexRouteImport } from './routes/pilot.index'
 import { Route as NotificationsIndexRouteImport } from './routes/notifications.index'
 import { Route as FollowUpsIndexRouteImport } from './routes/follow-ups.index'
 import { Route as ErrandsIndexRouteImport } from './routes/errands.index'
@@ -45,6 +47,7 @@ import { Route as TasksTaskIdRouteImport } from './routes/tasks.$taskId'
 import { Route as ShoppingListIdRouteImport } from './routes/shopping.$listId'
 import { Route as ShiftsNewRouteImport } from './routes/shifts.new'
 import { Route as ShiftsRuleIdRouteImport } from './routes/shifts.$ruleId'
+import { Route as PilotSigninRouteImport } from './routes/pilot.signin'
 import { Route as NotificationsPreferencesRouteImport } from './routes/notifications.preferences'
 import { Route as FollowUpsCaseIdRouteImport } from './routes/follow-ups.$caseId'
 import { Route as ErrandsErrandIdRouteImport } from './routes/errands.$errandId'
@@ -88,6 +91,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PilotRoute = PilotRouteImport.update({
+  id: '/pilot',
+  path: '/pilot',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -160,6 +168,11 @@ const ShiftsIndexRoute = ShiftsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ShiftsRoute,
 } as any)
+const PilotIndexRoute = PilotIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PilotRoute,
+} as any)
 const NotificationsIndexRoute = NotificationsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -230,6 +243,11 @@ const ShiftsRuleIdRoute = ShiftsRuleIdRouteImport.update({
   path: '/$ruleId',
   getParentRoute: () => ShiftsRoute,
 } as any)
+const PilotSigninRoute = PilotSigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
+  getParentRoute: () => PilotRoute,
+} as any)
 const NotificationsPreferencesRoute =
   NotificationsPreferencesRouteImport.update({
     id: '/preferences',
@@ -262,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/pilot': typeof PilotRouteWithChildren
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/shifts': typeof ShiftsRouteWithChildren
@@ -273,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/notifications/preferences': typeof NotificationsPreferencesRoute
+  '/pilot/signin': typeof PilotSigninRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
   '/shopping/$listId': typeof ShoppingListIdRoute
@@ -287,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/errands/': typeof ErrandsIndexRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
+  '/pilot/': typeof PilotIndexRoute
   '/shifts/': typeof ShiftsIndexRoute
   '/shopping/': typeof ShoppingIndexRoute
   '/tasks/': typeof TasksIndexRoute
@@ -308,6 +329,7 @@ export interface FileRoutesByTo {
   '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/notifications/preferences': typeof NotificationsPreferencesRoute
+  '/pilot/signin': typeof PilotSigninRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
   '/shopping/$listId': typeof ShoppingListIdRoute
@@ -322,6 +344,7 @@ export interface FileRoutesByTo {
   '/errands': typeof ErrandsIndexRoute
   '/follow-ups': typeof FollowUpsIndexRoute
   '/notifications': typeof NotificationsIndexRoute
+  '/pilot': typeof PilotIndexRoute
   '/shifts': typeof ShiftsIndexRoute
   '/shopping': typeof ShoppingIndexRoute
   '/tasks': typeof TasksIndexRoute
@@ -340,6 +363,7 @@ export interface FileRoutesById {
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRouteWithChildren
   '/onboarding': typeof OnboardingRoute
+  '/pilot': typeof PilotRouteWithChildren
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/shifts': typeof ShiftsRouteWithChildren
@@ -351,6 +375,7 @@ export interface FileRoutesById {
   '/errands/$errandId': typeof ErrandsErrandIdRoute
   '/follow-ups/$caseId': typeof FollowUpsCaseIdRoute
   '/notifications/preferences': typeof NotificationsPreferencesRoute
+  '/pilot/signin': typeof PilotSigninRoute
   '/shifts/$ruleId': typeof ShiftsRuleIdRoute
   '/shifts/new': typeof ShiftsNewRoute
   '/shopping/$listId': typeof ShoppingListIdRoute
@@ -365,6 +390,7 @@ export interface FileRoutesById {
   '/errands/': typeof ErrandsIndexRoute
   '/follow-ups/': typeof FollowUpsIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
+  '/pilot/': typeof PilotIndexRoute
   '/shifts/': typeof ShiftsIndexRoute
   '/shopping/': typeof ShoppingIndexRoute
   '/tasks/': typeof TasksIndexRoute
@@ -384,6 +410,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/notifications'
     | '/onboarding'
+    | '/pilot'
     | '/search'
     | '/settings'
     | '/shifts'
@@ -395,6 +422,7 @@ export interface FileRouteTypes {
     | '/errands/$errandId'
     | '/follow-ups/$caseId'
     | '/notifications/preferences'
+    | '/pilot/signin'
     | '/shifts/$ruleId'
     | '/shifts/new'
     | '/shopping/$listId'
@@ -409,6 +437,7 @@ export interface FileRouteTypes {
     | '/errands/'
     | '/follow-ups/'
     | '/notifications/'
+    | '/pilot/'
     | '/shifts/'
     | '/shopping/'
     | '/tasks/'
@@ -430,6 +459,7 @@ export interface FileRouteTypes {
     | '/errands/$errandId'
     | '/follow-ups/$caseId'
     | '/notifications/preferences'
+    | '/pilot/signin'
     | '/shifts/$ruleId'
     | '/shifts/new'
     | '/shopping/$listId'
@@ -444,6 +474,7 @@ export interface FileRouteTypes {
     | '/errands'
     | '/follow-ups'
     | '/notifications'
+    | '/pilot'
     | '/shifts'
     | '/shopping'
     | '/tasks'
@@ -461,6 +492,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/notifications'
     | '/onboarding'
+    | '/pilot'
     | '/search'
     | '/settings'
     | '/shifts'
@@ -472,6 +504,7 @@ export interface FileRouteTypes {
     | '/errands/$errandId'
     | '/follow-ups/$caseId'
     | '/notifications/preferences'
+    | '/pilot/signin'
     | '/shifts/$ruleId'
     | '/shifts/new'
     | '/shopping/$listId'
@@ -486,6 +519,7 @@ export interface FileRouteTypes {
     | '/errands/'
     | '/follow-ups/'
     | '/notifications/'
+    | '/pilot/'
     | '/shifts/'
     | '/shopping/'
     | '/tasks/'
@@ -504,6 +538,7 @@ export interface RootRouteChildren {
   MoreRoute: typeof MoreRoute
   NotificationsRoute: typeof NotificationsRouteWithChildren
   OnboardingRoute: typeof OnboardingRoute
+  PilotRoute: typeof PilotRouteWithChildren
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   ShiftsRoute: typeof ShiftsRouteWithChildren
@@ -572,6 +607,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pilot': {
+      id: '/pilot'
+      path: '/pilot'
+      fullPath: '/pilot'
+      preLoaderRoute: typeof PilotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -672,6 +714,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShiftsIndexRouteImport
       parentRoute: typeof ShiftsRoute
     }
+    '/pilot/': {
+      id: '/pilot/'
+      path: '/'
+      fullPath: '/pilot/'
+      preLoaderRoute: typeof PilotIndexRouteImport
+      parentRoute: typeof PilotRoute
+    }
     '/notifications/': {
       id: '/notifications/'
       path: '/'
@@ -770,6 +819,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShiftsRuleIdRouteImport
       parentRoute: typeof ShiftsRoute
     }
+    '/pilot/signin': {
+      id: '/pilot/signin'
+      path: '/signin'
+      fullPath: '/pilot/signin'
+      preLoaderRoute: typeof PilotSigninRouteImport
+      parentRoute: typeof PilotRoute
+    }
     '/notifications/preferences': {
       id: '/notifications/preferences'
       path: '/preferences'
@@ -827,6 +883,18 @@ const NotificationsRouteChildren: NotificationsRouteChildren = {
 const NotificationsRouteWithChildren = NotificationsRoute._addFileChildren(
   NotificationsRouteChildren,
 )
+
+interface PilotRouteChildren {
+  PilotSigninRoute: typeof PilotSigninRoute
+  PilotIndexRoute: typeof PilotIndexRoute
+}
+
+const PilotRouteChildren: PilotRouteChildren = {
+  PilotSigninRoute: PilotSigninRoute,
+  PilotIndexRoute: PilotIndexRoute,
+}
+
+const PilotRouteWithChildren = PilotRoute._addFileChildren(PilotRouteChildren)
 
 interface ShiftsRouteChildren {
   ShiftsRuleIdRoute: typeof ShiftsRuleIdRoute
@@ -929,6 +997,7 @@ const rootRouteChildren: RootRouteChildren = {
   MoreRoute: MoreRoute,
   NotificationsRoute: NotificationsRouteWithChildren,
   OnboardingRoute: OnboardingRoute,
+  PilotRoute: PilotRouteWithChildren,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   ShiftsRoute: ShiftsRouteWithChildren,

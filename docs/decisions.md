@@ -40,7 +40,8 @@ This is the canonical decision log. The prototype-era `LOVABLE_DECISIONS.md` rec
 | ADR-032 | The structural and Auth-backed database suites are separated, and the shared `seed.sql` stays business-empty. | Accepted |
 | ADR-033 | Family Pilot (Weekly Child Chores) is the next milestone. In-app user management is deferred **for the pilot only** and the long-term Auth, PIN, invitation and permission requirements stand unchanged. | Accepted |
 | ADR-034 | Personal pilot data never enters a migration or the shared seed. It is loaded by an environment-guarded, idempotent bootstrap, and pilot mode is non-production unless separately hardened and approved. | Accepted |
-| ADR-035 | The temporary pilot access model. | **Proposed** |
+| ADR-035 | The temporary pilot access model: one authenticated adult identity, four profiles, and a profile selector that is attribution/display only. | Accepted |
+| ADR-036 | Approved pilot chore schedules and per-chore staggered rotation cursors. Editable defaults, not permanent product rules. | Accepted |
 
 ## ADR-021 — Supabase local workflow (WP2)
 
@@ -189,13 +190,33 @@ They must never appear in a migration, in `supabase/seed.sql`, in committed auto
 - The bootstrap runs behind an **explicit environment guard**, writes through the normal authorization path, and uses no service-role key in the browser.
 - **Age is product context only.** `date_of_birth` stays client-inaccessible (ADR-029); no age column is added and no dates of birth are fabricated.
 
-## ADR-035 — Temporary pilot access model (Proposed)
+## ADR-035 — Temporary pilot access model (Accepted)
 
-**Status: Proposed — awaiting owner approval.** Nothing is implemented until this is accepted.
+**Accepted.** The Family Pilot runs on a single authenticated adult identity.
 
-The recommended model: **one authenticated adult pilot identity**, one household, four member profiles, and a **profile selector inside the pilot UI** that chooses whose week is shown. The selector is a display-and-attribution mechanism, never an authorization mechanism.
+- **One real local Supabase Auth identity.** No anonymous access, no second account, no signup, no password recovery, no invitation flow.
+- **The pilot owner profile is the one adult profile linked to that identity.** Exactly one membership carries a non-null `auth_user_id`; `pilot:status` asserts it.
+- **The second adult and both children have no Auth identity.** Children keep `auth_user_id IS NULL`, exactly as ADR-013 intends, so real per-person identities can be attached later without a data migration.
+- **Profile selection is attribution and display only.** It chooses whose week is shown. It is never sent as an authorization input, it writes nothing to the database, and it is cached only as a disposable UI preference that is re-validated against the profiles RLS actually returned.
+- **Server authority always derives from `auth.uid()`.** A client-supplied profile id is never trusted. Any future write on behalf of another profile must go through a server-side use case that re-verifies household membership and records both the authenticated actor and the acting profile.
+- **This is explicitly non-production.** Pilot commands fail closed unless `TORI_PILOT_MODE=local` *and* the Supabase target independently proves to be the local CLI stack. Within one household this model cannot distinguish which family member acted — acceptable for a scheduling pilot, and precisely why child PIN and per-person identities remain required (ADR-013, ADR-025).
 
-Any accepted model must satisfy: writes on behalf of a child go through a **server-side use case or RPC** · the server verifies the authenticated adult belongs to the same household and may act for that profile · a **client-supplied profile id is never trusted** · the acting profile is **recorded in the activity log** · no anonymous writes · no service-role key in browser code · no RLS bypass · `localStorage` is not a source of truth · an explicit non-production environment guard · impossible to enable accidentally in production · and a clear migration path to real per-person accounts.
+WP5A implemented this and required **no migration and no RLS change**: the existing WP4 policies already let the signed-in adult read their household and all four profiles.
+
+## ADR-036 — Approved pilot chore schedules and staggered rotation (Accepted)
+
+Approved defaults for the three initial chores. They are **editable pilot defaults, not permanent product rules**, and they are recorded here only — implementation belongs to WP5B (schedule) and WP5C (rotation).
+
+| Chore | Schedule | Rotation starts with |
+| --- | --- | --- |
+| Dishwasher unloading | every day, no fixed time | the **first** child profile |
+| Dishwasher loading | every day, no fixed time | the **second** child profile |
+| Taking out the trash | Sunday, Tuesday, Thursday, no fixed time | the **first** child profile |
+
+- **Each chore keeps its own rotation cursor.** The two daily dishwasher chores are staggered so that on any given day one child unloads and the other loads.
+- **The cursor continues across weeks and never resets on Sunday.** The trash chore therefore alternates by occurrence, and a week may end 9–8 with the split reversing the following week. That imbalance is expected and self-correcting.
+- **No catch-up punishment after an absence**, and **no random assignment** — required by [`08-rotation-engine.md`](./08-rotation-engine.md) and ADR-006.
+- Concrete profile order is **local pilot data** (ADR-034), never a value in this repository.
 
 ## Notes
 

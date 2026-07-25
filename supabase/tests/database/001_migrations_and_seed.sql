@@ -29,6 +29,14 @@ select is(
 
 -- seed.sql must remain business-empty (decision D4): fixtures are transactional
 -- and test-local, never persisted into the shared seed.
+--
+-- CONTRACT: these four counts assert the state of a FRESHLY RESET database, so
+-- this suite runs after `supabase db reset` and before any fixture or pilot
+-- bootstrap exists. That ordering is what makes it a meaningful guard on the
+-- shared seed. If you have run `bun run pilot:bootstrap` locally, either
+-- `bun run pilot:cleanup` or `bun run db:reset` before running this suite on
+-- its own — `bun run db:verify` already resets first and is the supported
+-- entry point.
 select is((select count(*) from public.households), 0::bigint,
   'seed creates no households');
 select is((select count(*) from public.member_profiles), 0::bigint,
