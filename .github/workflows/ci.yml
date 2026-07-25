@@ -64,6 +64,12 @@ jobs:
       - name: Smoke test (public URL + key only)
         run: bun run db:smoke
 
+      # pgTAP structural/constraint tests via the locked Supabase CLI. Each file
+      # is transactional and rolls back, so the tests leave no residue and can
+      # run in any order.
+      - name: Database schema tests (pgTAP)
+        run: bun run db:test
+
       - name: Stop Supabase
         if: always()
         run: bunx supabase stop --no-backup
