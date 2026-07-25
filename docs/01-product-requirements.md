@@ -130,7 +130,15 @@ Defined in full in [`07-notifications-and-reminders.md`](./07-notifications-and-
 
 Defined in full in [`08-rotation-engine.md`](./08-rotation-engine.md). Deterministic, explainable, versioned, idempotent, no undocumented randomness. Date-only logic must not depend on the runtime environment's timezone.
 
-## 15. MVP scope
+## 15. First delivery milestone — Family Pilot (Weekly Child Chores)
+
+The **immediate** execution priority, ahead of the rest of the MVP: let the owner's real household use Tori for one job — children seeing and completing their weekly chores, Sunday→Saturday, with a predictable rotation. Scope in [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md); decision in [`decisions.md`](./decisions.md) ADR-033.
+
+**In-app user management is deferred for the pilot only.** The household is preconfigured. This does **not** remove any requirement in §5 (child model), §4 (roles) or [`06-security-and-permissions.md`](./06-security-and-permissions.md) — real Auth, child PIN with lockout and adult reset, invitations and full RLS all remain required, and the pilot may not make them harder to add.
+
+Personal household data is never committed: no names in migrations and none in the shared seed (ADR-034).
+
+## 16. MVP scope
 
 In scope: household; adults and children; Today screen; one-off tasks; templates and instances; basic rotation; completion/history; weekly calendar; transport assignments and acceptance; shopping; errands; follow-ups; basic notifications; overdue; child view; soft delete/restore; RLS; Hebrew/RTL; basic PWA.
 

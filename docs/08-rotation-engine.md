@@ -10,6 +10,16 @@ The engine must be:
 - **idempotent**
 - with **no undocumented randomness**
 
+## Implementation note (Family Pilot)
+
+A pure engine already exists at `src/domain/shifts.ts` with `ALGORITHM_VERSION = "shifts.v1"`, supporting `fixed_sequence`, `weekday_fixed` and `manual`, emitting a `reason_code`, and offering `avoidConsecutive`. `src/features/shifts/human.ts` renders the plain-language explanation. The Family Pilot reuses this engine rather than introducing a second one.
+
+For the pilot, the child rotation is a **`fixed_sequence` over the two child profiles**: strictly alternating, never random, and no hidden AI decision. The concrete profile order is local pilot data (ADR-034), not a value in this document. Whether the sequence advances **per occurrence or per week** is an open decision (see [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) §10) and must be configurable, not hard-coded.
+
+Missing a turn must not push a child to the back of the queue or double their load — see the no-punishment rule below.
+
+When assignments are generated server-side, the persisted instance must carry the `algorithm_version` and the `reason_code` that produced it, so a past assignment stays explainable even after the engine changes. Manual override is a later addition and must record that it overrode a computed value.
+
 ## Input
 
 rule · participants · sequence · weekday · availability · eligibility · last assignee · history · algorithm version · fallback.

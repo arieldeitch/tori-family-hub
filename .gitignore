@@ -28,6 +28,12 @@ supabase/.env
 .env.local
 .env.*.local
 
+# Family Pilot — real household data is LOCAL ONLY and must never be committed
+# (ADR-034). Note `*.local` above does not match this name, so it is listed
+# explicitly. The placeholder template `pilot-household.example.json` IS tracked.
+pilot-household.local.json
+pilot-household.*.local.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
