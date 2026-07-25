@@ -32,6 +32,12 @@ This is the canonical decision log. The prototype-era `LOVABLE_DECISIONS.md` rec
 | ADR-024 | The household role lives on `household_members`, which is the dedicated membership/authorization table. There is no `user_roles` table. | Accepted |
 | ADR-025 | PIN credential material is never stored on `member_profiles`. Future credentials live in an unexposed `private.member_pin_credentials`, reachable only through a secured server/RPC boundary. | Accepted |
 | ADR-026 | A household may have multiple active owners. Protecting the last active owner is the responsibility of future RPCs, not a database constraint. | Accepted |
+| ADR-027 | Authorization helpers live in a non-exposed `private` schema, are SECURITY DEFINER with a fixed empty `search_path`, and never accept a user id. | Accepted |
+| ADR-028 | Membership and invitation mutations are RPC-only. No client may insert, update or delete `household_members` or `household_invitations`. | Accepted |
+| ADR-029 | Column-level grants protect sensitive data. `date_of_birth`, `token_hash`, `auth_user_id` and audit columns are unreachable through ordinary table grants. | Accepted |
+| ADR-030 | `service_role` holds DML on the identity tables for server-side administration and deterministic test fixtures only; its key never reaches the browser. | Accepted |
+| ADR-031 | `household_members.auth_user_id ON DELETE RESTRICT` is deferred to WP4.6, which blocks production account deletion and onboarding until it lands. | Accepted |
+| ADR-032 | The structural and Auth-backed database suites are separated, and the shared `seed.sql` stays business-empty. | Accepted |
 
 ## ADR-021 — Supabase local workflow (WP2)
 
@@ -64,7 +70,7 @@ The Identity & Household migration creates tables in a deliberately unreachable 
 - **All table privileges are revoked from `PUBLIC`, `anon` and `authenticated`**, which also strips the Supabase default privileges that would otherwise expose these tables through the Data API. WP3 grants no Data API access at all.
 - Privileges of `postgres`, the table owner, `service_role` and other Supabase infrastructure roles are **not** indiscriminately revoked — migrations, type generation and pgTAP must keep working.
 
-**WP4 is the opening step**: it adds the *minimum* required `GRANT` statements together with the complete RLS policy set, in the same migration, with positive **and** negative tests.
+**WP4 is the opening step**: it adds the _minimum_ required `GRANT` statements together with the complete RLS policy set, in the same migration, with positive **and** negative tests.
 
 This is a sequencing decision under [`06-security-and-permissions.md`](./06-security-and-permissions.md), which requires that a table never exist in a reachable state without policies. Splitting the work this way is stricter than granting first and adding policies later: between WP3 and WP4 the tables are reachable by nobody.
 
@@ -94,6 +100,68 @@ A household may have more than one active `owner`.
 - No partial unique index restricts a household to a single active owner.
 - WP3 attempts **no** cross-row "at least one active owner" constraint. Expressing it correctly in SQL requires either a deferred constraint trigger or serialized writes, and it would block legitimate ownership handover.
 - Instead, the future role-change, suspend and revoke RPCs **must prevent removal of the final active owner unless ownership is transferred atomically** in the same transaction.
+
+## ADR-027 — Authorization helpers live in a non-exposed `private` schema (WP4)
+
+Every RLS policy derives authority from three helpers in `private`, never from inline SQL and never from a client-supplied value.
+
+- **`private`, not `public`.** The Data API exposes `public` and `graphql_public` only (`supabase/config.toml`), so a helper in `public` would be callable as a PostgREST RPC endpoint. In `private` it is reachable by policies but not over HTTP. `private` contains **no tables**, and `anon` holds neither `USAGE` on the schema nor `EXECUTE` on any function.
+- **The three helpers** are `is_active_household_member(uuid)`, `has_household_role(uuid, household_role[])` and `current_profile_id(uuid)`. No `can_manage_household` wrapper was created — a wrapper adds a name without adding a decision.
+- **No helper accepts a user id.** Each derives the caller from `auth.uid()` alone. A `is_member(user_id, household_id)` form would be an oracle for probing other people's memberships, so the parameter simply does not exist. A test asserts no helper takes more than one `uuid` argument.
+- **Properties:** `SECURITY DEFINER`, owned by `postgres`, `STABLE`, `SET search_path = ''`, fully schema-qualified, no dynamic SQL. DEFINER ownership by a `BYPASSRLS` role is what prevents infinite recursion when a policy on `household_members` must consult `household_members`.
+- **One authorization predicate.** A caller has standing only when a membership row matches `auth.uid()`, its status is `active`, `access_expires_at` is NULL or in the future, the household is not soft-deleted, and the caller's own profile is active and not soft-deleted. Anything else — including a NULL `auth.uid()` — is false. Suspended, revoked and expired all fail closed.
+
+## ADR-028 — Membership and invitation mutations are RPC-only (WP4)
+
+`household_members` and `household_invitations` are **read-only for every client**. Neither a grant nor a write policy exists.
+
+This single fact is what makes the following impossible rather than merely disallowed: self-insertion into a household, granting oneself a role, changing `role`, `status`, `auth_user_id`, `profile_id` or `household_id`, removing a member, creating or revoking an invitation, and accepting an invitation.
+
+Invitation listing is **owner-only** in WP4 — not adult — because an invitation is an authority-granting artefact.
+
+These operations arrive in **WP4.5** as authorized, audited, atomic RPCs. Invitation acceptance must derive the household and role from the token record, never from client input, and consume a use with a conditional update so concurrent redemptions cannot over-consume. Role-change, suspend and revoke RPCs must prevent removal of the final active owner unless ownership transfers atomically (ADR-026).
+
+## ADR-029 — Column-level grants protect sensitive data (WP4)
+
+RLS is row-level only, so column visibility is expressed as `GRANT`s on specific columns. `authenticated` holds **no table-wide privilege** on any identity table; a column added by a future migration is therefore unreadable until deliberately granted — fail closed by default.
+
+Never granted to any client role:
+
+- **`member_profiles.date_of_birth` — neither readable nor writable.** The proposed adults-only accessor function was explicitly **not approved**: no accessor, no view, and no assumption that every adult may see it. Read and write behaviour is deferred to a future sensitive-profile RPC or permission model (see [`todo.md`](./todo.md)).
+- **`household_invitations.token_hash`** and **`created_by`** — the hash never leaves the database.
+- **`household_members.auth_user_id`** — account identifiers are never readable; policies consult it only inside DEFINER helpers.
+- **`households.created_by`, `deleted_at`, `deleted_by`** and `member_profiles.deleted_at`, `deleted_by`.
+
+Readable but never writable: `pin_auth_enabled` (ADR-025), `is_child`, `is_active`, membership `role` and `status`.
+
+## ADR-030 — `service_role` DML is server-side and test-only (WP4)
+
+`service_role` holds `SELECT/INSERT/UPDATE/DELETE` on the four identity tables. Supabase's default privileges grant it no DML in `public`, so this is explicit and deliberate: it is the identity used for server-side administration and for creating deterministic test fixtures.
+
+Hard conditions: the service-role key never appears in a `VITE_*` variable, in client code, in a build artefact, or in `.env.local` written by CI; it is masked in GitHub Actions before any command can emit it; it is used through a **separate** service-role client on which `signIn` is never called; and behavioural tests use separate publishable-key clients. `bun run check:client-secrets` scans `src/` and the build output for the key name patterns and, when available, the literal value, and fails the build on a hit.
+
+Granting `service_role` DML does **not** widen client access: `anon` still holds nothing and `authenticated` still holds only the approved columns.
+
+## ADR-031 — Deferred `ON DELETE RESTRICT` blocks production account deletion (WP4.6)
+
+`household_members.auth_user_id` remains `ON DELETE CASCADE` after WP4. **This is not acceptable for production.** Deleting an Auth account currently deletes the membership rows — destroying revoked-membership audit history, silently removing a household's last active owner, and deleting the row that holds the least personal data while retaining `member_profiles`, which holds the most.
+
+The approved target is **`ON DELETE RESTRICT`** plus a controlled server-side deletion workflow: revoke memberships and transfer ownership _before_ deleting the identity, with audit retention and final-active-owner protection.
+
+It is deferred because WP4 grants no INSERT/UPDATE/DELETE on `household_members`, so no client can reach the behaviour, and no policy depends on it. **WP4.6 must complete before WP5 introduces real account deletion or production onboarding.**
+
+## ADR-032 — Separated test suites and a business-empty shared seed (WP4)
+
+`supabase/seed.sql` stays **business-empty**. Fixtures are created and destroyed by the test harness, never persisted into the shared seed.
+
+The database suites are separated by path so they can run in the right order:
+
+- `supabase/tests/database/` — structural, policy-catalog, function-property and GRANT tests. These run **before any fixture exists**, because they assert the seed is business-empty.
+- `supabase/tests/rls/` — behavioural tests that depend on Auth-backed fixtures.
+
+Auth identities are created through the **Auth admin API, never by SQL** against `auth.users`; domain rows are created with `service_role` through PostgREST. Fixture orchestration is idempotent (setup tears down first) and cleans up in a `finally` block so a failing test cannot leave residue. Fixture addresses use the non-routable `@tori.invalid` domain, and passwords are generated per run, never logged and never committed.
+
+Because pgTAP connects as `postgres` — which has `BYPASSRLS` and owns the tables — **every behavioural test asserts `current_user = 'authenticated'` before evaluating policy results.** Without that, the suite would pass regardless of what the policies say. `FORCE ROW LEVEL SECURITY` is deliberately not enabled, so this assertion is the guard.
 
 ## Notes
 

@@ -78,27 +78,35 @@ For every table:
 - RLS tests
 - secret scanning
 
-## Current status (post-WP3)
+## Current status (post-WP4)
 
-Two independent suites:
+Three suites, deliberately separated (ADR-032):
 
-- **Application:** **162 passing unit/integration tests across 19 test files** (Vitest + Testing Library + jsdom), including timezone-determinism regression tests for the rotation engine and public-env validation tests for the Supabase scaffold.
-- **Database:** **102 passing pgTAP tests across 7 files** in `supabase/tests/database/`, run with `bun run db:test` (`supabase test db` via the locked CLI — no PostgreSQL JavaScript driver is installed). Every file is wrapped in `begin … rollback`, so the tests are transactional, independent and leave no residue.
+- **Application:** **162 passing tests across 19 files** (Vitest + Testing Library + jsdom). Hermetic — no Docker, no database. `bun run test`.
+- **Structural database:** **181 passing pgTAP tests across 9 files** in `supabase/tests/database/`. `bun run db:test:structure`. Runs **before any fixture exists**, because it asserts `seed.sql` is business-empty. Covers WP3 structure and constraints plus the WP4 policy catalog, GRANT matrix and helper-function properties.
+- **Behavioural RLS + integration:** **117 pgTAP tests across 6 files** in `supabase/tests/rls/` plus **34 publishable-key integration assertions**. `bun run db:test:auth-suite` orchestrates fixture setup → RLS pgTAP → integration → cleanup in a `finally` block.
 
-The pgTAP suite covers WP3 structure and constraints: enums and lifecycle values, table/column/default/nullability shape, household-consistency composite foreign keys (a membership cannot reference a profile from another household), live-membership uniqueness with `revoked` excluded, invitation counter and token-hash rules, `updated_at` maintenance, `household_id` immutability, cascade behaviour, index presence, and the locked-down RLS/privilege state (RLS enabled, zero policies, no privileges for `PUBLIC`/`anon`/`authenticated`). It also asserts that `seed.sql` stays business-empty and that no PIN credential column exists.
+No PostgreSQL JavaScript driver is installed; pgTAP runs through the locked Supabase CLI. Every pgTAP file is wrapped in `begin … rollback`, so tests are transactional, independent and leave no residue.
 
-**It does not test RLS household isolation** — there are no policies yet, so there is no isolation behaviour to test. That is WP4's job, together with real Auth users created through the Auth admin API.
+### What the RLS tests prove
+
+Cross-household denial in both directions; unauthenticated and `anon` denial; suspended, revoked, expired and deactivated-profile denial; the **exact expiry boundary** (`access_expires_at = now()` is already expired, `now() + 1µs` is not); soft-deleted households invisible even to their own owner; owner-versus-adult update rights; guest and service-provider scoping to their own row; `date_of_birth`, `token_hash` and `auth_user_id` unreadable; membership insert/update/delete and invitation writes all rejected; helpers denying other households and failing closed on a NULL `auth.uid()`; helpers unreachable as Data API RPCs; one Auth identity safely spanning two households; and no policy recursion.
+
+**Critical technique:** pgTAP connects as `postgres`, which has `BYPASSRLS` and owns the tables, so every behavioural test switches with `set local role authenticated` and **asserts `current_user = 'authenticated'`** before evaluating results. Without that assertion the suite would pass no matter what the policies say.
+
+### Fixtures
+
+Auth identities come from the **Auth admin API, never SQL** against `auth.users`; domain rows come from `service_role` through PostgREST. Household A holds an owner, adult, child _without_ an Auth identity, active guest, service provider, suspended adult, revoked member, expired guest and a deactivated profile; Household B holds a separate owner and adult; one identity spans both; one is unrelated; one household is soft-deleted. Addresses use the non-routable `@tori.invalid` domain and passwords are generated per run, never logged, never committed.
 
 CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) runs **two jobs** on every pull request and on pushes to `main`:
 
 - **`verify` — application verification.** `bun install --frozen-lockfile` → `typecheck` → `lint` → `test` → `build` → **generated-route-tree freshness check** (`routes:check`, see [`decisions.md`](./decisions.md) ADR-022).
-- **`database` — local Supabase/database validation.** Starts a lean local stack (DB + API only), applies migrations + `seed.sql` via `supabase db reset`, verifies the generated `database.types.ts` matches the resulting schema (`db:types:check`), runs a public-key-only REST smoke test (`db:smoke`), runs the **pgTAP schema tests** (`db:test`), then stops the stack. No secrets, no remote project, no `db push`.
+- **`database` — local Supabase/database validation**, in this exact order: `supabase db reset` → `db:types:check` → `db:smoke` → **structural/catalog pgTAP** (while the business tables are empty) → **Auth-backed suite** (fixtures → behavioural RLS pgTAP → publishable-key integration → cleanup) → `check:client-secrets` → **re-run the structural suite** to prove the seed is still business-empty → stop the stack. The service-role key is masked with `::add-mask::` before any command can emit it, is passed only to that step's process, and never reaches `GITHUB_ENV`, a file or a `VITE_*` variable.
 
-**Migration validation exists** as of WP2 and now includes schema tests: every pull request proves that the migrations apply cleanly from scratch, that the committed generated types are current, and that the schema's constraints and locked-down RLS state hold.
+**Migration validation and RLS negative tests both exist** as of WP4: every pull request proves the migrations apply cleanly from scratch, the committed generated types are current, the constraint set holds, and a user of one household provably cannot read or write another's.
 
-Still **not implemented** (accurate as of WP3):
+Still **not implemented**:
 
-- **RLS policies and RLS negative tests** — WP3 ships tables with RLS enabled and zero policies (ADR-023), so cross-household isolation cannot be tested yet. Scheduled for WP4 (see [`todo.md`](./todo.md)).
-- **The base dataset** (Household A/B with owner, adult, two children and a guest) — needs real Auth users, so it arrives with WP4. WP3 uses transactional, test-local fixtures instead and keeps `seed.sql` business-empty (ADR-023 sibling decision D4).
+- **The full base dataset** below (Household A/B with two children, plus regular/adults-only/overdue/deleted business data) — the identity half exists as WP4 fixtures; the business half needs business-module schema.
 - **End-to-end tests** — no Playwright/Cypress suite.
-- **Secret scanning** — no scanning gate in CI.
+- **Secret scanning** — no general scanning gate. `check:client-secrets` covers service-role material in `src/` and the build output only.
