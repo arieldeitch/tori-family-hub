@@ -42,6 +42,7 @@ This is the canonical decision log. The prototype-era `LOVABLE_DECISIONS.md` rec
 | ADR-034 | Personal pilot data never enters a migration or the shared seed. It is loaded by an environment-guarded, idempotent bootstrap, and pilot mode is non-production unless separately hardened and approved. | Accepted |
 | ADR-035 | The temporary pilot access model: one authenticated adult identity, four profiles, and a profile selector that is attribution/display only. | Accepted |
 | ADR-036 | Approved pilot chore schedules and per-chore staggered rotation cursors. Editable defaults, not permanent product rules. | Accepted |
+| ADR-037 | Lovable hosts the frontend only; Supabase remains the exclusive backend. Lovable Cloud database is rejected. Supersedes the local-only runtime hosting of ADR-033/ADR-034, nothing else. | Accepted |
 
 ## ADR-021 — Supabase local workflow (WP2)
 
@@ -217,6 +218,23 @@ Approved defaults for the three initial chores. They are **editable pilot defaul
 - **The cursor continues across weeks and never resets on Sunday.** The trash chore therefore alternates by occurrence, and a week may end 9–8 with the split reversing the following week. That imbalance is expected and self-correcting.
 - **No catch-up punishment after an absence**, and **no random assignment** — required by [`08-rotation-engine.md`](./08-rotation-engine.md) and ADR-006.
 - Concrete profile order is **local pilot data** (ADR-034), never a value in this repository.
+
+## ADR-037 — Lovable hosts the frontend; Supabase remains the only backend (WP5A hosted)
+
+The Family Pilot moves from a localhost-only runtime to a hosted, non-production pilot. **This supersedes only the runtime-hosting portion of ADR-033 and ADR-034. Every other clause of both — deferred user management, personal data handling, non-production posture — stands unchanged.**
+
+- **Lovable is frontend hosting and publishing only.** It builds and serves the application; it holds no data.
+- **Supabase remains the exclusive backend** for PostgreSQL, Auth, RLS, migrations, RPCs and application data.
+- **A Lovable Cloud database is explicitly rejected.** No second data source, no duplicated database, no divergence about where truth lives (ADR-010).
+- **GitHub `main` remains the source of truth for application code.** Lovable synchronises from it; code is not authored in Lovable.
+- **Docker and the local Supabase CLI stack remain development and CI infrastructure only.** Normal family use requires neither Docker nor localhost. CI keeps using the local stack, so it stays deterministic and needs no hosted secret.
+- **The hosted project is explicitly non-production**: `tori-family-pilot`, its own personal Supabase organisation, deliberately separate from any company-owned project.
+- **Lovable receives only browser-safe values** — the hosted Supabase URL and the publishable key. The service-role key, database password and Supabase access token are never given to Lovable, never `VITE_`-prefixed, and never committed (ADR-030).
+- **Personal pilot data stays uncommitted** (ADR-034). The hosted bootstrap reads the same git-ignored local configuration; no name reaches a migration, the shared seed, a fixture or CI.
+- **The hosted pilot password differs from the local one.** Two runtimes, two credentials, two credential files.
+- **Hosted writes are guarded by an exact project-reference allowlist.** A declared mode alone is never sufficient: the hosted URL must itself resolve to an allowlisted reference and agree with the declared one. The local guard is unchanged and does not grant hosted access.
+- **WP4.6 still blocks production onboarding and account deletion** (ADR-031). A hosted non-production pilot with no account management does not change that.
+- **The weekly chores implementation remains WP5B–WP5E.** Hosting changes where the app runs, not what it does.
 
 ## Notes
 

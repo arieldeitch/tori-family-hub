@@ -26,6 +26,16 @@ WP3 added the Identity & Household schema (`households`, `member_profiles`, `hou
 | `bun run db:test:auth-suite` | Fixtures → `db:test:rls` → publishable-key integration tests → cleanup. |
 | `bun run db:verify` | Reset → types → smoke → structural pgTAP → Auth-backed suite → pilot bootstrap suite. |
 
+### Hosted pilot (ADR-037)
+
+| Script | What it does |
+| --- | --- |
+| `bun run pilot:bootstrap:hosted` | Converge the **approved hosted** project on the pilot household. |
+| `bun run pilot:status:hosted` | Report hosted convergence (counts and shape only). |
+| `bun run pilot:test:hosted-guard` | Guard tests — every rejection path, no credentials, no network. |
+
+Hosted commands require `TORI_PILOT_MODE=hosted-preview` **and** a project reference in the source allowlist **and** a hosted URL that resolves to that same reference. A declared mode alone is never sufficient, and the local guard grants no hosted access. Migrations reach the hosted project with `supabase db push --linked` — **never** a remote reset.
+
 ### Family Pilot (WP5A) — local only
 
 | Script | What it does |

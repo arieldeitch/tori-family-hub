@@ -39,6 +39,22 @@ Auth, Supabase, Storage, Notifications, PWA, Telemetry, Jobs, Integrations.
 - A non-mergeable conflict is shown to the user — no silent overwrite.
 - The initial PWA is app-shell-only. No deliberate caching of tokens or sensitive family data. See [`PWA.md`](./PWA.md).
 
+## Hosting topology (Family Pilot, hosted)
+
+**Lovable hosts the frontend. Supabase is the only backend.** There is no Lovable Cloud database and no second data source (ADR-037).
+
+```
+GitHub main  ->  Lovable (build + host the frontend)  ->  browser
+                                                            |
+                                    hosted Supabase project (PostgreSQL, Auth, RLS)
+```
+
+- The browser receives exactly two values: the hosted Supabase URL and the publishable key. Both are public.
+- The service-role key is server-side only and never reaches Lovable, a `VITE_` variable, the bundle or Git.
+- GitHub `main` remains the source of truth for code; Lovable synchronises from it.
+- Docker and the local Supabase CLI stack remain development and CI infrastructure. Normal family use needs neither.
+- The same application code serves both runtimes: `VITE_SUPABASE_URL` decides whether it talks to the local stack or the hosted project. No hosted URL and no localhost URL is hard-coded in committed source, and a missing configuration renders an explanatory screen rather than a blank page.
+
 ## Acting on behalf of another profile (Family Pilot)
 
 The Family Pilot runs with **one authenticated adult identity** and a **profile selector** in the UI (ADR-035, [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md)). That selector is a **display and attribution** mechanism, never an authorization mechanism.

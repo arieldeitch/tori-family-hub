@@ -78,6 +78,18 @@ The profile selector is a **display and attribution** mechanism, not an authoriz
 
 Local commands: `bun run pilot:bootstrap`, `bun run pilot:status`, `bun run pilot:cleanup`, `bun run pilot:test`. All fail closed unless `TORI_PILOT_MODE=local` **and** the Supabase target independently proves to be the local CLI stack.
 
+
+## Hosted pilot (ADR-037)
+
+The pilot now runs hosted as well as locally:
+
+- **Lovable hosts the frontend**; **Supabase is the only backend**. No Lovable Cloud database.
+- Hosted Supabase project: `tori-family-pilot`, eu-central-1, personal organisation, explicitly **non-production**.
+- **Docker is not required for normal family use** — it remains development and CI infrastructure.
+- Lovable receives only the hosted Supabase **URL** and **publishable key**. The service-role key stays server-side.
+- The hosted pilot password is **different** from the local one, and each has its own local credentials file.
+- Hosted commands: `pilot:bootstrap:hosted`, `pilot:status:hosted`, guarded by an exact project-reference allowlist.
+
 ## 6. Rotation
 
 Default pilot behaviour: an **automatic deterministic fixed sequence** between the two child profiles.

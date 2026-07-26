@@ -61,6 +61,16 @@ A denied read returns **zero rows**, never an error that would reveal another ho
 
 Rate limiting, lockout, and reset by an authorized adult are required.
 
+## Hosted pilot — secret boundary
+
+The hosted pilot (ADR-037) does not change any policy; it changes where the database lives.
+
+- **Browser-safe, may be given to Lovable:** hosted Supabase URL, publishable key.
+- **Server-side only, never given to Lovable and never committed:** service-role key, database password, Supabase access token, the pilot password.
+- Hosted writes run through a separate guard that requires an exact **project-reference allowlist**; a declared mode alone is never sufficient, and the hosted URL must resolve to an allowlisted reference and agree with the declared one. The local guard is untouched and grants no hosted access.
+- CI never receives a hosted secret and continues to run against the local Supabase stack.
+- `check:client-secrets` scans source and build output for forbidden variable **names** and credential **values**; credential values are rejected everywhere, including test files.
+
 ## Family Pilot — temporary access posture
 
 The pilot defers user-management screens but **relaxes no enforcement** (ADR-033).
