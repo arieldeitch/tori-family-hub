@@ -2,6 +2,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { LoadingState } from "@/components/design-system";
+import { PilotConfigurationError } from "@/features/pilot/PilotConfigurationError";
 import { PilotSignInScreen } from "@/features/pilot/PilotSignInScreen";
 import { usePilotSession } from "@/lib/pilot/usePilotSession";
 
@@ -10,13 +11,17 @@ export const Route = createFileRoute("/pilot/signin")({
 });
 
 function PilotSignInPage() {
-  const { status, signIn } = usePilotSession();
+  const { status, signIn, configError } = usePilotSession();
   const navigate = useNavigate();
 
   // Already signed in? Do not show a second sign-in form.
   useEffect(() => {
     if (status === "signed-in") void navigate({ to: "/pilot", replace: true });
   }, [status, navigate]);
+
+  if (status === "unconfigured" && configError) {
+    return <PilotConfigurationError configError={configError} />;
+  }
 
   if (status === "loading" || status === "signed-in") {
     return (

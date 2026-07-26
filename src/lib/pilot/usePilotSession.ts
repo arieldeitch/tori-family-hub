@@ -7,8 +7,14 @@
 // It is deliberately NOT called `currentUser`, because the pilot also has a
 // `selectedPerspectiveProfile` (whose week is shown). Conflating the two is the
 // mistake that would turn a display choice into a permission (ADR-035).
+//
+// Works unchanged against the local Supabase stack and the hosted preview: the
+// environment supplies the two browser-safe values. A missing or unsafe
+// configuration yields the "unconfigured" status so the UI can explain itself
+// instead of rendering a blank page.
 import { useCallback, useEffect, useState } from "react";
 import { getSupabaseClient } from "@/infrastructure/supabase";
+import { readPilotRuntimeConfig, type PilotRuntimeConfigError } from "./runtimeConfig";
 
 export interface AuthenticatedActor {
   /** auth.users.id — the value the server sees as auth.uid(). */
@@ -16,11 +22,13 @@ export interface AuthenticatedActor {
   email: string | null;
 }
 
-export type PilotSessionStatus = "loading" | "signed-in" | "signed-out";
+export type PilotSessionStatus = "loading" | "signed-in" | "signed-out" | "unconfigured";
 
 export interface PilotSessionState {
   status: PilotSessionStatus;
   authenticatedActor: AuthenticatedActor | null;
+  /** Present only when status is "unconfigured". Names only, never values. */
+  configError: PilotRuntimeConfigError | null;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
@@ -37,8 +45,16 @@ export interface PilotSessionState {
 export function usePilotSession(): PilotSessionState {
   const [status, setStatus] = useState<PilotSessionStatus>("loading");
   const [authenticatedActor, setAuthenticatedActor] = useState<AuthenticatedActor | null>(null);
+  const [configError, setConfigError] = useState<PilotRuntimeConfigError | null>(null);
 
   useEffect(() => {
+    const config = readPilotRuntimeConfig();
+    if (!config.ok) {
+      setConfigError(config);
+      setStatus("unconfigured");
+      return;
+    }
+
     let active = true;
     const client = getSupabaseClient();
 
@@ -53,7 +69,11 @@ export function usePilotSession(): PilotSessionState {
       }
     };
 
-    void client.auth.getSession().then(({ data }) => apply(data.session?.user));
+    void client.auth
+      .getSession()
+      .then(({ data }) => apply(data.session?.user))
+      // A transport failure must not leave the UI stuck on "loading" forever.
+      .catch(() => apply(null));
 
     const { data: subscription } = client.auth.onAuthStateChange((_event, session) => {
       apply(session?.user);
@@ -66,14 +86,18 @@ export function usePilotSession(): PilotSessionState {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    const config = readPilotRuntimeConfig();
+    if (!config.ok) return { error: config.message };
     const { error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
     // Surface a message, never the raw credential or token.
     return { error: error ? error.message : null };
   }, []);
 
   const signOut = useCallback(async () => {
+    const config = readPilotRuntimeConfig();
+    if (!config.ok) return;
     await getSupabaseClient().auth.signOut();
   }, []);
 
-  return { status, authenticatedActor, signIn, signOut };
+  return { status, authenticatedActor, configError, signIn, signOut };
 }

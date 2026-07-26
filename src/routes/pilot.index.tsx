@@ -5,6 +5,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { LoadingState } from "@/components/design-system";
+import { PilotConfigurationError } from "@/features/pilot/PilotConfigurationError";
 import { PilotLandingScreen } from "@/features/pilot/PilotLandingScreen";
 import { usePilotHousehold } from "@/lib/pilot/usePilotHousehold";
 import { usePilotSession } from "@/lib/pilot/usePilotSession";
@@ -14,13 +15,17 @@ export const Route = createFileRoute("/pilot/")({
 });
 
 function PilotLandingPage() {
-  const { status, authenticatedActor, signOut } = usePilotSession();
+  const { status, authenticatedActor, signOut, configError } = usePilotSession();
   const navigate = useNavigate();
   const householdState = usePilotHousehold(status === "signed-in");
 
   useEffect(() => {
     if (status === "signed-out") void navigate({ to: "/pilot/signin", replace: true });
   }, [status, navigate]);
+
+  if (status === "unconfigured" && configError) {
+    return <PilotConfigurationError configError={configError} />;
+  }
 
   if (status !== "signed-in" || !authenticatedActor) {
     return (
