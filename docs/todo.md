@@ -12,6 +12,8 @@ Prioritized future work. **Do not open several business modules in parallel befo
 - ✅ **WP4 — RLS & Negative Tests — complete.** Three `private` authorization helpers, minimum column-level grants, six policies, 181 structural + 117 behavioural pgTAP tests and 34 Auth-backed integration assertions (ADR-027…ADR-032). No RPC, no Auth UI, no app wiring.
 - ✅ **WP5A — Pilot access and local bootstrap — complete.** Environment-guarded idempotent bootstrap, one authenticated adult identity, four profiles, local sign-in and a profile selector. No migration and no RLS change were needed (ADR-035).
 - ✅ **WP5A hosted conversion — complete.** Lovable hosts the frontend; the dedicated non-production Supabase project is the only backend (ADR-037). Migrations applied and verified remotely, hosted bootstrap converged and idempotent, hosted Auth verified.
+- ✅ **Lovable published-environment fix — complete.** Tracked root `.env` with the two browser-public values, allowlist-enforced (ADR-038).
+- ⚠️ **Recommended follow-up:** disable signup on the hosted Supabase project. It is currently enabled, and the repository is public, so a stranger can create an Auth account. RLS gives such an account no data, but the pilot ships no signup flow, so the surface is unnecessary.
 - ▶️ **WP5B — Task and recurrence foundation — NEXT.** See [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md); approved schedules in ADR-036.
 - ⏸️ **WP4.5 — Identity RPCs — still required, no longer immediately next.**
 - ⏸️ **WP4.6 — Auth account deletion — still required and still BLOCKING before production onboarding or account deletion** (ADR-031). It does not block the non-production pilot, which ships no account management and no account deletion.

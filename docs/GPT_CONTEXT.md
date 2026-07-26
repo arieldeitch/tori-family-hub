@@ -169,7 +169,8 @@
 3. ~~**WP4** — RLS and Negative Tests~~ — בוצע ומוזג.
 4. ~~**WP5A** — Pilot access and local bootstrap~~ — בוצע ומוזג (ADR-035). bootstrap אידמפוטנטי עם environment guard, זהות Auth אחת של מבוגר, ארבעה פרופילים, כניסה מקומית ובורר פרופילים. ללא migration וללא שינוי RLS.
 5. ~~**WP5A hosted conversion**~~ — בוצע: Lovable מארח את ה־frontend בלבד, Supabase הוא ה־backend הבלעדי (ADR-037). אין Lovable Cloud database. Docker אינו נדרש לשימוש רגיל.
-6. **WP5B** — Task and recurrence foundation (הצעד הבא). לוחות הזמנים והרוטציה המאושרים: ADR-036.
+6. ~~**Lovable published-environment fix**~~ — בוצע: קובץ `.env` בשורש הריפו נשמר ב־Git ומכיל **בדיוק** את שני הערכים הציבוריים לדפדפן (ADR-038). builds מפורסמים ב־Lovable אינם מקבלים קבצים מוחרגים. allowlist נאכף ב־`check:client-secrets`.
+7. **WP5B** — Task and recurrence foundation (הצעד הבא). לוחות הזמנים והרוטציה המאושרים: ADR-036.
 5. **WP4.5** — Identity RPCs (נדרש, אך לא הבא בתור).
 6. **WP4.6** — Auth account deletion (⚠️ חוסם onboarding בפרודקשן ומחיקת חשבון; אינו חוסם את הפיילוט הלא־פרודקשן).
 4. **WP5** — Real Onboarding (חיבור onboarding לנתונים אמיתיים).

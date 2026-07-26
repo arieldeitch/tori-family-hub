@@ -1,5 +1,16 @@
 # Changelog
 
+## WP5A — Lovable published-environment fix (ADR-038)
+Published Lovable builds could not configure themselves: they do not receive git-ignored files, so the app rendered the missing-configuration screen while the preview worked from a local ignored `.env`. Frontend hosting only — no backend, RLS, Auth, schema or product behaviour changed.
+
+- **Tracked root `.env`.** Committed with **exactly two** variables, `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. Both are public by design — every Supabase browser client ships them to every visitor. Confidentiality of the anon key was never the control: RLS is, and `anon` holds zero table and zero column privileges on the hosted project.
+- **`.gitignore` narrowed, not opened.** Only the root `.env` and `.env.example` are trackable; `.env.local`, `.env.*.local` and every other `.env.*` variant stay ignored, so a local or secret-bearing file cannot be committed by accident. Local development still overrides the tracked file with `.env.local`.
+- **Allowlist enforcement.** `check:client-secrets` now validates the tracked `.env` against an exact allowlist — any other variable name fails the build — and rejects credential-shaped values (`sb_secret_…`, `sbp_…`, JWTs) regardless of the variable name hiding them. Verified in both directions with deliberate probes.
+- **Test coverage.** A new test pins the file: exactly the two names, a hosted `https` URL, a publishable-form key, and no credential-shaped value anywhere. Assertions compare booleans so a failure never prints the file. Application tests 203 → 210.
+- **Build verified.** A published-build simulation (no `.env.local`) confirms the client bundle carries the hosted configuration and contains **no** localhost URL, **no** `sb_secret_` key and **no** service-role JWT.
+- **Unchanged.** No migration, no RLS or grant change, no Auth user or household data touched, no Supabase configuration modified, no Lovable Cloud database. Lovable remains frontend-only; Supabase remains the exclusive backend (ADR-037).
+- **Recommended follow-up (not done here — out of scope).** Signup is enabled on the hosted project and the repository is public, so a stranger can create an Auth account. RLS gives such an account no data, but the pilot ships no signup flow, so disabling signup would remove the surface entirely.
+
 ## WP2 — Supabase local workflow (infrastructure scaffold only)
 Local-first Supabase setup. No business schema, no Auth, no RLS, no remote project, no UI/behavior change. Business modules still use the in-memory mock repositories.
 

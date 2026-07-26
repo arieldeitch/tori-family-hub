@@ -53,6 +53,7 @@ GitHub main  ->  Lovable (build + host the frontend)  ->  browser
 - The service-role key is server-side only and never reaches Lovable, a `VITE_` variable, the bundle or Git.
 - GitHub `main` remains the source of truth for code; Lovable synchronises from it.
 - Docker and the local Supabase CLI stack remain development and CI infrastructure. Normal family use needs neither.
+- **Published Lovable builds read a tracked root `.env`** holding the two browser-public values (ADR-038). Lovable's published, non-Enterprise builds do not receive git-ignored files, so those values must be committed for the published app to configure itself. `.env.local` still overrides it for local development.
 - The same application code serves both runtimes: `VITE_SUPABASE_URL` decides whether it talks to the local stack or the hosted project. No hosted URL and no localhost URL is hard-coded in committed source, and a missing configuration renders an explanatory screen rather than a blank page.
 
 ## Acting on behalf of another profile (Family Pilot)

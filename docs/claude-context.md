@@ -47,6 +47,7 @@ WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are 
 - Every RLS change requires positive **and** negative tests.
 - Authorization helpers live in `private`, are SECURITY DEFINER with `search_path = ''`, and **never take a user id** (ADR-027). Never add one to `public`.
 - Membership and invitation mutations are **RPC-only** (ADR-028). Never grant a client INSERT/UPDATE/DELETE on `household_members` or `household_invitations`.
+- The root `.env` is **tracked on purpose** and may contain **only** `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (ADR-038). `check:client-secrets` enforces that allowlist. Never add anything else to it; local overrides belong in the ignored `.env.local`.
 - **Never commit pilot household data** — real names/ages live only in the git-ignored `pilot-household.local.json`, never in a migration, the shared seed, a committed fixture, documentation or a source constant (ADR-034). `bun run check:pilot-privacy` enforces this.
 - **Never conflate the authenticated actor with the selected perspective profile.** `authenticatedActor` is authority (from `auth.uid()`); `selectedPerspectiveProfile` is display and attribution only. Never name either `currentUser` (ADR-035).
 - The structural pgTAP suite asserts a **freshly reset** database. Run `pilot:cleanup` or `db:reset` before running it standalone with a local pilot household bootstrapped.
