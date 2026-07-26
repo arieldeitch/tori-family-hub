@@ -138,6 +138,8 @@ The **immediate** execution priority, ahead of the rest of the MVP: let the owne
 
 Personal household data is never committed: no names in migrations and none in the shared seed (ADR-034).
 
+The pilot runs **hosted** as of the WP5A hosted conversion: Lovable hosts the frontend, Supabase remains the only backend, and normal family use requires neither Docker nor localhost (ADR-037). The hosted environment is explicitly non-production.
+
 ## 16. MVP scope
 
 In scope: household; adults and children; Today screen; one-off tasks; templates and instances; basic rotation; completion/history; weekly calendar; transport assignments and acceptance; shopping; errands; follow-ups; basic notifications; overdue; child view; soft delete/restore; RLS; Hebrew/RTL; basic PWA.

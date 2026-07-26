@@ -28,11 +28,23 @@ const TEXT_EXTENSIONS = new Set([
 
 interface Rule {
   label: string;
+  /**
+   * "name"  - a forbidden variable NAME. Skipped in test files, which must be
+   *           able to name a forbidden variable in order to assert it is
+   *           rejected. Test files are never bundled into the browser.
+   * "value" - actual credential material. Checked EVERYWHERE, including tests:
+   *           a real key pasted into a test is still a leak.
+   */
+  kind: "name" | "value";
   test: (content: string) => boolean;
 }
 
+/** Vitest files: present in src/, never shipped to the browser. */
+const TEST_FILE = /\.(test|spec)\.[tj]sx?$/;
+
 const rules: Rule[] = [
   {
+    kind: "name",
     label: "service-role key env name",
     test: (c) => /SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE_KEY|service_role_key/.test(c),
   },
@@ -41,20 +53,24 @@ const rules: Rule[] = [
     // itself ships `key.startsWith("sb_secret_")` and a doc comment mentioning
     // the prefix, and flagging the library's own guard would be a false alarm
     // that trains people to ignore this check.
+    kind: "value",
     label: "a Supabase secret key value (sb_secret_…)",
     test: (c) => /sb_secret_[A-Za-z0-9_-]{10,}/.test(c),
   },
   {
+    kind: "name",
     label: "a VITE_-prefixed service role variable",
     test: (c) => /VITE_[A-Z_]*SERVICE_ROLE/.test(c),
   },
   {
     // The pilot password is server-only: it must never be VITE_-prefixed and
     // must never be read from client code (ADR-034).
+    kind: "name",
     label: "a client-exposed pilot password variable",
     test: (c) => /VITE_[A-Z_]*(PILOT_PASSWORD|PASSWORD)/.test(c),
   },
   {
+    kind: "name",
     label: "the pilot password env name read from client code",
     test: (c) => /TORI_PILOT_PASSWORD/.test(c),
   },
@@ -63,6 +79,7 @@ const rules: Rule[] = [
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (serviceRoleKey && serviceRoleKey.length >= 20) {
   rules.push({
+    kind: "value",
     label: "the literal service-role key value",
     test: (c) => c.includes(serviceRoleKey),
   });
@@ -71,6 +88,7 @@ if (serviceRoleKey && serviceRoleKey.length >= 20) {
 const pilotPassword = process.env.TORI_PILOT_PASSWORD;
 if (pilotPassword && pilotPassword.length >= 8) {
   rules.push({
+    kind: "value",
     label: "the literal pilot password value",
     test: (c) => c.includes(pilotPassword),
   });
@@ -113,7 +131,10 @@ function main(): void {
         continue;
       }
       scanned += 1;
+      const isTestFile = TEST_FILE.test(file);
       for (const rule of rules) {
+        // Names are allowed in tests; credential VALUES never are.
+        if (isTestFile && rule.kind === "name") continue;
         if (rule.test(content)) {
           violations.push(`${relative(cwd, file)} — ${rule.label}`);
         }

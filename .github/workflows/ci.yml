@@ -38,6 +38,12 @@ jobs:
       - name: Check no pilot household data is committed
         run: bun run check:pilot-privacy
 
+      # Hosted-pathway guard tests. Every case is refused BEFORE any network
+      # call, so this needs no hosted credentials and contacts no Supabase
+      # project — CI stays deterministic on the local stack (ADR-037).
+      - name: Hosted pilot guard tests
+        run: bun run pilot:test:hosted-guard
+
   database:
     # Validates the local Supabase infrastructure: migrations, seed, generated
     # types freshness, and a public-key-only API smoke test. Local-only — no

@@ -29,7 +29,9 @@ Operational instructions for Claude Code working on Tori.
 
 ## Current stage
 
-**WP5A is merged to `main`.** The Family Pilot has a working local access slice: an environment-guarded idempotent bootstrap (`pilot:bootstrap` / `pilot:status` / `pilot:cleanup` / `pilot:test`), one authenticated adult identity, four member profiles, a local sign-in and a profile selector. It needed **no migration and no RLS change**.
+**WP5A is merged to `main`, and the pilot now runs hosted** (ADR-037): Lovable hosts the frontend, the non-production Supabase project `tori-family-pilot` is the only backend, and Docker is no longer needed for family use. CI still runs against the local stack.
+
+ The Family Pilot has a working local access slice: an environment-guarded idempotent bootstrap (`pilot:bootstrap` / `pilot:status` / `pilot:cleanup` / `pilot:test`), one authenticated adult identity, four member profiles, a local sign-in and a profile selector. It needed **no migration and no RLS change**.
 
 Next is **WP5B — Task and recurrence foundation**. No task or rotation table exists yet.
 
