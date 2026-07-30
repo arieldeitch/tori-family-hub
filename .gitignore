@@ -24,9 +24,19 @@ dist-ssr
 supabase/.temp/
 supabase/.branches/
 supabase/.env
-.env
-.env.local
-.env.*.local
+
+# Environment files.
+#
+# The ROOT `.env` is TRACKED on purpose (ADR-038): Lovable's published,
+# non-Enterprise builds do not receive git-ignored files, so the two PUBLIC
+# browser values must be committed for the published app to configure itself.
+# It may contain ONLY those two values — `bun run check:client-secrets`
+# enforces that allowlist and fails on anything else.
+#
+# Every other .env variant stays ignored, so a local or secret-bearing file can
+# never be committed by accident. `.env.example` remains the tracked template.
+.env.*
+!.env.example
 
 # Family Pilot — real household data is LOCAL ONLY and must never be committed
 # (ADR-034). Note `*.local` above does not match this name, so it is listed

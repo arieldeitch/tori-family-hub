@@ -43,6 +43,7 @@ This is the canonical decision log. The prototype-era `LOVABLE_DECISIONS.md` rec
 | ADR-035 | The temporary pilot access model: one authenticated adult identity, four profiles, and a profile selector that is attribution/display only. | Accepted |
 | ADR-036 | Approved pilot chore schedules and per-chore staggered rotation cursors. Editable defaults, not permanent product rules. | Accepted |
 | ADR-037 | Lovable hosts the frontend only; Supabase remains the exclusive backend. Lovable Cloud database is rejected. Supersedes the local-only runtime hosting of ADR-033/ADR-034, nothing else. | Accepted |
+| ADR-038 | The two browser-public Supabase values are committed in a tracked root `.env`, because published Lovable builds do not receive ignored files. An enforced allowlist keeps everything else out. | Accepted |
 
 ## ADR-021 — Supabase local workflow (WP2)
 
@@ -235,6 +236,41 @@ The Family Pilot moves from a localhost-only runtime to a hosted, non-production
 - **Hosted writes are guarded by an exact project-reference allowlist.** A declared mode alone is never sufficient: the hosted URL must itself resolve to an allowlisted reference and agree with the declared one. The local guard is unchanged and does not grant hosted access.
 - **WP4.6 still blocks production onboarding and account deletion** (ADR-031). A hosted non-production pilot with no account management does not change that.
 - **The weekly chores implementation remains WP5B–WP5E.** Hosting changes where the app runs, not what it does.
+
+## ADR-038 — The browser-public Supabase values are tracked in a root `.env` (WP5A hosted)
+
+Lovable's published, non-Enterprise builds do not receive git-ignored files. The preview worked only because an ignored root `.env` existed on the developer machine; the published app received nothing and rendered the missing-configuration screen. On this workspace Lovable confirmed that a **tracked root `.env`** is the supported path.
+
+**Decision.** The root `.env` is committed and contains **exactly two variables**:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+### Why this is not a secret leak
+
+Both values are **public by design**. Every Supabase browser client ships them to every visitor; the moment the app is published they are readable in the bundle and in network requests. Committing them changes nothing about who can see them.
+
+**Confidentiality of the anon key was never the control — RLS is.** WP4 verified on this hosted project that `anon` holds **zero table privileges and zero column privileges**, RLS is enabled on all four identity tables, and every policy requires an active authenticated membership. An attacker holding the URL and publishable key can reach exactly nothing.
+
+The values that *are* secret — service-role key, database password, Supabase access token, pilot passwords — remain out of the repository entirely and out of every browser variable (ADR-030, ADR-037).
+
+### What keeps this safe over time
+
+A committed `.env` is the most likely place for a secret to be added by mistake later, so the pattern is guarded rather than merely permitted:
+
+- **`check:client-secrets` enforces an exact allowlist** on the tracked `.env`. Any other variable name fails the build, and credential-shaped values (`sb_secret_…`, `sbp_…`, JWTs) are rejected regardless of the variable name they hide behind.
+- **A test pins the file's contents** — exactly the two names, a hosted `https` URL, a publishable-form key, and no credential-shaped value anywhere. It compares booleans, so a failure never prints the file.
+- **`.gitignore` is narrowed, not opened.** Only the root `.env` and `.env.example` are trackable; `.env.local`, `.env.*.local` and every other `.env.*` variant stay ignored, so a local or secret-bearing file cannot be committed by accident.
+- **Local development is unaffected.** `.env.local` still overrides the tracked file, so a developer keeps pointing at the local Supabase stack.
+
+### Consequences worth stating plainly
+
+The repository is **public**, so the hosted project reference and publishable key are now discoverable without visiting the app. This is acceptable for the reasons above, but it makes two things worth revisiting:
+
+1. **Signup is currently enabled on the hosted project.** A stranger can create an Auth account. RLS gives such an account no data — no membership means no rows — but for a family pilot with no signup flow in the UI, disabling signup removes the abuse surface entirely. Recommended, and deliberately **not** changed here because Supabase configuration was out of scope for this task.
+2. If the hosted project is ever rotated or replaced, the tracked `.env` must be updated in the same change as the allowlist in `check-client-secrets.ts`.
+
+Nothing else changes: Lovable remains frontend-only, Supabase remains the exclusive backend, and no Lovable Cloud database exists (ADR-037).
 
 ## Notes
 

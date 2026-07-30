@@ -7,7 +7,7 @@
 //
 // Nothing matched is ever echoed: the report prints the file and the pattern
 // label only, never the surrounding text.
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join, relative, resolve } from "node:path";
 
 const ROOTS = ["src", ".output", "dist"];
@@ -94,6 +94,64 @@ if (pilotPassword && pilotPassword.length >= 8) {
   });
 }
 
+/**
+ * The ONLY variables permitted in the tracked root `.env` (ADR-038).
+ *
+ * That file is committed so Lovable's published builds can configure
+ * themselves, which makes it the single most likely place for a secret to be
+ * added by mistake later. Enforcing an exact allowlist turns a risky pattern
+ * into a guarded one: anything unexpected fails the build immediately.
+ */
+const TRACKED_ENV_FILE = ".env";
+const TRACKED_ENV_ALLOWLIST = new Set(["VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"]);
+
+/** Parse `KEY=value` lines, ignoring comments and blanks. */
+export function parseEnvNames(content: string): string[] {
+  return content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("#"))
+    .map((line) => line.split("=", 1)[0]?.trim() ?? "")
+    .filter((name) => name.length > 0);
+}
+
+/** Violations found in the tracked root .env, if it exists. */
+export function checkTrackedEnvFile(cwd: string): string[] {
+  const path = resolve(cwd, TRACKED_ENV_FILE);
+  if (!existsSync(path)) return [];
+
+  let content: string;
+  try {
+    content = readFileSync(path, "utf8");
+  } catch {
+    return [`${TRACKED_ENV_FILE} — could not be read for verification`];
+  }
+
+  const problems: string[] = [];
+  for (const name of parseEnvNames(content)) {
+    if (!TRACKED_ENV_ALLOWLIST.has(name)) {
+      // Name only — the value is never echoed, even when rejecting it.
+      problems.push(
+        `${TRACKED_ENV_FILE} — "${name}" is not permitted in the tracked env file ` +
+          `(allowed: ${[...TRACKED_ENV_ALLOWLIST].join(", ")})`,
+      );
+    }
+  }
+
+  // Defence in depth: reject credential-shaped values regardless of the name.
+  for (const [label, pattern] of [
+    ["a Supabase secret key", /sb_secret_[A-Za-z0-9_-]{10,}/],
+    ["a Supabase access token", /sbp_[A-Za-z0-9]{20,}/],
+    ["a service-role JWT", /"?eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/],
+  ] as const) {
+    if (pattern.test(content)) {
+      problems.push(`${TRACKED_ENV_FILE} — contains ${label}`);
+    }
+  }
+
+  return problems;
+}
+
 function* walk(dir: string): Generator<string> {
   let entries: string[];
   try {
@@ -121,6 +179,10 @@ function main(): void {
   const cwd = process.cwd();
   const violations: string[] = [];
   let scanned = 0;
+
+  // The tracked root .env is committed on purpose, so it gets its own strict
+  // allowlist check in addition to the pattern scan below.
+  violations.push(...checkTrackedEnvFile(cwd));
 
   for (const root of ROOTS) {
     for (const file of walk(resolve(cwd, root))) {

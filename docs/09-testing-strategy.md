@@ -55,6 +55,8 @@ CI remains deterministic on the **local** Supabase stack and receives no hosted 
 - **`bun run pilot:test:hosted-guard`** — 26 assertions covering every hosted rejection path. Each is refused before any network call, so the suite needs no credentials and contacts no project. It runs in the CI `verify` job.
 - **Hosted verification** — run manually against the approved project when it changes: migration application, RLS shape, privilege matrix, bootstrap convergence and idempotency, sign-in success and failure, RLS scoping, and that the private helpers are not Data API RPCs.
 
+The tracked root `.env` is pinned by test: exactly the two permitted names, a hosted `https` URL, a publishable-form key, and no credential-shaped value anywhere. Assertions compare booleans so a failure never prints the file (ADR-038).
+
 Browser runtime configuration is unit-tested: local versus hosted selection, missing values, malformed URL, and refusal when a server-side secret is exposed as a browser variable — the case that must render an explanatory screen instead of a blank page.
 
 ## Family Pilot test requirements
