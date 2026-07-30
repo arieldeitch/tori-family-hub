@@ -4,7 +4,9 @@ Read this first for the **as-built implementation**. It is the source of truth f
 
 ## What exists in practice
 
-A Hebrew (RTL), mobile-first family-coordination **prototype**. All screens, flows, and business logic are implemented against **in-memory mock repositories**. Refreshing the browser resets state to seed data. No backend, no auth, no persistence.
+A Hebrew (RTL), mobile-first family-coordination **prototype**. All *business* screens, flows and logic are implemented against **in-memory mock repositories**; refreshing the browser resets them to seed data.
+
+> **Correction, 2026-07-30.** "No backend, no auth, no persistence" was true of the prototype and is no longer true of the repository. The Family Pilot slice (WP5A) performs real Supabase Auth sign-in and real household reads under RLS, and the hosted non-production Supabase project is the runtime backend (ADR-037). What remains true: **no business module** has a backend, auth gate or persistence. See [`project-status.md`](./project-status.md) for the verified current state.
 
 ## Stack & versions
 
