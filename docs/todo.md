@@ -2,24 +2,12 @@
 
 Prioritized future work. **Do not open several business modules in parallel before Identity, Household, and RLS are stable.**
 
-_Reviewed against the repository on **2026-07-30** at commit `17f1ebd` (branch `wp5a-lovable-published-env`). Every ✅ below was re-checked for evidence in the repository; nothing is marked complete on the strength of a scaffold file._
+_Reviewed against the repository on **2026-07-30**, then updated after PR #10 was merged into `main` as `b9c603b`. Every ✅ below was re-checked for evidence in the repository; nothing is marked complete on the strength of a scaffold file._
 
-## P0 — do this first
+## P0 — done, except one dashboard action
 
-**Merge PR #10 (`wp5a-lovable-published-env` → `main`).**
-
-Not a work package — a merge click. `main` is at `51c586e` and does **not** contain `d688420`, `1831eed` or `17f1ebd`, which are the tracked root `.env` (ADR-038) and its allowlist test. Without them a published Lovable build from `main` has no Supabase URL or publishable key and renders the configuration-error screen. Every later pilot deliverable is unshowable until this lands.
-
-**PR #10 has been open since 2026-07-26**, is `MERGEABLE` with a `CLEAN` merge state, and both CI jobs (`verify` and `database`) concluded SUCCESS. Nothing technical is blocking it.
-
-Acceptance criteria:
-
-- PR #10 is merged into `main`.
-- After the merge, `main` contains a tracked root `.env` holding **exactly** `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` and nothing else, and `bun run check:client-secrets` passes on `main`.
-- A Lovable publish from `main` reaches `/pilot/signin` rather than `PilotConfigurationError`.
-- No file outside the ADR-038 change set differs between `main` and the branch.
-
-Immediately afterwards, and before WP5B: **disable signup on the hosted Supabase pilot project** (see the ⚠️ item below). It is a dashboard toggle, needs no code, and the repository is public.
+- ✅ **PR #10 merged 2026-07-30** as `b9c603b`, branch deleted. `main` now carries the ADR-038 tracked root `.env`, verified to hold exactly `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. A published Lovable build from `main` can configure itself.
+- ⚠️ **Still open — disable signup on the hosted `tori-family-pilot` project.** Attempted 2026-07-30 and **not possible from this machine**: the Supabase CLI here is authenticated to a different account that cannot see the pilot project, which lives in a personal organisation. No workaround was attempted. Manual action: _Supabase Dashboard → `tori-family-pilot` → Authentication → Providers → Email → disable new user signups._ Leave existing sign-in working and other providers untouched.
 
 ## Status
 
@@ -31,9 +19,9 @@ Immediately afterwards, and before WP5B: **disable signup on the hosted Supabase
 - ✅ **WP4 — RLS & Negative Tests — complete.** Three `private` authorization helpers, minimum column-level grants, six policies, 181 structural + 117 behavioural pgTAP tests and 34 Auth-backed integration assertions (ADR-027…ADR-032). No RPC, no Auth UI, no app wiring.
 - ✅ **WP5A — Pilot access and local bootstrap — complete.** Environment-guarded idempotent bootstrap, one authenticated adult identity, four profiles, local sign-in and a profile selector. No migration and no RLS change were needed (ADR-035).
 - ✅ **WP5A hosted conversion — complete.** Lovable hosts the frontend; the dedicated non-production Supabase project is the only backend (ADR-037). Migrations applied and verified remotely, hosted bootstrap converged and idempotent, hosted Auth verified.
-- ⚠️ **Lovable published-environment fix — code complete and CI-green, NOT on `main`.** Tracked root `.env` with the two browser-public values, allowlist-enforced (ADR-038). Verified present on `wp5a-lovable-published-env` and **absent from `main`** as of 2026-07-30; **PR #10 is open and mergeable**. See P0 above.
-- ⚠️ **Still open since 2026-07-26 — disable signup on the hosted Supabase project.** It is currently enabled and the repository is public, so a stranger can create an Auth account. RLS gives such an account no data, but the pilot ships no signup flow, so the surface is unnecessary. A dashboard setting, not a code change.
-- ▶️ **WP5B — Task and recurrence foundation — NEXT after P0.** See [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md); approved schedules in ADR-036. No task or rotation table exists — confirmed 2026-07-30: `supabase/migrations/` holds exactly three files, none of them task-related.
+- ✅ **Lovable published-environment fix — complete and merged to `main`** (PR #10, merge commit `b9c603b`, 2026-07-30). Tracked root `.env` with the two browser-public values, allowlist-enforced (ADR-038).
+- ⚠️ **Still open since 2026-07-26 — disable signup on the hosted Supabase project.** See P0 above; it cannot be done from this machine.
+- ▶️ **WP5B — Task and recurrence foundation — IN PROGRESS.** See [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md); approved schedules in ADR-036. Confirmed 2026-07-30 before starting: `supabase/migrations/` held exactly three files, none task-related.
 - ⏸️ **WP4.5 — Identity RPCs — still required, no longer immediately next.**
 - ⏸️ **WP4.6 — Auth account deletion — still required and still BLOCKING before production onboarding or account deletion** (ADR-031). It does not block the non-production pilot, which ships no account management and no account deletion.
 

@@ -9,12 +9,12 @@ _Last updated: **2026-07-30** — repository audit (documentation only; no code,
 A full state audit was run against the repository, not against chat history.
 
 - **Audited commit:** `17f1ebd` (`docs: ADR-038 for the tracked browser-public configuration`, authored 2026-07-26).
-- **Audited branch:** `wp5a-lovable-published-env`, in sync with `origin/wp5a-lovable-published-env` (0 ahead, 0 behind). Working tree clean.
-- **`main` is at `51c586e`** (merge of PR #9). The three commits `d688420`, `1831eed`, `17f1ebd` — the tracked-root-`.env` work (ADR-038) — exist **only on `wp5a-lovable-published-env`** and are **not merged to `main`**.
-- **PR #10 is open and ready to merge.** Opened 2026-07-26, `MERGEABLE`, merge state `CLEAN`, and **both CI jobs (`verify` and `database`) concluded SUCCESS**. It has been sitting merge-ready for four days; nothing technical is blocking it.
-- **No commits since 2026-07-26.** The last four days have no repository activity.
+- **Audited branch:** `wp5a-lovable-published-env`, in sync with its remote, working tree clean. The branch has since been merged and deleted.
+- **PR #10 is merged.** It had been open, `MERGEABLE` and CI-green since 2026-07-26. Merged on **2026-07-30** as `b9c603b`, and the `wp5a-lovable-published-env` branch was deleted. `main` now carries the ADR-038 tracked root `.env` — verified after the merge to hold **exactly** `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. A published Lovable build from `main` can now configure itself.
+- **`main` was at `51c586e`** (merge of PR #9) when the audit began.
+- **No commits between 2026-07-26 and the audit.** The gap was four days of no repository activity.
 - **Re-run and green on this machine:** `bun install --frozen-lockfile`, `typecheck`, `lint`, `test`, `build`, `routes:check`, `check:client-secrets`, `check:pilot-privacy`, `pilot:test:hosted-guard`.
-- **Not re-run locally:** every database gate (`db:verify`, `db:test:structure`, `db:test:rls`, `db:test:auth-suite`, `pilot:test`). The Docker daemon is not running, and `db:verify` begins with `supabase db reset`, which the audit's terms forbid. They are not unverified, though: the CI `database` job — which runs the migrations, the type-freshness check, the smoke test, both pgTAP suites, the Auth-backed integration suite and the pilot bootstrap tests — **passed on PR #10 at this exact commit**. The individual pgTAP counts below are still carried forward from WP4 rather than re-counted.
+- **Not re-run during the audit itself:** every database gate. The Docker daemon was down at the time, and `db:verify` begins with `supabase db reset`, which the audit's terms forbade. They were not unverified even then: the CI `database` job — migrations, type freshness, smoke, both pgTAP suites, the Auth-backed integration suite and the pilot bootstrap tests — **passed on PR #10 at the audited commit**. Docker was started later the same day and the database gates were re-run in full as part of WP5B.
 
 Counts corrected by this audit (documentation had drifted behind the last three commits):
 
@@ -29,15 +29,15 @@ Counts corrected by this audit (documentation had drifted behind the last three 
 
 Point-in-time state so work can resume without relying on chat history.
 
-- **`main` contains WP0 + WP1 + WP2 + the post-WP2 consistency pass + WP3 + WP4.**
+- **`main` contains WP0 + WP1 + WP2 + the post-WP2 consistency pass + WP3 + WP4 + WP5A + ADR-038.**
 - **Done & merged to `main`:** WP0 (foundation fixes), WP1 (knowledge pack), WP2 (Supabase local workflow, PR #3 / `9e691c9`), post-WP2 consistency (PR #4 / `17647b4`), WP3 (Identity & Household schema, PR #5 / `924d621`), WP4 (RLS, grants, negative tests).
 - **WP5A (pilot access and local bootstrap) is complete.** Environment-guarded idempotent bootstrap, one authenticated adult identity, four member profiles, local sign-in and a profile selector — **no migration and no RLS change were required** (ADR-035).
 - **The pilot is now hosted** (ADR-037): Lovable hosts the frontend, the dedicated non-production Supabase project `tori-family-pilot` (eu-central-1, personal org) is the only backend. WP2/WP3/WP4 migrations are applied remotely and verified; the hosted pilot household is bootstrapped and idempotent. Docker is no longer required for family use.
 - **Published Lovable builds are now configurable** (ADR-038): the two browser-public Supabase values live in a tracked root `.env`, because published builds do not receive ignored files. An enforced allowlist plus a test keeps everything else out, and `.gitignore` still ignores every other `.env` variant.
-- **Next step: WP5B — Task and recurrence foundation.** Approved chore schedules and staggered rotation defaults are recorded in ADR-036. No task or rotation table exists yet.
+- **Current step: WP5B — Task and recurrence foundation.** Approved chore schedules and staggered rotation defaults are recorded in ADR-036. No rotation table exists yet (that is WP5C).
 - **Still required, no longer immediately next:** WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion — still blocking before production onboarding or account deletion, ADR-031).
 - **Quality gates, re-verified 2026-07-30:** `install --frozen-lockfile` ✓ · typecheck 0 · lint **0 errors / 7 warnings** · **app tests 210/210 across 24 files** · build ✓ · `routes:check` ✓ · `check:client-secrets` ✓ (564 files scanned) · `check:pilot-privacy` ✓ (368 tracked files) · `pilot:test:hosted-guard` ✓ (26/26).
-- **Database gates, carried forward from WP4 and _not_ re-verified on 2026-07-30:** structural pgTAP 181/181 across 9 files · behavioural RLS pgTAP 117/117 across 6 files · 34/34 Auth-backed integration assertions · `db:verify` ✓. Docker was not running, and re-running them requires `supabase db reset`, which was out of scope for the audit.
+- **Database gates:** see the WP5B section below for the numbers measured on 2026-07-30 after Docker was started. The pre-WP5B baseline carried forward from WP4 was 181 structural pgTAP across 9 files, 117 behavioural RLS pgTAP across 6 files and 34 Auth-backed integration assertions.
 - **WP2 facts:** Supabase CLI `2.109.1` (locked dev dep), `@supabase/supabase-js` `2.110.8` (runtime), package manager **Bun 1.3.14** (Node `v24.15.0` present locally; CI uses `oven-sh/setup-bun@v2`). Local `project_id = tori-family-hub`, app dev URL `http://localhost:8080`, Supabase local ports remapped to the **553xx** range (to avoid clashing with another local stack). Foundation migration: `supabase/migrations/20260724153731_wp2_foundation.sql` (empty). `supabase/seed.sql` has no business data. Generated types: `src/infrastructure/supabase/database.types.ts`. Public env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`. No service role in frontend, no `db push`. CI has a separate `database` job; `db:verify` = reset + type freshness + smoke + the full suite.
 - **The client is no longer scaffold-only.** `src/infrastructure/supabase/` is consumed by `src/lib/pilot/usePilotSession.ts` (real `signInWithPassword` / `signOut` / session subscription) and `src/lib/pilot/usePilotHousehold.ts` (real household + profile reads under WP4 RLS). This is the pilot slice only; **no business module reads or writes the database**.
 - **A remote project is linked locally.** `supabase/.temp/linked-project.json` and `supabase/.temp/project-ref` exist and are correctly git-ignored via `supabase/.gitignore`. This is the hosted non-production pilot project of ADR-037 — the repository holds no credential for it.
@@ -49,7 +49,7 @@ Point-in-time state so work can resume without relying on chat history.
 - GitHub is connected.
 - Claude Code is active.
 - The Repository Acceptance Audit is complete.
-- **WP0, WP1, WP2, the post-WP2 consistency pass, WP3, WP4 and WP5A (including the hosted conversion) are complete and merged to `main`.** The ADR-038 tracked-`.env` work is complete on `wp5a-lovable-published-env` and **not yet on `main`**.
+- **WP0, WP1, WP2, the post-WP2 consistency pass, WP3, WP4 and WP5A (including the hosted conversion and the ADR-038 tracked-`.env` work) are all complete and merged to `main`.**
 - A Supabase environment exists in two forms: the local CLI stack for development and CI, and the hosted non-production pilot project that ADR-037 makes the exclusive backend. `supabase/` holds config, **three** migrations, a business-empty seed and 15 pgTAP files (9 structural + 6 behavioural RLS).
 - The Identity & Household tables exist with RLS enforced, and are read by the pilot slice only. **No business module is connected to the database** — every business module still uses the in-memory mock repositories in `src/data/*Repo.ts`.
 
@@ -179,8 +179,11 @@ These are documented, not fixed, in WP1 (no code changes). Each is tracked in [`
 
 Ordered by what they cost if left alone.
 
-1. **ADR-038 is unmerged, and only a merge click is missing.** The tracked root `.env` that lets a published Lovable build configure itself exists only on `wp5a-lovable-published-env`. `main` (`51c586e`) does not have it, so a publish from `main` reaches the configuration-error screen rather than the pilot. **PR #10 has been open, mergeable and fully green since 2026-07-26.** Highest value for the least effort available anywhere in this project.
-2. **Signup is open on the hosted pilot project.** Recorded in [`todo.md`](./todo.md) on 2026-07-26 and still unresolved. The repository is public and the hosted URL and publishable key are now committed, so a stranger can create an Auth account. WP4 RLS gives such an account no data and the pilot ships no signup flow, so this is an unnecessary surface rather than a data leak. Closing it is a Supabase dashboard setting, not a code change.
+1. ~~ADR-038 is unmerged.~~ **Resolved 2026-07-30** — PR #10 merged as `b9c603b`.
+2. **Signup is open on the hosted pilot project — and cannot be closed from this machine.** Recorded in [`todo.md`](./todo.md) on 2026-07-26. The repository is public and the hosted URL and publishable key are committed, so a stranger can create an Auth account. WP4 RLS gives such an account no data and the pilot ships no signup flow, so this is an unnecessary surface rather than a data leak.
+
+   **Verified 2026-07-30:** the Supabase CLI on this machine is authenticated to a **different account** — `bunx supabase projects list` returns five unrelated projects and **not** `tori-family-pilot`, whose ref is recorded in the git-ignored `supabase/.temp/linked-project.json`. The pilot lives in a personal organisation the current token cannot reach, so the Management API cannot be used and no attempt was made to work around it. **This is the one remaining manual action:** _Supabase Dashboard → the `tori-family-pilot` project → Authentication → Providers → Email → disable new user signups._ Do not disable sign-in for the existing pilot adult, and change no other provider.
+
 3. **WP4.6 still blocks production.** `household_members.auth_user_id` remains `ON DELETE CASCADE` (ADR-031): deleting an Auth account silently removes membership rows and can leave a household ownerless. It does not block the non-production pilot.
 4. **The database gates were last observed in CI on 2026-07-26**, where they passed at the audited commit. They have not been run locally since; doing so needs Docker and a `supabase db reset`. The individual pgTAP and integration numbers in this document are carried forward, not re-counted.
 5. **No business persistence exists anywhere.** Fourteen capability areas are mock-only and a refresh discards all of them. The domain and UI layers are real and tested; the storage layer beneath them is not.
@@ -188,6 +191,6 @@ Ordered by what they cost if left alone.
 
 ## Recommended next action
 
-**Merge the ADR-038 branch to `main`, then begin WP5B — Task and recurrence foundation.**
+**WP5B — Task and recurrence foundation is now in progress.** The ADR-038 merge that blocked it is done.
 
-The merge is a prerequisite rather than a work package: until it lands, `main` cannot produce a working published build, so no WP5B result could be shown to the family. WP5B itself is specified in [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) §9 and §12, with approved schedules in ADR-036 and acceptance criteria in [`todo.md`](./todo.md).
+WP5B is specified in [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) §9 and §12, with approved schedules in ADR-036 and acceptance criteria in [`todo.md`](./todo.md).
