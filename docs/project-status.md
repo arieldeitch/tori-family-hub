@@ -10,10 +10,11 @@ A full state audit was run against the repository, not against chat history.
 
 - **Audited commit:** `17f1ebd` (`docs: ADR-038 for the tracked browser-public configuration`, authored 2026-07-26).
 - **Audited branch:** `wp5a-lovable-published-env`, in sync with `origin/wp5a-lovable-published-env` (0 ahead, 0 behind). Working tree clean.
-- **`main` is at `51c586e`** (merge of PR #9). The three commits `d688420`, `1831eed`, `17f1ebd` — the tracked-root-`.env` work (ADR-038) — exist **only on `wp5a-lovable-published-env`** and are **not yet merged to `main`**. No PR for that branch was confirmed from the repository alone.
+- **`main` is at `51c586e`** (merge of PR #9). The three commits `d688420`, `1831eed`, `17f1ebd` — the tracked-root-`.env` work (ADR-038) — exist **only on `wp5a-lovable-published-env`** and are **not merged to `main`**.
+- **PR #10 is open and ready to merge.** Opened 2026-07-26, `MERGEABLE`, merge state `CLEAN`, and **both CI jobs (`verify` and `database`) concluded SUCCESS**. It has been sitting merge-ready for four days; nothing technical is blocking it.
 - **No commits since 2026-07-26.** The last four days have no repository activity.
 - **Re-run and green on this machine:** `bun install --frozen-lockfile`, `typecheck`, `lint`, `test`, `build`, `routes:check`, `check:client-secrets`, `check:pilot-privacy`, `pilot:test:hosted-guard`.
-- **Not re-run:** every database gate (`db:verify`, `db:test:structure`, `db:test:rls`, `db:test:auth-suite`, `pilot:test`). The Docker daemon is not running, and `db:verify` begins with `supabase db reset`, which the audit's terms forbid. The pgTAP and integration counts below are therefore **carried forward from WP4, not re-verified on 2026-07-30**.
+- **Not re-run locally:** every database gate (`db:verify`, `db:test:structure`, `db:test:rls`, `db:test:auth-suite`, `pilot:test`). The Docker daemon is not running, and `db:verify` begins with `supabase db reset`, which the audit's terms forbid. They are not unverified, though: the CI `database` job — which runs the migrations, the type-freshness check, the smoke test, both pgTAP suites, the Auth-backed integration suite and the pilot bootstrap tests — **passed on PR #10 at this exact commit**. The individual pgTAP counts below are still carried forward from WP4 rather than re-counted.
 
 Counts corrected by this audit (documentation had drifted behind the last three commits):
 
@@ -178,10 +179,10 @@ These are documented, not fixed, in WP1 (no code changes). Each is tracked in [`
 
 Ordered by what they cost if left alone.
 
-1. **ADR-038 is unmerged.** The tracked root `.env` that lets a published Lovable build configure itself exists only on `wp5a-lovable-published-env`. `main` (`51c586e`) does not have it, so a publish from `main` reaches the configuration-error screen rather than the pilot. **Highest value for the least effort available right now.**
+1. **ADR-038 is unmerged, and only a merge click is missing.** The tracked root `.env` that lets a published Lovable build configure itself exists only on `wp5a-lovable-published-env`. `main` (`51c586e`) does not have it, so a publish from `main` reaches the configuration-error screen rather than the pilot. **PR #10 has been open, mergeable and fully green since 2026-07-26.** Highest value for the least effort available anywhere in this project.
 2. **Signup is open on the hosted pilot project.** Recorded in [`todo.md`](./todo.md) on 2026-07-26 and still unresolved. The repository is public and the hosted URL and publishable key are now committed, so a stranger can create an Auth account. WP4 RLS gives such an account no data and the pilot ships no signup flow, so this is an unnecessary surface rather than a data leak. Closing it is a Supabase dashboard setting, not a code change.
 3. **WP4.6 still blocks production.** `household_members.auth_user_id` remains `ON DELETE CASCADE` (ADR-031): deleting an Auth account silently removes membership rows and can leave a household ownerless. It does not block the non-production pilot.
-4. **The database gates have not been observed since 2026-07-26.** They need Docker and a `supabase db reset`. Every pgTAP and integration number in this document is carried forward, not re-measured.
+4. **The database gates were last observed in CI on 2026-07-26**, where they passed at the audited commit. They have not been run locally since; doing so needs Docker and a `supabase db reset`. The individual pgTAP and integration numbers in this document are carried forward, not re-counted.
 5. **No business persistence exists anywhere.** Fourteen capability areas are mock-only and a refresh discards all of them. The domain and UI layers are real and tested; the storage layer beneath them is not.
 6. **Documentation drifted within four days of the last commit** — test counts, route counts, lint counts, "client is scaffold only" and "Supabase is local-only" were all wrong. The end-of-task documentation rule in [`claude-context.md`](./claude-context.md) held for every merged work package and was missed on the final three commits, which are the ones still unmerged.
 

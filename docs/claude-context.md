@@ -15,7 +15,7 @@ Operational instructions for Claude Code working on Tori.
 ## Repo state (verified 2026-07-30 at commit `17f1ebd`)
 
 - WP0, WP1, WP2, the post-WP2 consistency pass, **WP3**, **WP4** and **WP5A** (including the hosted conversion) are merged to `main`.
-- **ADR-038 is not on `main`.** `main` is at `51c586e`; the tracked root `.env` and its allowlist test live only on `wp5a-lovable-published-env`. Merging that branch is the current P0 — see [`todo.md`](./todo.md).
+- **ADR-038 is not on `main`.** `main` is at `51c586e`; the tracked root `.env` and its allowlist test live only on `wp5a-lovable-published-env`. **PR #10 is open, mergeable and CI-green** — merging it is the current P0, see [`todo.md`](./todo.md).
 - `typecheck` uses `tsc --noEmit`; `.gitattributes` enforces LF.
 - Rotation-engine timezone bug fixed, with regression tests.
 - **210 of 210 app tests pass across 24 test files** (re-measured 2026-07-30). Database, carried forward from WP4 and **not re-run since 2026-07-26**: 181 structural pgTAP + 117 behavioural RLS pgTAP + 34 Auth-backed integration assertions.
@@ -32,7 +32,7 @@ Operational instructions for Claude Code working on Tori.
 
 ## Exact starting point for the next agent
 
-1. `git fetch --all --prune`, then confirm where `wp5a-lovable-published-env` stands relative to `main`. If ADR-038 is still unmerged, that merge is P0 and comes before any new work.
+1. `git fetch --all --prune`, then `gh pr view 10 --json state,mergeable`. If PR #10 is still open, merging it is P0 and comes before any new work.
 2. `bun install --frozen-lockfile`, then `bun run typecheck && bun run lint && bun run test && bun run build && bun run routes:check && bun run check:client-secrets`. Expect **210 tests across 24 files** and **0 errors / 7 warnings**. A different number means the repository moved — re-audit before trusting this file.
 3. For database work: start Docker, `bun run supabase:start`, then `bun run db:verify`. Nothing below the app layer has been observed since 2026-07-26.
 4. WP5B begins at `supabase/migrations/`. The pattern to copy is `20260725143927_wp3_identity_household.sql` (structure) plus `20260725154640_wp4_identity_household_rls.sql` (grants + policies) — and per ADR-023 a **new** business table ships its structure, grants and policies together in one migration, not split across two.

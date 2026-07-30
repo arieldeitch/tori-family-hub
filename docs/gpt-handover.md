@@ -10,9 +10,9 @@ Verified against the repository, not against chat history.
 - **Nothing has changed since 2026-07-26.** No commits in the last four days; the last work was the ADR-038 tracked-`.env` change.
 - **What changed since 24 July** — the date of the previously assumed state: the project went from "documentation library only" to a working hosted pilot. WP3 (identity schema), WP4 (RLS, grants, negative tests), WP5A (pilot access and bootstrap), the hosted conversion (ADR-037) and the published-build environment fix (ADR-038) all landed between 25 and 26 July. Anyone still working from a 24 July picture is a full milestone behind.
 - **One thing needs the product owner and cannot be done in code:** signup is still enabled on the hosted Supabase pilot project, and the repository is public. RLS gives such an account no data and the pilot ships no signup flow, so it is an unnecessary surface rather than a leak — but it is a dashboard toggle only the owner can flip.
-- **One merge is outstanding:** `wp5a-lovable-published-env` → `main`. Until it merges, a published Lovable build from `main` has no Supabase configuration and shows an error screen instead of the pilot.
-- **Recommended next task:** merge that branch, disable hosted signup, then start WP5B — task and recurrence foundation.
-- **Corrected counts:** 210 app tests across 24 files (documentation said 162 across 19); 44 route modules (said 41); lint 0 errors / 7 warnings (said 6). The database suites were **not** re-run — Docker was down and re-running them requires a `db reset`, which the audit did not permit.
+- **One merge is outstanding, and it is only a click.** **PR #10** (`wp5a-lovable-published-env` → `main`) has been open since 26 July, is mergeable with a clean merge state, and both CI jobs passed. Until it merges, a published Lovable build from `main` has no Supabase configuration and shows an error screen instead of the pilot.
+- **Recommended next task:** merge PR #10, disable hosted signup, then start WP5B — task and recurrence foundation.
+- **Corrected counts:** 210 app tests across 24 files (documentation said 162 across 19); 44 route modules (said 41); lint 0 errors / 7 warnings (said 6). The database suites were **not** re-run locally — Docker was down and re-running them requires a `db reset`, which the audit did not permit — but the CI `database` job passed on PR #10 at the audited commit.
 
 ## Current continuity state
 
