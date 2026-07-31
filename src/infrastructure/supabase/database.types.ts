@@ -248,6 +248,229 @@ export type Database = {
           },
         ]
       }
+      rotation_assignment_log: {
+        Row: {
+          algorithm_version: string
+          candidate_snapshot: Json | null
+          client_operation_id: string | null
+          created_at: string
+          cursor_before_profile_id: string | null
+          decided_at: string
+          household_id: string
+          human_explanation: string | null
+          id: string
+          reason_code: string
+          rotation_rule_id: string
+          selected_profile_id: string | null
+          task_instance_id: string
+          warnings: Json | null
+        }
+        Insert: {
+          algorithm_version: string
+          candidate_snapshot?: Json | null
+          client_operation_id?: string | null
+          created_at?: string
+          cursor_before_profile_id?: string | null
+          decided_at?: string
+          household_id: string
+          human_explanation?: string | null
+          id?: string
+          reason_code: string
+          rotation_rule_id: string
+          selected_profile_id?: string | null
+          task_instance_id: string
+          warnings?: Json | null
+        }
+        Update: {
+          algorithm_version?: string
+          candidate_snapshot?: Json | null
+          client_operation_id?: string | null
+          created_at?: string
+          cursor_before_profile_id?: string | null
+          decided_at?: string
+          household_id?: string
+          human_explanation?: string | null
+          id?: string
+          reason_code?: string
+          rotation_rule_id?: string
+          selected_profile_id?: string | null
+          task_instance_id?: string
+          warnings?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rotation_assignment_log_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rotation_assignment_log_instance_same_household_fkey"
+            columns: ["task_instance_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "task_instances"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "rotation_assignment_log_rule_same_household_fkey"
+            columns: ["rotation_rule_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "rotation_rules"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "rotation_assignment_log_selected_same_household_fkey"
+            columns: ["selected_profile_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "member_profiles"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
+      rotation_members: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          household_id: string
+          id: string
+          is_eligible: boolean
+          member_profile_id: string
+          position: number
+          rotation_rule_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          household_id: string
+          id?: string
+          is_eligible?: boolean
+          member_profile_id: string
+          position: number
+          rotation_rule_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          household_id?: string
+          id?: string
+          is_eligible?: boolean
+          member_profile_id?: string
+          position?: number
+          rotation_rule_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rotation_members_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rotation_members_profile_same_household_fkey"
+            columns: ["member_profile_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "member_profiles"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "rotation_members_rule_same_household_fkey"
+            columns: ["rotation_rule_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "rotation_rules"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
+      rotation_rules: {
+        Row: {
+          advance_mode: Database["public"]["Enums"]["rotation_advance_mode"]
+          algorithm_version: string
+          avoid_consecutive: boolean
+          created_at: string
+          created_by: string | null
+          cursor_advanced_at: string | null
+          cursor_profile_id: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          fallback: Database["public"]["Enums"]["rotation_fallback"]
+          household_id: string
+          id: string
+          is_active: boolean
+          strategy: Database["public"]["Enums"]["rotation_strategy"]
+          task_template_id: string
+          updated_at: string
+          updated_by: string | null
+          weekday_map: Json
+        }
+        Insert: {
+          advance_mode?: Database["public"]["Enums"]["rotation_advance_mode"]
+          algorithm_version?: string
+          avoid_consecutive?: boolean
+          created_at?: string
+          created_by?: string | null
+          cursor_advanced_at?: string | null
+          cursor_profile_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fallback?: Database["public"]["Enums"]["rotation_fallback"]
+          household_id: string
+          id?: string
+          is_active?: boolean
+          strategy?: Database["public"]["Enums"]["rotation_strategy"]
+          task_template_id: string
+          updated_at?: string
+          updated_by?: string | null
+          weekday_map?: Json
+        }
+        Update: {
+          advance_mode?: Database["public"]["Enums"]["rotation_advance_mode"]
+          algorithm_version?: string
+          avoid_consecutive?: boolean
+          created_at?: string
+          created_by?: string | null
+          cursor_advanced_at?: string | null
+          cursor_profile_id?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          fallback?: Database["public"]["Enums"]["rotation_fallback"]
+          household_id?: string
+          id?: string
+          is_active?: boolean
+          strategy?: Database["public"]["Enums"]["rotation_strategy"]
+          task_template_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          weekday_map?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rotation_rules_cursor_same_household_fkey"
+            columns: ["cursor_profile_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "member_profiles"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "rotation_rules_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rotation_rules_template_same_household_fkey"
+            columns: ["task_template_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "task_templates"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
       task_activity_log: {
         Row: {
           acting_profile_id: string | null
@@ -387,6 +610,13 @@ export type Database = {
             columns: ["task_instance_id", "household_id"]
             isOneToOne: false
             referencedRelation: "task_instances"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "task_assignments_rule_same_household_fkey"
+            columns: ["assigned_by_rule_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "rotation_rules"
             referencedColumns: ["id", "household_id"]
           },
         ]
@@ -594,6 +824,9 @@ export type Database = {
         | "suspended"
         | "revoked"
       household_role: "owner" | "adult" | "child" | "guest" | "service_provider"
+      rotation_advance_mode: "per_occurrence" | "per_week"
+      rotation_fallback: "unassigned" | "next_available_in_sequence"
+      rotation_strategy: "fixed_sequence" | "weekday_fixed" | "manual"
       task_activity_action:
         | "created"
         | "assigned"
@@ -751,6 +984,9 @@ export const Constants = {
         "revoked",
       ],
       household_role: ["owner", "adult", "child", "guest", "service_provider"],
+      rotation_advance_mode: ["per_occurrence", "per_week"],
+      rotation_fallback: ["unassigned", "next_available_in_sequence"],
+      rotation_strategy: ["fixed_sequence", "weekday_fixed", "manual"],
       task_activity_action: [
         "created",
         "assigned",

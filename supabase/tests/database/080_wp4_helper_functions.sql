@@ -1,7 +1,7 @@
--- WP4 — authorization helper properties.
+﻿-- WP4 ג€” authorization helper properties.
 -- Structural only: needs no fixtures.
 begin;
-select plan(38);
+select plan(40);
 
 -- The helpers live in a non-exposed schema ---------------------------------
 select has_schema('private', 'the private schema exists');
@@ -9,7 +9,7 @@ select is(
   (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'private' and c.relkind in ('r', 'p', 'v', 'm', 'f')),
   0::bigint,
-  'private contains no tables or views — nothing there could ever be exposed as a Data API resource');
+  'private contains no tables or views ג€” nothing there could ever be exposed as a Data API resource');
 
 -- ...and nowhere else. No equivalent helper may exist in public, where
 -- PostgREST would expose it as an RPC endpoint.
@@ -20,7 +20,7 @@ select hasnt_function('public', 'has_household_role',
 select hasnt_function('public', 'current_profile_id',
   'no current_profile_id in public');
 select hasnt_function('public', 'can_manage_household',
-  'no can_manage_household anywhere — redundant wrapper not created');
+  'no can_manage_household anywhere ג€” redundant wrapper not created');
 select is(
   (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
@@ -46,11 +46,15 @@ select has_function('private', 'is_task_template_adult_only', array['uuid'],
   'private.is_task_template_adult_only(uuid) exists');
 select has_function('private', 'is_task_instance_adult_only', array['uuid'],
   'private.is_task_instance_adult_only(uuid) exists');
+select has_function('private', 'is_rotation_rule_adult_only', array['uuid'],
+  'private.is_rotation_rule_adult_only(uuid) exists');
+select has_function('private', 'is_assigned_to_rotation_rule', array['uuid'],
+  'private.is_assigned_to_rotation_rule(uuid) exists');
 select is(
   (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'private'),
-  7::bigint,
-  'private contains exactly seven functions — three identity, four task scope, no redundant wrappers');
+  9::bigint,
+  'private contains exactly nine functions ג€” three identity, four task scope, two rotation scope');
 
 -- None of the task helpers may leak into the exposed schema either.
 select hasnt_function('public', 'is_assigned_to_task_instance',
@@ -66,7 +70,7 @@ select is(
     where n.nspname = 'private'
       and (select count(*) from unnest(p.proargtypes) t where t = 'uuid'::regtype) > 1),
   0::bigint,
-  'no private helper takes more than one uuid argument — none can accept a user id');
+  'no private helper takes more than one uuid argument ג€” none can accept a user id');
 select is(
   (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'private'

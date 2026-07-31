@@ -1,8 +1,8 @@
--- WP5B — task and recurrence foundation: schema, grants and policy catalog.
+﻿-- WP5B ג€” task and recurrence foundation: schema, grants and policy catalog.
 -- Structural only: asserts shape and the locked-down surface, never behaviour.
 -- Household isolation is behavioural and lives in supabase/tests/rls.
 begin;
-select plan(81);
+select plan(82);
 
 -- Enums ---------------------------------------------------------------------
 select has_type('public', 'task_status', 'task_status enum exists');
@@ -32,7 +32,7 @@ select enum_has_labels('public', 'task_assignment_status',
 select has_type('public', 'task_missed_policy', 'task_missed_policy enum exists');
 select enum_has_labels('public', 'task_missed_policy',
   array['remain_overdue', 'auto_skip', 'reschedule_next'],
-  'task_missed_policy is explicit per template — a chore never silently disappears');
+  'task_missed_policy is explicit per template ג€” a chore never silently disappears');
 
 select has_type('public', 'task_effort_level', 'task_effort_level enum exists');
 select enum_has_labels('public', 'task_effort_level',
@@ -42,7 +42,7 @@ select has_type('public', 'task_activity_action', 'task_activity_action enum exi
 select enum_has_labels('public', 'task_activity_action',
   array['created', 'assigned', 'unassigned', 'status_changed',
         'reopened', 'edited', 'soft_deleted', 'restored'],
-  'task_activity_action is a closed vocabulary — the log needs no free-text parsing');
+  'task_activity_action is a closed vocabulary ג€” the log needs no free-text parsing');
 
 -- Tables --------------------------------------------------------------------
 select has_table('public', 'task_templates', 'task_templates exists');
@@ -81,7 +81,7 @@ select columns_are('public', 'task_activity_log', array[
 
 -- No credential or free-form authority material leaked onto the task tables.
 select hasnt_column('public', 'task_instances', 'assignee_role',
-  'authority is never denormalised onto an occurrence — it comes from household_members');
+  'authority is never denormalised onto an occurrence ג€” it comes from household_members');
 select hasnt_column('public', 'task_templates', 'household_role',
   'a template carries no role column; adult_only is a hint, not a boundary');
 
@@ -90,7 +90,7 @@ select is(
   (select a.attgenerated from pg_attribute a
     where a.attrelid = 'public.task_instances'::regclass and a.attname = 'occurrence_key'),
   's',
-  'occurrence_key is a STORED generated column — never client-supplied');
+  'occurrence_key is a STORED generated column ג€” never client-supplied');
 
 -- A generated expression must be IMMUTABLE, so it cannot read DateStyle. This
 -- asserts the ISO construction rather than the ::text cast that would silently
@@ -145,7 +145,7 @@ select is(
       and tgname in ('task_activity_log_no_update', 'task_activity_log_no_delete')
       and tgenabled <> 'O'),
   0::bigint,
-  'the append-only triggers are ordinary enabled triggers — service_role does not bypass them');
+  'the append-only triggers are ordinary enabled triggers ג€” service_role does not bypass them');
 
 -- Indexes --------------------------------------------------------------------
 select has_index('public', 'task_instances', 'task_instances_occurrence_key_unique',
@@ -156,7 +156,7 @@ select is(
 select ok(
   (select pg_get_expr(indpred, indrelid) from pg_index
     where indexrelid = 'public.task_instances_occurrence_key_unique'::regclass) is not null,
-  'the idempotency index is partial — one-off and soft-deleted rows are exempt');
+  'the idempotency index is partial ג€” one-off and soft-deleted rows are exempt');
 select has_index('public', 'task_assignments', 'task_assignments_one_live_per_instance',
   'at most one live assignment per occurrence');
 select ok(
@@ -170,16 +170,16 @@ select has_index('public', 'task_assignments', 'task_assignments_assignee_idx',
 select has_index('public', 'task_activity_log', 'task_activity_log_instance_time_idx',
   'per-occurrence history is indexed newest first');
 
--- assigned_by_rule_id deliberately has no FK yet (WP5C).
+-- WP5B deliberately left assigned_by_rule_id an FK-less uuid because
+-- rotation_rules did not exist. WP5C added the reference it promised, as a
+-- COMPOSITE key so a rule from another household is structurally unreachable.
+select col_is_fk('public', 'task_assignments', array['assigned_by_rule_id', 'household_id'],
+  'assigned_by_rule_id now references rotation_rules, scoped to the same household (WP5C)');
 select is(
-  (select count(*) from pg_constraint
-    where conrelid = 'public.task_assignments'::regclass
-      and contype = 'f'
-      and 'assigned_by_rule_id' = any (
-        select attname from pg_attribute
-        where attrelid = conrelid and attnum = any (conkey))),
-  0::bigint,
-  'assigned_by_rule_id has no foreign key — rotation_rules arrives in WP5C');
+  (select confdeltype from pg_constraint
+    where conname = 'task_assignments_rule_same_household_fkey'),
+  'n',
+  'deleting a rotation rule sets assigned_by_rule_id NULL ג€” it never erases the assignment the rule produced');
 
 -- Composite household FKs make cross-household rows structurally impossible ----
 select col_is_fk('public', 'task_instances', array['template_id', 'household_id'],
@@ -219,7 +219,7 @@ select policies_are('public', 'task_assignments',
   'task_assignments has exactly the three approved policies');
 select policies_are('public', 'task_activity_log',
   array['task_activity_log_select_member', 'task_activity_log_insert_member'],
-  'task_activity_log has exactly two policies — read and append, never edit');
+  'task_activity_log has exactly two policies ג€” read and append, never edit');
 
 select is(
   (select count(*) from pg_policies
@@ -227,7 +227,7 @@ select is(
       and tablename in ('task_templates', 'task_instances', 'task_assignments', 'task_activity_log')
       and cmd = 'DELETE'),
   0::bigint,
-  'no DELETE policy on any task table — clients soft-delete, never hard-delete');
+  'no DELETE policy on any task table ג€” clients soft-delete, never hard-delete');
 
 select is(
   (select count(*) from pg_policies
@@ -252,7 +252,7 @@ select ok(not has_any_column_privilege('anon', 'public.task_instances', 'SELECT'
 -- Audit and generated columns are readable but never writable ------------------
 select column_privs_are('public', 'task_instances', 'occurrence_key', 'authenticated',
   array['SELECT']::text[],
-  'occurrence_key is readable but not writable — an idempotency key cannot be forged');
+  'occurrence_key is readable but not writable ג€” an idempotency key cannot be forged');
 select column_privs_are('public', 'task_instances', 'created_by', 'authenticated',
   array['SELECT']::text[], 'task_instances.created_by is readable but not writable');
 select column_privs_are('public', 'task_instances', 'updated_by', 'authenticated',
@@ -263,7 +263,7 @@ select column_privs_are('public', 'task_templates', 'created_by', 'authenticated
   array['SELECT']::text[], 'task_templates.created_by is readable but not writable');
 select column_privs_are('public', 'task_templates', 'household_id', 'authenticated',
   array['SELECT', 'INSERT']::text[],
-  'household_id may be set at creation but never updated — a row cannot be moved between households');
+  'household_id may be set at creation but never updated ג€” a row cannot be moved between households');
 select column_privs_are('public', 'task_activity_log', 'actor_auth_user_id', 'authenticated',
   array['SELECT']::text[],
   'the authenticated actor is recorded server-side, never written by a client (ADR-035)');

@@ -1,7 +1,7 @@
--- WP4 — policy catalog and GRANT matrix.
+﻿-- WP4 ג€” policy catalog and GRANT matrix.
 -- Structural only: runs while the business tables are empty, needs no fixtures.
 begin;
-select plan(54);
+select plan(55);
 
 -- Exact policy sets -------------------------------------------------------
 select policies_are('public', 'households',
@@ -12,10 +12,10 @@ select policies_are('public', 'member_profiles',
   'member_profiles has exactly the two approved policies');
 select policies_are('public', 'household_members',
   array['household_members_select_permitted'],
-  'household_members has exactly one policy — SELECT only');
+  'household_members has exactly one policy ג€” SELECT only');
 select policies_are('public', 'household_invitations',
   array['household_invitations_select_owner'],
-  'household_invitations has exactly one policy — SELECT only');
+  'household_invitations has exactly one policy ג€” SELECT only');
 
 -- Commands ----------------------------------------------------------------
 select is((select cmd from pg_policies where policyname = 'households_select_active_member'),
@@ -46,12 +46,29 @@ select is(
   0::bigint,
   'no INSERT or DELETE policy exists on any WP3 identity table');
 
--- Nothing in the schema may be physically deleted by a client: every table
--- either soft-deletes or is append-only.
+-- Client hard-deletion is confined to exactly ONE table, by name.
+--
+-- rotation_members is the single deliberate exception (WP5C): removing somebody
+-- from a rotation edits a forward-looking list, and every turn they already took
+-- survives in rotation_assignment_log, which nobody can delete. Everything that
+-- holds history still soft-deletes or is append-only. Asserting the exact
+-- policy set rather than a count means a second exception cannot slip in.
 select is(
-  (select count(*) from pg_policies where schemaname = 'public' and cmd = 'DELETE'),
+  (select coalesce(array_agg(tablename || '.' || policyname order by tablename), array[]::text[])
+     from pg_policies where schemaname = 'public' and cmd = 'DELETE'),
+  array['rotation_members.rotation_members_delete_adult']::text[],
+  'rotation_members is the ONLY table a client may hard-delete from, and only an owner/adult may');
+
+-- The tables that carry history must never gain a DELETE policy.
+select is(
+  (select count(*) from pg_policies
+    where schemaname = 'public' and cmd = 'DELETE'
+      and tablename in ('households', 'member_profiles', 'household_members',
+                        'household_invitations', 'task_templates', 'task_instances',
+                        'task_assignments', 'task_activity_log', 'rotation_rules',
+                        'rotation_assignment_log')),
   0::bigint,
-  'no DELETE policy exists on any public table — clients never hard-delete');
+  'no history-bearing table has a DELETE policy');
 
 -- Every policy targets `authenticated` only, never PUBLIC or anon.
 select is(
@@ -71,12 +88,12 @@ select is(
       and (coalesce(pg_get_expr(p.polqual, p.polrelid), '') like '%household_members%'
         or coalesce(pg_get_expr(p.polwithcheck, p.polrelid), '') like '%household_members%')),
   0::bigint,
-  'no policy expression references the household_members table directly — recursion is impossible');
+  'no policy expression references the household_members table directly ג€” recursion is impossible');
 
 -- Every policy routes through a private helper. An INSERT policy has no USING
 -- clause at all (polqual is NULL), so the assertion looks at whichever
 -- expressions the policy actually has and requires every one of them to derive
--- standing from auth.uid() through the helpers — never from a client-supplied
+-- standing from auth.uid() through the helpers ג€” never from a client-supplied
 -- household_id.
 select is(
   (select count(*) from pg_policy p
@@ -92,7 +109,7 @@ select is(
         or (p.polqual is null and p.polwithcheck is null)
       )),
   0::bigint,
-  'every policy expression — USING and WITH CHECK — calls a private authorization helper');
+  'every policy expression ג€” USING and WITH CHECK ג€” calls a private authorization helper');
 
 -- anon gets nothing at all --------------------------------------------------
 select table_privs_are('public', 'households', 'anon', array[]::text[],
@@ -134,9 +151,9 @@ select ok(not has_table_privilege('authenticated', 'public.member_profiles', 'DE
 select ok(has_any_column_privilege('authenticated', 'public.household_members', 'SELECT'),
   'authenticated can read some membership columns');
 select ok(not has_any_column_privilege('authenticated', 'public.household_members', 'INSERT'),
-  'authenticated cannot INSERT household_members — self-assignment is impossible');
+  'authenticated cannot INSERT household_members ג€” self-assignment is impossible');
 select ok(not has_any_column_privilege('authenticated', 'public.household_members', 'UPDATE'),
-  'authenticated cannot UPDATE household_members — role/status/auth_user_id/profile_id are unchangeable');
+  'authenticated cannot UPDATE household_members ג€” role/status/auth_user_id/profile_id are unchangeable');
 select ok(not has_table_privilege('authenticated', 'public.household_members', 'DELETE'),
   'authenticated cannot DELETE household_members');
 
@@ -145,7 +162,7 @@ select ok(has_any_column_privilege('authenticated', 'public.household_invitation
 select ok(not has_any_column_privilege('authenticated', 'public.household_invitations', 'INSERT'),
   'authenticated cannot INSERT invitations');
 select ok(not has_any_column_privilege('authenticated', 'public.household_invitations', 'UPDATE'),
-  'authenticated cannot UPDATE invitations — no direct revoked_at write');
+  'authenticated cannot UPDATE invitations ג€” no direct revoked_at write');
 select ok(not has_table_privilege('authenticated', 'public.household_invitations', 'DELETE'),
   'authenticated cannot DELETE invitations');
 
