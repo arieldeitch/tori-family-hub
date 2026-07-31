@@ -376,6 +376,25 @@ Loopback strings still appear inside supabase-js (its GoTrue default and its own
 
 **Verified 2026-07-31:** a published-style build (no `.env.local`) inlines only `https://nrfelnchbmofwrfajfai.supabase.co`.
 
+### Reproduced live, 2026-07-31, on `https://home-flow-joy.lovable.app/`
+
+Headless Chromium against the hosted app, mobile viewport (390×844), `he-IL`:
+
+| Load | Service worker | `navigator.onLine` | Result |
+| --- | --- | --- | --- |
+| 1st visit | `installing` — not yet in control | `true` | **app loads correctly**, redirects to `/pilot/signin` |
+| reload, after activation + claim | `activated`, controlling | `true` | **`אין חיבור לרשת כרגע`** |
+| reload again | controlling | `true` | **`אין חיבור לרשת כרגע`** |
+| `/?sw=off` (the documented kill switch) | controlling | `true` | **`אין חיבור לרשת כרגע`** |
+
+**Zero console errors and zero failed requests on every load.** That is the signature of this bug: nothing failed, because nothing was attempted — the worker answered the navigation from its precache before the app existed.
+
+It also explains why the fault reads as intermittent. The worker only bites once it has finished precaching 148 entries (~1.3 MB) and claimed the client, so the very first visit to a clean browser looks perfectly healthy.
+
+And it explains why `?sw=off` did not save anyone: the kill switch lives in application code, and the application never ran. Its pathname is `/`, and the old `NavigationRoute` denylist covered only `/api/` and `/~oauth`, so the escape hatch was itself served the offline page. The old page's only control was `location.reload()`, which the same worker answered with the same page — a closed loop with no exit from inside the tab. This is why recovery now lives in `offline.html` itself rather than in the app.
+
+**Everything else on the hosted stack was healthy throughout**: the origin serves the real app shell (`<html lang="he" dir="rtl">`, `<title>Tori — מרכז התפעול המשפחתי</title>`), all 11 JS assets return 200, the only hosts contacted are the app origin plus Google Fonts and Lovable's own CDN, **no loopback or local endpoint is ever requested**, and the hosted Supabase answers `/auth/v1/settings` 200 and REST `401 · 42501` with `Access-Control-Allow-Origin: https://home-flow-joy.lovable.app`.
+
 ## Notes
 
 - **ADR-006 (rotation determinism)** is reinforced by the WP0 timezone fix: date-only rotation logic must not depend on the runtime timezone. This did not require a new ADR — it is an implementation correction under an existing accepted decision (see [`08-rotation-engine.md`](./08-rotation-engine.md)).
