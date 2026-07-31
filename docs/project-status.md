@@ -4,9 +4,11 @@
 
 _Last updated: **2026-07-31** — hosted offline-screen outage fixed (ADR-042), after WP5B. The 2026-07-30 audit section below is retained as the point-in-time record it was._
 
-## Hosted outage — the app showed "אין חיבור לרשת כרגע" on a working connection (fixed)
+## Hosted outage — the app showed "אין חיבור לרשת כרגע" on a working connection
 
-Root cause, verified from the generated artefact rather than inferred (**ADR-042**):
+**Hosted frontend: `https://home-flow-joy.lovable.app/`.** Fixed in the repository (merged, `9c05d8f`); **the published build is still the pre-fix one and must be republished from Lovable** — see "Deployment status" below.
+
+Root cause, verified from the generated artefact and then **reproduced live** (**ADR-042**):
 
 - `workbox.navigateFallback: "/offline.html"` made Workbox emit a `NavigationRoute` bound to the **precached** offline page. It answered **every** navigation regardless of connectivity, and because Workbox matches routes in registration order it was matched **before** the `NetworkFirst` route, making that route dead code. With `skipWaiting`/`clientsClaim` the worker took control immediately, so the application never executed. Nothing mis-classified the error — the classifier never ran.
 - Separately, failures that did reach the app had no classification, so an expired session, an RLS refusal or a missing migration would all have read as a network problem.
@@ -28,6 +30,24 @@ Querying `https://nrfelnchbmofwrfajfai.supabase.co` with the publishable key alo
 So the hosted schema is at **WP4**, the repository is at **WP5B**, and that gap is deliberate: applying WP5B to the hosted project remains a separate, explicit step and **no hosted migration was applied**. The probe also proves the hosted Supabase is reachable over HTTPS from a normal client, so the offline screen was never a Supabase-reachability problem.
 
 Both of those real responses are now regression fixtures in `classifyError.test.ts` — a permission refusal and a missing table are precisely the two failures most likely to be misread as "no internet".
+
+### Deployment status — the published build is stale
+
+Verified against `https://home-flow-joy.lovable.app/` on 2026-07-31, after the fix was merged to `main`:
+
+- The served `/sw.js` still contains `NavigationRoute` ×1 and `PrecacheFallbackPlugin` ×0 — it is the **pre-fix** worker. Confirmed with `Cache-Control: no-cache` and cache-busted requests, so this is the origin, not a CDN cache.
+- The served `/offline.html` has no self-heal script.
+- The client bundle contains none of the new classifier strings.
+
+So Lovable has not rebuilt from `main` since the merge. GitHub sync is connected (`gpt-engineer-app[bot]` and `Lovable <noreply@lovable.dev>` have both committed here, most recently 2026-07-24), but **publishing the built app is a manual action in Lovable and cannot be triggered from this repository** — there is no deploy workflow, no GitHub deployment or environment, and no Lovable API credential.
+
+**One manual step remains: press Publish / Update in Lovable.** Nothing else is required, and no stuck client needs manual intervention afterwards:
+
+- `/sw.js` is served with `Cache-Control: no-cache`, so the browser's update check sees the new worker on the next navigation.
+- `skipWaiting` + `clientsClaim` make it take control immediately, and `cleanupOutdatedCaches` purges the old precache.
+- If anyone still lands on the offline page, the new `offline.html` self-heals: it detects `navigator.onLine === true`, unregisters workers, clears caches and reloads once.
+
+**Until it is republished**, a stuck client can only be recovered by hand: DevTools → Application → Service Workers → *Unregister*, or clearing site data for the origin. `?sw=off` does **not** work while the old worker is in control — it is intercepted like any other navigation.
 
 ## Audit of 2026-07-30 — what was verified and what was corrected
 

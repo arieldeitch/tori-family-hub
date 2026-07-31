@@ -107,6 +107,29 @@ If a returning user gets a stuck cache, appending `?sw=off` to any URL
 will cause the wrapper to unregister `/sw.js` for that origin, and the
 next reload serves fresh HTML from the network.
 
+> **`?sw=off` is not a universal escape hatch, and the ADR-042 outage proved it.**
+> The kill switch lives in application code, so it only runs if the application
+> runs. A worker that answers navigations from the cache never lets the app load,
+> so `/?sw=off` was itself served the offline page — its pathname is `/`, and the
+> old `NavigationRoute` denylist covered only `/api/` and `/~oauth`. The old
+> offline page's only control was `location.reload()`, which the same worker
+> answered with the same page: a closed loop with no way out from inside the tab.
+>
+> That is why recovery must not depend on the app booting:
+>
+> 1. **`public/offline.html` self-heals** — if it renders while `navigator.onLine`
+>    is true it unregisters workers, clears caches and reloads once per tab. This
+>    is the primary recovery path, because that page is what a stuck user is
+>    actually looking at.
+> 2. **No `NavigationRoute`** — with every navigation on `NetworkFirst`, a
+>    reachable server always wins, so `?sw=off` works again as documented.
+>
+> **Manual recovery, if a client is ever stuck again:** DevTools → Application →
+> Service Workers → *Unregister* (or tick *Bypass for network*), then reload.
+> Clearing site data for the origin works too. On mobile Chrome/Safari, clearing
+> the site's data is the only reliable route — which is precisely why the escape
+> hatch now lives in the offline page itself.
+
 ## Manual checks
 
 - **The generated worker must contain no `NavigationRoute`.** After a build:
