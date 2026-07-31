@@ -248,6 +248,338 @@ export type Database = {
           },
         ]
       }
+      task_activity_log: {
+        Row: {
+          acting_profile_id: string | null
+          action_type: Database["public"]["Enums"]["task_activity_action"]
+          actor_auth_user_id: string | null
+          client_operation_id: string | null
+          created_at: string
+          detail: Json | null
+          from_state: Database["public"]["Enums"]["task_status"] | null
+          household_id: string
+          id: string
+          occurred_at: string
+          task_instance_id: string
+          to_state: Database["public"]["Enums"]["task_status"] | null
+        }
+        Insert: {
+          acting_profile_id?: string | null
+          action_type: Database["public"]["Enums"]["task_activity_action"]
+          actor_auth_user_id?: string | null
+          client_operation_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          from_state?: Database["public"]["Enums"]["task_status"] | null
+          household_id: string
+          id?: string
+          occurred_at?: string
+          task_instance_id: string
+          to_state?: Database["public"]["Enums"]["task_status"] | null
+        }
+        Update: {
+          acting_profile_id?: string | null
+          action_type?: Database["public"]["Enums"]["task_activity_action"]
+          actor_auth_user_id?: string | null
+          client_operation_id?: string | null
+          created_at?: string
+          detail?: Json | null
+          from_state?: Database["public"]["Enums"]["task_status"] | null
+          household_id?: string
+          id?: string
+          occurred_at?: string
+          task_instance_id?: string
+          to_state?: Database["public"]["Enums"]["task_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_activity_log_acting_profile_same_household_fkey"
+            columns: ["acting_profile_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "member_profiles"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "task_activity_log_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_activity_log_instance_same_household_fkey"
+            columns: ["task_instance_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "task_instances"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
+      task_assignments: {
+        Row: {
+          accepted_at: string | null
+          algorithm_version: string | null
+          assigned_by_rule_id: string | null
+          assignee_profile_id: string | null
+          assignment_reason: string | null
+          assignment_type: Database["public"]["Enums"]["task_assignment_type"]
+          created_at: string
+          created_by: string | null
+          household_id: string
+          id: string
+          reason_code: string | null
+          status: Database["public"]["Enums"]["task_assignment_status"]
+          task_instance_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          algorithm_version?: string | null
+          assigned_by_rule_id?: string | null
+          assignee_profile_id?: string | null
+          assignment_reason?: string | null
+          assignment_type?: Database["public"]["Enums"]["task_assignment_type"]
+          created_at?: string
+          created_by?: string | null
+          household_id: string
+          id?: string
+          reason_code?: string | null
+          status?: Database["public"]["Enums"]["task_assignment_status"]
+          task_instance_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          algorithm_version?: string | null
+          assigned_by_rule_id?: string | null
+          assignee_profile_id?: string | null
+          assignment_reason?: string | null
+          assignment_type?: Database["public"]["Enums"]["task_assignment_type"]
+          created_at?: string
+          created_by?: string | null
+          household_id?: string
+          id?: string
+          reason_code?: string | null
+          status?: Database["public"]["Enums"]["task_assignment_status"]
+          task_instance_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignments_assignee_same_household_fkey"
+            columns: ["assignee_profile_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "member_profiles"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "task_assignments_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignments_instance_same_household_fkey"
+            columns: ["task_instance_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "task_instances"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
+      task_instances: {
+        Row: {
+          blocked_reason: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          description_snapshot: string | null
+          due_at: string | null
+          household_id: string
+          id: string
+          manual_override: boolean
+          occurrence_date: string
+          occurrence_key: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          scheduled_for: string | null
+          skipped_reason: string | null
+          source: Database["public"]["Enums"]["task_source"]
+          status: Database["public"]["Enums"]["task_status"]
+          template_id: string | null
+          title_snapshot: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          blocked_reason?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description_snapshot?: string | null
+          due_at?: string | null
+          household_id: string
+          id?: string
+          manual_override?: boolean
+          occurrence_date: string
+          occurrence_key?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          scheduled_for?: string | null
+          skipped_reason?: string | null
+          source?: Database["public"]["Enums"]["task_source"]
+          status?: Database["public"]["Enums"]["task_status"]
+          template_id?: string | null
+          title_snapshot: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          blocked_reason?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description_snapshot?: string | null
+          due_at?: string | null
+          household_id?: string
+          id?: string
+          manual_override?: boolean
+          occurrence_date?: string
+          occurrence_key?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          scheduled_for?: string | null
+          skipped_reason?: string | null
+          source?: Database["public"]["Enums"]["task_source"]
+          status?: Database["public"]["Enums"]["task_status"]
+          template_id?: string | null
+          title_snapshot?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_instances_completed_by_same_household_fkey"
+            columns: ["completed_by", "household_id"]
+            isOneToOne: false
+            referencedRelation: "member_profiles"
+            referencedColumns: ["id", "household_id"]
+          },
+          {
+            foreignKeyName: "task_instances_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_instances_template_same_household_fkey"
+            columns: ["template_id", "household_id"]
+            isOneToOne: false
+            referencedRelation: "task_templates"
+            referencedColumns: ["id", "household_id"]
+          },
+        ]
+      }
+      task_templates: {
+        Row: {
+          adult_only: boolean
+          approval_required: boolean
+          area_or_room: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          default_priority: Database["public"]["Enums"]["task_priority"]
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string | null
+          effort_level: Database["public"]["Enums"]["task_effort_level"] | null
+          ends_on: string | null
+          estimated_minutes: number | null
+          household_id: string
+          id: string
+          is_active: boolean
+          missed_policy: Database["public"]["Enums"]["task_missed_policy"]
+          recurrence_rule: Json
+          starts_on: string
+          time_window_end: string | null
+          time_window_start: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          adult_only?: boolean
+          approval_required?: boolean
+          area_or_room?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_priority?: Database["public"]["Enums"]["task_priority"]
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          effort_level?: Database["public"]["Enums"]["task_effort_level"] | null
+          ends_on?: string | null
+          estimated_minutes?: number | null
+          household_id: string
+          id?: string
+          is_active?: boolean
+          missed_policy?: Database["public"]["Enums"]["task_missed_policy"]
+          recurrence_rule?: Json
+          starts_on?: string
+          time_window_end?: string | null
+          time_window_start?: string | null
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          adult_only?: boolean
+          approval_required?: boolean
+          area_or_room?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_priority?: Database["public"]["Enums"]["task_priority"]
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          effort_level?: Database["public"]["Enums"]["task_effort_level"] | null
+          ends_on?: string | null
+          estimated_minutes?: number | null
+          household_id?: string
+          id?: string
+          is_active?: boolean
+          missed_policy?: Database["public"]["Enums"]["task_missed_policy"]
+          recurrence_rule?: Json
+          starts_on?: string
+          time_window_end?: string | null
+          time_window_start?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_templates_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "households"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -262,6 +594,26 @@ export type Database = {
         | "suspended"
         | "revoked"
       household_role: "owner" | "adult" | "child" | "guest" | "service_provider"
+      task_activity_action:
+        | "created"
+        | "assigned"
+        | "unassigned"
+        | "status_changed"
+        | "reopened"
+        | "edited"
+        | "soft_deleted"
+        | "restored"
+      task_assignment_status:
+        | "proposed"
+        | "accepted"
+        | "declined"
+        | "reassigned"
+      task_assignment_type: "rotation" | "manual" | "volunteer"
+      task_effort_level: "light" | "medium" | "heavy"
+      task_missed_policy: "remain_overdue" | "auto_skip" | "reschedule_next"
+      task_priority: "low" | "normal" | "high"
+      task_source: "generated" | "manual" | "quick_add"
+      task_status: "pending" | "done" | "skipped" | "blocked"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -399,6 +751,28 @@ export const Constants = {
         "revoked",
       ],
       household_role: ["owner", "adult", "child", "guest", "service_provider"],
+      task_activity_action: [
+        "created",
+        "assigned",
+        "unassigned",
+        "status_changed",
+        "reopened",
+        "edited",
+        "soft_deleted",
+        "restored",
+      ],
+      task_assignment_status: [
+        "proposed",
+        "accepted",
+        "declined",
+        "reassigned",
+      ],
+      task_assignment_type: ["rotation", "manual", "volunteer"],
+      task_effort_level: ["light", "medium", "heavy"],
+      task_missed_policy: ["remain_overdue", "auto_skip", "reschedule_next"],
+      task_priority: ["low", "normal", "high"],
+      task_source: ["generated", "manual", "quick_add"],
+      task_status: ["pending", "done", "skipped", "blocked"],
     },
   },
 } as const
