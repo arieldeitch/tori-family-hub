@@ -225,59 +225,51 @@ select lives_ok(
   'an owner may also define a chore');
 reset role;
 
--- A non-adult member: reads live rows, defines nothing, removes nothing ----------
+-- An UNASSIGNED guest: membership alone buys nothing (ADR-040) -------------------
+-- Nobody in this file holds a task assignment, so the guest and the service
+-- provider are here purely as negative cases. The positive side — an assigned
+-- guest reaching exactly their own work — is asserted in 180.
 select set_config('request.jwt.claims',
   json_build_object('sub', current_setting('tori.a_guest'), 'role', 'authenticated')::text, true);
 set local role authenticated;
-select cmp_ok((select count(*) from public.task_templates), '>', 0::bigint,
-  'an active non-adult member reads the household chore list');
+select is((select count(*) from public.task_templates), 0::bigint,
+  'an unassigned guest sees NO templates — membership is not household-wide chore visibility');
+select is((select count(*) from public.task_instances), 0::bigint,
+  'an unassigned guest sees no occurrences at all');
 select is((select count(*) from public.task_templates
            where id = 'e0000000-0000-4000-8000-00000000a002'), 0::bigint,
-  'a non-adult member never sees the trash — soft-deleted templates are hidden from them');
-select is((select count(*) from public.task_instances
-           where id = 'e0000000-0000-4000-8000-00000000c002'), 0::bigint,
-  'a non-adult member never sees a soft-deleted occurrence');
+  'a guest never sees the trash — soft-deleted templates are owner/adult only');
 select throws_ok(
   $$ insert into public.task_templates (household_id, title)
      values ('aaaa0000-0000-4000-8000-000000000001', 'guest invents a chore') $$,
-  '42501', null, 'a non-adult member cannot define a chore');
+  '42501', null, 'a guest cannot define a chore');
+select throws_ok(
+  $$ insert into public.task_instances (household_id, occurrence_date, title_snapshot, source)
+     values ('aaaa0000-0000-4000-8000-000000000001', date '2026-08-08', 'Quick add', 'quick_add') $$,
+  '42501', null, 'a guest cannot add a chore to the household');
 
 update public.task_templates set title = 'guest edit'
   where id = 'e0000000-0000-4000-8000-00000000a001';
+update public.task_instances
+   set status = 'done', completed_at = now(),
+       completed_by = 'aaaa0000-0000-4000-8000-000000000103'
+ where id = 'e0000000-0000-4000-8000-00000000c001';
 reset role;
 select isnt((select title from public.task_templates
              where id = 'e0000000-0000-4000-8000-00000000a001'), 'guest edit',
-  'a non-adult member cannot edit a template — the UPDATE matches zero rows');
+  'a guest cannot edit a template — the UPDATE matches zero rows');
+select isnt((select status::text from public.task_instances
+             where id = 'e0000000-0000-4000-8000-00000000c001'), 'done',
+  'a guest cannot complete a chore that was never assigned to them');
 
--- Completion, by contrast, is open to any active member: the pilot family view
--- lets whoever is at the sink mark the chore done.
-set local role authenticated;
-select lives_ok(
-  $$ insert into public.task_instances (household_id, occurrence_date, title_snapshot, source)
-     values ('aaaa0000-0000-4000-8000-000000000001', date '2026-08-08', 'Quick add', 'quick_add') $$,
-  'any active member may add an occurrence in their own household');
-select lives_ok(
-  $$ update public.task_instances
-       set status = 'done', completed_at = now(),
-           completed_by = 'aaaa0000-0000-4000-8000-000000000103'
-     where id = 'e0000000-0000-4000-8000-00000000c001' $$,
-  'any active member may complete an occurrence in their own household');
-select throws_ok(
-  $$ update public.task_instances set deleted_at = now()
-       where id = 'e0000000-0000-4000-8000-00000000c001' $$,
-  '42501', null,
-  'a non-adult member cannot remove a chore from the week — soft-delete is an owner/adult act');
-reset role;
-
--- The service provider currently has the same task visibility as any member.
--- Pinned deliberately: task reads use is_active_household_member, which is
--- role-agnostic, unlike the WP4 member_profiles policy which narrows guests and
--- service providers to their own row. Recorded as an open question for WP5D.
+-- The service provider is scoped identically.
 select set_config('request.jwt.claims',
   json_build_object('sub', current_setting('tori.a_service'), 'role', 'authenticated')::text, true);
 set local role authenticated;
-select cmp_ok((select count(*) from public.task_templates), '>', 0::bigint,
-  'a service provider currently reads the household chore list (open question for WP5D)');
+select is((select count(*) from public.task_templates), 0::bigint,
+  'an unassigned service provider sees no templates');
+select is((select count(*) from public.task_instances), 0::bigint,
+  'an unassigned service provider sees no occurrences');
 select throws_ok(
   $$ insert into public.task_templates (household_id, title)
      values ('aaaa0000-0000-4000-8000-000000000001', 'service provider invents a chore') $$,

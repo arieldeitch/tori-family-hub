@@ -5,7 +5,7 @@
 -- attributed to somebody else. That is what lets an adult complete a chore on
 -- a child's behalf (ADR-035) while stopping a sibling from forging an entry.
 begin;
-select plan(39);
+select plan(41);
 
 -- Row fixtures, created as owner and rolled back with the transaction --------
 insert into public.task_templates (id, household_id, title) values
@@ -18,6 +18,8 @@ insert into public.task_instances
    'f0000000-0000-4000-8000-00000000a001', date '2026-08-03', 'A: chore'),
   ('f0000000-0000-4000-8000-00000000c002', 'aaaa0000-0000-4000-8000-000000000001',
    'f0000000-0000-4000-8000-00000000a001', date '2026-08-04', 'A: chore'),
+  ('f0000000-0000-4000-8000-00000000c003', 'aaaa0000-0000-4000-8000-000000000001',
+   'f0000000-0000-4000-8000-00000000a001', date '2026-08-05', 'A: chore'),
   ('f0000000-0000-4000-8000-00000000d001', 'bbbb0000-0000-4000-8000-000000000001',
    'f0000000-0000-4000-8000-00000000b001', date '2026-08-03', 'B: chore');
 
@@ -25,6 +27,11 @@ insert into public.task_assignments
   (id, household_id, task_instance_id, assignee_profile_id, assignment_type, status) values
   ('f0000000-0000-4000-8000-00000000e001', 'aaaa0000-0000-4000-8000-000000000001',
    'f0000000-0000-4000-8000-00000000c001', 'aaaa0000-0000-4000-8000-000000000103', 'manual', 'proposed'),
+  -- The guest holds one real assignment, so the attribution rules below are
+  -- tested on a caller who is genuinely in scope (ADR-040) rather than one who
+  -- is refused for lacking scope in the first place.
+  ('f0000000-0000-4000-8000-00000000e003', 'aaaa0000-0000-4000-8000-000000000001',
+   'f0000000-0000-4000-8000-00000000c003', 'aaaa0000-0000-4000-8000-000000000104', 'manual', 'proposed'),
   ('f0000000-0000-4000-8000-00000000e002', 'bbbb0000-0000-4000-8000-000000000001',
    'f0000000-0000-4000-8000-00000000d001', 'bbbb0000-0000-4000-8000-000000000102', 'manual', 'proposed');
 
@@ -62,8 +69,8 @@ set local role authenticated;
 
 select is(current_user::text, 'authenticated', 'acting as authenticated, not as a BYPASSRLS owner');
 
-select is((select count(*) from public.task_assignments), 1::bigint,
-  'an adult sees only their own household''s assignments');
+select is((select count(*) from public.task_assignments), 2::bigint,
+  'an adult sees every assignment of their own household and none of household B''s');
 select is((select count(*) from public.task_activity_log), 1::bigint,
   'an adult sees only their own household''s history');
 select is((select count(*) from public.task_assignments
@@ -141,22 +148,25 @@ select throws_ok(
   'a client cannot write actor_auth_user_id — the authenticated actor is recorded server-side');
 reset role;
 
--- A non-adult member ---------------------------------------------------------------
+-- A guest holding exactly one assignment ---------------------------------------------
 select set_config('request.jwt.claims',
   json_build_object('sub', current_setting('tori.a_guest'), 'role', 'authenticated')::text, true);
 set local role authenticated;
 
-select cmp_ok((select count(*) from public.task_assignments), '>', 0::bigint,
-  'a non-adult member reads the assignments — a child has to see whose turn it is');
-select cmp_ok((select count(*) from public.task_activity_log), '>', 0::bigint,
-  'a non-adult member reads the household history — transparency is the point');
+select is((select count(*) from public.task_assignments), 1::bigint,
+  'a guest sees their own assignment row and nobody else''s (ADR-040)');
+select is((select count(*) from public.task_assignments
+           where id = 'f0000000-0000-4000-8000-00000000e001'), 0::bigint,
+  'the assignment naming another person is invisible to the guest');
+select is((select count(*) from public.task_activity_log), 0::bigint,
+  'a guest reads no history at all until something happens on their OWN occurrence');
 
 select throws_ok(
   $$ insert into public.task_assignments
        (household_id, task_instance_id, assignee_profile_id, assignment_type)
-     values ('aaaa0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000c001',
+     values ('aaaa0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000c002',
              'aaaa0000-0000-4000-8000-000000000103', 'manual') $$,
-  '42501', null, 'a non-adult member cannot assign a chore to somebody else');
+  '42501', null, 'a guest cannot assign a chore to somebody else');
 
 update public.task_assignments set assignee_profile_id = 'aaaa0000-0000-4000-8000-000000000104'
   where id = 'f0000000-0000-4000-8000-00000000e001';
@@ -164,38 +174,45 @@ reset role;
 select is((select assignee_profile_id from public.task_assignments
            where id = 'f0000000-0000-4000-8000-00000000e001'),
   'aaaa0000-0000-4000-8000-000000000103'::uuid,
-  'a non-adult member cannot reassign — the UPDATE matches zero rows');
+  'a guest cannot reassign somebody else''s chore to themselves — the UPDATE matches zero rows');
 
--- Attribution: self yes, anybody else no.
+-- Attribution, tested on a caller who IS in scope: self yes, anybody else no.
 set local role authenticated;
 select is(private.current_profile_id('aaaa0000-0000-4000-8000-000000000001'),
   'aaaa0000-0000-4000-8000-000000000104'::uuid,
-  'the non-adult caller resolves to their own profile');
+  'the guest caller resolves to their own profile');
 select lives_ok(
   $$ insert into public.task_activity_log
        (household_id, task_instance_id, acting_profile_id, action_type, to_state)
-     values ('aaaa0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000c001',
+     values ('aaaa0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000c003',
              'aaaa0000-0000-4000-8000-000000000104', 'status_changed', 'done') $$,
-  'a non-adult member may append history attributed to themselves');
+  'a guest may append history about their own occurrence, attributed to themselves');
 select lives_ok(
   $$ insert into public.task_activity_log
        (household_id, task_instance_id, action_type)
-     values ('aaaa0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000c001',
+     values ('aaaa0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000c003',
              'created') $$,
-  'a non-adult member may append an unattributed entry');
+  'a guest may append an unattributed entry about their own occurrence');
+select throws_ok(
+  $$ insert into public.task_activity_log
+       (household_id, task_instance_id, acting_profile_id, action_type, to_state)
+     values ('aaaa0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000c003',
+             'aaaa0000-0000-4000-8000-000000000103', 'status_changed', 'done') $$,
+  '42501', null,
+  'a guest cannot forge an entry attributed to somebody else, even on their own occurrence');
 select throws_ok(
   $$ insert into public.task_activity_log
        (household_id, task_instance_id, acting_profile_id, action_type, to_state)
      values ('aaaa0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000c001',
-             'aaaa0000-0000-4000-8000-000000000103', 'status_changed', 'done') $$,
+             'aaaa0000-0000-4000-8000-000000000104', 'status_changed', 'done') $$,
   '42501', null,
-  'a non-adult member cannot forge an entry attributed to somebody else');
+  'and cannot append history about an occurrence that is not theirs, even attributed correctly');
 select throws_ok(
   $$ insert into public.task_activity_log
        (household_id, task_instance_id, action_type)
      values ('bbbb0000-0000-4000-8000-000000000001', 'f0000000-0000-4000-8000-00000000d001',
              'created') $$,
-  '42501', null, 'a non-adult member cannot append history to another household');
+  '42501', null, 'a guest cannot append history to another household');
 reset role;
 
 -- Household B is sealed off in the other direction ------------------------------------

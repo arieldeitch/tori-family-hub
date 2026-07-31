@@ -1,7 +1,7 @@
 -- WP4 — authorization helper properties.
 -- Structural only: needs no fixtures.
 begin;
-select plan(30);
+select plan(38);
 
 -- The helpers live in a non-exposed schema ---------------------------------
 select has_schema('private', 'the private schema exists');
@@ -29,18 +29,34 @@ select is(
   0::bigint,
   'no unexpected SECURITY DEFINER function exists in the exposed public schema');
 
--- Exactly the three approved helpers exist ---------------------------------
+-- Exactly the approved helpers exist ---------------------------------------
+-- Three from WP4 (identity) and four from WP5B (task scope, ADR-040). Every one
+-- of them is held to the same contract by the property assertions below.
 select has_function('private', 'is_active_household_member', array['uuid'],
   'private.is_active_household_member(uuid) exists');
 select has_function('private', 'has_household_role', array['uuid', 'public.household_role[]'],
   'private.has_household_role(uuid, household_role[]) exists');
 select has_function('private', 'current_profile_id', array['uuid'],
   'private.current_profile_id(uuid) exists');
+select has_function('private', 'is_assigned_to_task_instance', array['uuid'],
+  'private.is_assigned_to_task_instance(uuid) exists');
+select has_function('private', 'is_assigned_to_task_template', array['uuid'],
+  'private.is_assigned_to_task_template(uuid) exists');
+select has_function('private', 'is_task_template_adult_only', array['uuid'],
+  'private.is_task_template_adult_only(uuid) exists');
+select has_function('private', 'is_task_instance_adult_only', array['uuid'],
+  'private.is_task_instance_adult_only(uuid) exists');
 select is(
   (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'private'),
-  3::bigint,
-  'private contains exactly three functions — no redundant wrappers');
+  7::bigint,
+  'private contains exactly seven functions — three identity, four task scope, no redundant wrappers');
+
+-- None of the task helpers may leak into the exposed schema either.
+select hasnt_function('public', 'is_assigned_to_task_instance',
+  'no is_assigned_to_task_instance in public');
+select hasnt_function('public', 'is_task_template_adult_only',
+  'no is_task_template_adult_only in public');
 
 -- No helper accepts a user id ----------------------------------------------
 -- Every argument must be either the household uuid or the role array. A second
@@ -127,6 +143,20 @@ select ok(not has_function_privilege('anon', 'private.current_profile_id(uuid)',
   'anon cannot execute current_profile_id');
 select ok(has_function_privilege('authenticated', 'private.is_active_household_member(uuid)', 'EXECUTE'),
   'authenticated can execute is_active_household_member');
+
+-- The WP5B task helpers are held to the same privilege contract.
+select is(
+  (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'private'
+      and has_function_privilege('anon', p.oid, 'EXECUTE')),
+  0::bigint,
+  'anon can execute no private helper at all, task helpers included');
+select is(
+  (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'private'
+      and not has_function_privilege('authenticated', p.oid, 'EXECUTE')),
+  0::bigint,
+  'authenticated can execute every private helper, so no policy fails to resolve one');
 
 -- PUBLIC holds no EXECUTE on any helper.
 select is(
