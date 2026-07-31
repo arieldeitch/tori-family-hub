@@ -6,7 +6,7 @@ _Last updated: **2026-07-31** — hosted offline-screen outage fixed (ADR-042), 
 
 ## Hosted outage — the app showed "אין חיבור לרשת כרגע" on a working connection
 
-**Hosted frontend: `https://home-flow-joy.lovable.app/`.** Fixed in the repository (merged, `9c05d8f`); **the published build is still the pre-fix one and must be republished from Lovable** — see "Deployment status" below.
+**Hosted frontend: `https://home-flow-joy.lovable.app/`. Fixed, published and verified live on 2026-07-31** — see "Deployment status" below.
 
 Root cause, verified from the generated artefact and then **reproduced live** (**ADR-042**):
 
@@ -31,23 +31,29 @@ So the hosted schema is at **WP4**, the repository is at **WP5B**, and that gap 
 
 Both of those real responses are now regression fixtures in `classifyError.test.ts` — a permission refusal and a missing table are precisely the two failures most likely to be misread as "no internet".
 
-### Deployment status — the published build is stale
+### Deployment status — published and verified live
 
-Verified against `https://home-flow-joy.lovable.app/` on 2026-07-31, after the fix was merged to `main`:
+The fix was merged to `main` (`9c05d8f`) and Lovable republished roughly 40 minutes later. Note the sequence for future incidents: **a merge to `main` is not a deploy.** For a while the repository was fixed while every user was still being served the broken worker, and the published build only changed once Lovable rebuilt.
 
-- The served `/sw.js` still contains `NavigationRoute` ×1 and `PrecacheFallbackPlugin` ×0 — it is the **pre-fix** worker. Confirmed with `Cache-Control: no-cache` and cache-busted requests, so this is the origin, not a CDN cache.
-- The served `/offline.html` has no self-heal script.
-- The client bundle contains none of the new classifier strings.
+Verified on the live origin, 2026-07-31, with `Cache-Control: no-cache` and cache-busted requests:
 
-So Lovable has not rebuilt from `main` since the merge. GitHub sync is connected (`gpt-engineer-app[bot]` and `Lovable <noreply@lovable.dev>` have both committed here, most recently 2026-07-24), but **publishing the built app is a manual action in Lovable and cannot be triggered from this repository** — there is no deploy workflow, no GitHub deployment or environment, and no Lovable API credential.
+| Artefact | Before | After |
+| --- | --- | --- |
+| `/sw.js` `NavigationRoute` | 1 | **0** |
+| `/sw.js` `PrecacheFallbackPlugin` | 0 | **1**, `{fallbackURL:"/offline.html"}` |
+| `/offline.html` self-heal script | absent | **present** |
+| client bundle hash | `usePilotSession-B2Y5eo5F.js` | **`usePilotSession-C5ftLP9Y.js`** |
 
-**One manual step remains: press Publish / Update in Lovable.** Nothing else is required, and no stuck client needs manual intervention afterwards:
+Behavioural verification with headless Chromium, after waiting for the worker to **activate and claim the client** — the state in which the bug used to appear:
 
-- `/sw.js` is served with `Cache-Control: no-cache`, so the browser's update check sees the new worker on the next navigation.
-- `skipWaiting` + `clientsClaim` make it take control immediately, and `cleanupOutdatedCaches` purges the old precache.
-- If anyone still lands on the offline page, the new `offline.html` self-heals: it detects `navigator.onLine === true`, unregisters workers, clears caches and reloads once.
+- reload with the worker in control → **the app loads** (`כניסה לפיילוט המשפחתי`); the offline screen does not appear
+- second reload → same
+- `/?sw=off` → works again; no longer intercepted
+- visiting `/offline.html` **directly while online** → self-heals and lands on `/pilot/signin`, which is the recovery path for anyone still holding a bad worker
+- a failed sign-in produced `https://nrfelnchbmofwrfajfai.supabase.co/auth/v1/token` (422) and the app showed *"הפרטים שהוזנו אינם נכונים…"* — an auth failure reported as an auth failure, not as a network failure
+- hosts contacted: the app origin, Google Fonts, Lovable's CDN and the hosted Supabase. **No loopback or local endpoint was requested at any point.** No failed requests.
 
-**Until it is republished**, a stuck client can only be recovered by hand: DevTools → Application → Service Workers → *Unregister*, or clearing site data for the origin. `?sw=off` does **not** work while the old worker is in control — it is intercepted like any other navigation.
+`?sw=off` remains unreliable as a general escape hatch and must not be relied on — see the note in [`PWA.md`](./PWA.md). The recovery that actually works when the app cannot boot is the self-healing offline page.
 
 ## Audit of 2026-07-30 — what was verified and what was corrected
 
