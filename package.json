@@ -33,6 +33,7 @@
     "pilot:status": "bun scripts/pilot-status.ts",
     "pilot:cleanup": "bun scripts/pilot-cleanup.ts",
     "pilot:test": "bun scripts/pilot-tests.ts",
+    "pilot:chores": "bun scripts/pilot-chores.ts",
     "pilot:bootstrap:hosted": "bun scripts/pilot-bootstrap-hosted.ts",
     "pilot:status:hosted": "bun scripts/pilot-status-hosted.ts",
     "pilot:test:hosted-guard": "bun scripts/pilot-hosted-guard-tests.ts",

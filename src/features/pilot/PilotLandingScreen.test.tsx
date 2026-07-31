@@ -62,7 +62,6 @@ describe("PilotLandingScreen", () => {
     const child = screen.getByRole("radio", { name: /ילד ב/ });
     fireEvent.click(child);
     expect(child).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByText(/כאן יופיע השבוע של ילד ב/)).toBeInTheDocument();
   });
 
   it("persists the perspective as a disposable UI preference only", () => {
@@ -190,8 +189,17 @@ describe("PilotLandingScreen", () => {
     expect(screen.queryByRole("radiogroup")).toBeNull();
   });
 
-  it("does not build the weekly chores view yet", () => {
+  // WP5D replaced the placeholder. The weekly area is now gated on a backend
+  // capability probe, so before that probe resolves it reports that it is
+  // checking — never the old "not built yet" copy, and never an error.
+  it("gates the weekly area on the backend capability probe", async () => {
     setup();
-    expect(screen.getByText(/תצוגת המטלות השבועית עדיין לא נבנתה/)).toBeInTheDocument();
+    expect(screen.queryByText(/תצוגת המטלות השבועית עדיין לא נבנתה/)).toBeNull();
+    expect(await screen.findByText(/בודק את מצב השרת/)).toBeInTheDocument();
+  });
+
+  it("never shows the offline screen merely because the probe has not resolved", () => {
+    setup();
+    expect(screen.queryByText(/אין חיבור לרשת/)).toBeNull();
   });
 });

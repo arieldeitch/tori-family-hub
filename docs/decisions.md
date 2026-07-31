@@ -450,6 +450,37 @@ Each decision records `reason_code`, `algorithm_version`, the candidate snapshot
 
 `rotation_members` is the only table a client may hard-delete from. Removing somebody from a rotation edits a forward-looking list; every turn they already took survives in the append-only log. `070_wp4_policies_and_grants.sql` now asserts the **exact** delete-policy set by name, so a second exception cannot slip in unnoticed.
 
+## ADR-044 — The app asks the backend what it can do, and degrades calmly (WP5D, Accepted)
+
+WP5D ships the real weekly chores experience while the hosted pilot project is still **two migrations behind** — WP5B and WP5C are merged and tested here, but applying them to the hosted project is a separate, approval-gated step that has not happened.
+
+Merging WP5D naively would therefore break the live pilot for the family: every weekly query would fail with `PGRST205` and the screen would show an error for something that is **not an error**. The app would simply be newer than its database, and the fix is a migration, not a retry.
+
+**Decision.** `src/lib/pilot/schemaCapability.ts` probes once whether the backend carries WP5B/WP5C, and the UI branches on the answer:
+
+| Probe result | Meaning | What the family sees |
+| --- | --- | --- |
+| success | tables present | the real weekly view |
+| `missing_schema` (`PGRST205`) | backend older than this build | **"שדרוג הפיילוט ממתין"** — calm, factual, not an error |
+| permission / auth refusal | tables **exist**, RLS answered | the real weekly view |
+| anything else | a genuine fault | the classified error (ADR-042) |
+
+Three properties make this safe rather than merely clever:
+
+1. **A missing table is not a failure.** It gets its own state, never the error screen and never the offline screen. Errors imply something is broken and invite retrying; nothing is broken and retrying cannot help.
+2. **It does not spam.** One probe per session — memoised in module scope and mirrored into `sessionStorage`, with concurrent callers sharing a single in-flight request. A settled answer is sticky; only the explicit "בדקו שוב" control re-checks. A transient *error* is deliberately not cached, so it stays retryable.
+3. **It switches itself on.** The probe is a runtime question, so the moment the hosted migrations land the next session activates the real weekly experience with **no code change and no redeploy**.
+
+**A permission refusal counts as capable.** Capability and authorisation are different questions: a `403` proves the relation resolves, which is exactly what a capable backend does. Conflating them would have shown the upgrade screen to a correctly-configured backend that simply refused one caller.
+
+### Where visibility is enforced
+
+The weekly data layer does **no** client-side visibility filtering. A child sees the family week minus `adult_only`, and a guest sees only assigned work, because the WP5B/WP5C **policies return only those rows** (ADR-041). Re-filtering in the browser would put the rule in a weaker place and let two copies of it disagree.
+
+### Completion cannot render as success unless it persisted
+
+The update uses `.select()` so the write returns the row it changed. Without it, a zero-row update — an RLS refusal, or a row somebody else already moved — would be indistinguishable from success, which `PILOT_WEEKLY_CHORES.md` §7 forbids outright. Zero rows is reported as a permission fault; the activity-log entry is appended only **after** the state change is confirmed, so history can never claim a transition that did not happen.
+
 ## Notes
 
 - **ADR-006 (rotation determinism)** is reinforced by the WP0 timezone fix: date-only rotation logic must not depend on the runtime timezone. This did not require a new ADR — it is an implementation correction under an existing accepted decision (see [`08-rotation-engine.md`](./08-rotation-engine.md)).

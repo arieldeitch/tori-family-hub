@@ -55,6 +55,20 @@ Behavioural verification with headless Chromium, after waiting for the worker to
 
 `?sw=off` remains unreliable as a general escape hatch and must not be relied on — see the note in [`PWA.md`](./PWA.md). The recovery that actually works when the app cannot boot is the self-healing offline page.
 
+## Verified state after WP5D — the real weekly chores experience
+
+Measured 2026-07-31 against the local Supabase stack. **Nothing hosted was touched.**
+
+- **The placeholder is gone.** `WeeklyChoresView` renders the real Sunday→Saturday family week from `task_instances`, `task_assignments` and `rotation_assignment_log`, with today marked, the assignee named in words as well as by avatar, status in words, and the stored rotation explanation shown verbatim.
+- **Completion persists and cannot lie.** The update uses `.select()`, so a zero-row write — an RLS refusal, or a row somebody else moved — is reported as a permission fault instead of a false tick (§7). The activity-log entry is appended only after the state change is confirmed. Reopening is a normal audited transition, never a silent deletion.
+- **Visibility is enforced by RLS alone.** The data layer does no client-side filtering: a child gets the family week minus `adult_only`, a guest gets only assigned work, because the policies return only those rows (ADR-041).
+- **Backward compatible with the hosted schema that exists today (ADR-044).** A capability probe asks once whether WP5B/WP5C are present. When they are not — which is the hosted project right now — the family sees a calm **"שדרוג הפיילוט ממתין"** screen, not an error and not the offline screen. One probe per session, memoised and mirrored into `sessionStorage`, so there is no request spam. The real view **switches itself on** the moment the migrations land: no code change, no redeploy.
+- **Every failure is classified** (ADR-042): permission, auth, schema, config, timeout, server and offline each get their own honest Hebrew message. A missing table, an RLS denial, an Auth failure and a server fault are **never** reported as offline — asserted by test.
+- **`bun run pilot:chores`** loads the three approved chores (ADR-036) with their rotation rules and staggered participant order. Guarded by the existing local guard, idempotent — verified converging 3→3 templates and 6→6 participants across three consecutive runs — and it writes **no** pilot data into a migration or `seed.sql` (ADR-034). There is deliberately no hosted counterpart yet.
+- **New pure domain module** `src/domain/week.ts`: Sunday→Saturday week maths on the UTC calendar, carrying the WP0 timezone rule forward so a chore "on Tuesday" cannot drift with the device's timezone. Regression-tested across UTC, Asia/Jerusalem, a negative offset and UTC+14.
+- **App tests 284 → 303 across 29 files.** typecheck 0 · lint 0 errors / 6 known warnings · build ✓ · `routes:check` ✓ · `check:client-secrets` ✓ · `check:pilot-privacy` ✓ · `check:bundle-endpoints` ✓ · `db:verify` ✓ (381 structural + 302 behavioural pgTAP + 34 integration + 29 pilot).
+- **No schema change.** WP5D needed none: WP5B and WP5C already carried everything the view reads.
+
 ## Verified state after WP5C — rotation foundation
 
 Measured 2026-07-31 against a freshly reset local stack.
