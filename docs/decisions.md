@@ -395,6 +395,18 @@ And it explains why `?sw=off` did not save anyone: the kill switch lives in appl
 
 **Everything else on the hosted stack was healthy throughout**: the origin serves the real app shell (`<html lang="he" dir="rtl">`, `<title>Tori — מרכז התפעול המשפחתי</title>`), all 11 JS assets return 200, the only hosts contacted are the app origin plus Google Fonts and Lovable's own CDN, **no loopback or local endpoint is ever requested**, and the hosted Supabase answers `/auth/v1/settings` 200 and REST `401 · 42501` with `Access-Control-Allow-Origin: https://home-flow-joy.lovable.app`.
 
+### Fix confirmed live, same day
+
+Lovable republished about 40 minutes after the merge. **A merge to `main` is not a deploy** — for that window the repository was fixed while every user was still served the broken worker. Re-running the identical test against the new build, with the worker again **activated and controlling**:
+
+- reload → **the app loads**; no offline screen. Second reload → same.
+- `/?sw=off` → works again.
+- visiting `/offline.html` **directly while online** → self-heals and lands on `/pilot/signin`.
+- a failed sign-in hit `https://nrfelnchbmofwrfajfai.supabase.co/auth/v1/token` (422) and rendered *"הפרטים שהוזנו אינם נכונים…"* — an auth failure reported as an auth failure. This is the second fault of this ADR, closed in production.
+- no loopback or local endpoint requested; no failed requests.
+
+Served artefacts moved from `NavigationRoute` ×1 / `PrecacheFallbackPlugin` ×0 to **×0 / ×1**, and the offline page now carries the self-heal script.
+
 ## Notes
 
 - **ADR-006 (rotation determinism)** is reinforced by the WP0 timezone fix: date-only rotation logic must not depend on the runtime timezone. This did not require a new ADR — it is an implementation correction under an existing accepted decision (see [`08-rotation-engine.md`](./08-rotation-engine.md)).
