@@ -166,6 +166,14 @@ comment on function public.prevent_task_activity_mutation() is
   'Blocks UPDATE and DELETE on task_activity_log for every role including service_role. History is written once. Correcting a mistake means appending a new entry, not editing the old one.';
 
 -- ---------------------------------------------------------------------------
+-- Task authorization helpers  (private schema, ADR-027)
+--
+-- Created AFTER the tables they read, at the bottom of this file. They are
+-- declared here in comment form only so the reading order stays: functions,
+-- tables, indexes, triggers, RLS, grants, policies.
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
 -- task_templates
 --
 -- The definition of a recurring chore. `recurrence_rule` is jsonb rather than a
@@ -244,7 +252,7 @@ comment on column public.task_templates.recurrence_rule is
 comment on column public.task_templates.missed_policy is
   'What happens to an occurrence nobody completed. Explicit per template, because PILOT_WEEKLY_CHORES.md §7 forbids a chore silently disappearing at the end of the day. The no-punishment rule of 08-rotation-engine.md holds whichever value is chosen.';
 comment on column public.task_templates.adult_only is
-  'Presentation and generation hint. NOT a security boundary: authority comes from household_members, and RLS never consults this column.';
+  'Hides the chore, its occurrences, its assignments and its history from CHILDREN — RLS does consult this column (ADR-040), implementing "a child does not see adults_only data" from 06-security-and-permissions.md. It is not a general authority mechanism: authority still comes from household_members, and this flag grants nobody anything. Safe as a boundary because only an owner or adult can write task_templates, so a child cannot clear it.';
 
 -- ---------------------------------------------------------------------------
 -- task_instances
@@ -610,6 +618,192 @@ create trigger task_activity_log_no_delete
   for each row execute function public.prevent_task_activity_mutation();
 
 -- ---------------------------------------------------------------------------
+-- Task authorization helpers
+--
+-- Same contract as the WP4 helpers (ADR-027):
+--   * SECURITY DEFINER, so a policy can consult a table the caller cannot read
+--     without recursing through that table's own policies.
+--   * STABLE — auth.uid() and now() are stable within a statement.
+--   * SET search_path = '' with every object fully schema-qualified.
+--   * NO user-id parameter. A caller can only ever ask about itself, so these
+--     cannot be used to probe what somebody else is assigned to.
+--   * They live in `private`, which anon cannot even use.
+--
+-- These exist because least privilege here is ROW-shaped, not table-shaped: a
+-- guest or service provider may see the chores assigned to them and nothing
+-- else, and that question cannot be answered from the row alone.
+-- ---------------------------------------------------------------------------
+
+-- Is the CALLER the live assignee of this occurrence?
+--
+-- `proposed` and `accepted` are the live statuses; `declined` and `reassigned`
+-- are history, and history must not keep granting access after somebody else
+-- has taken the turn. Standing is re-verified in full (active, unexpired, live
+-- household, active profile), so a suspended assignee loses access immediately
+-- without anybody having to rewrite their assignment rows.
+create or replace function private.is_assigned_to_task_instance(p_task_instance_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.task_assignments a
+    join public.household_members m
+      on m.household_id = a.household_id
+     and m.profile_id = a.assignee_profile_id
+    join public.member_profiles p
+      on p.id = m.profile_id
+     and p.household_id = m.household_id
+    join public.households h
+      on h.id = m.household_id
+    where a.task_instance_id = p_task_instance_id
+      and a.status in ('proposed', 'accepted')
+      and m.auth_user_id = (select auth.uid())
+      and m.status = 'active'
+      and (m.access_expires_at is null or m.access_expires_at > now())
+      and h.deleted_at is null
+      and p.is_active
+      and p.deleted_at is null
+  );
+$$;
+
+comment on function private.is_assigned_to_task_instance(uuid) is
+  'True when the CALLER holds the live assignment (proposed or accepted) for this occurrence, with full membership standing re-verified. Takes no user id: it can only answer for the caller. This is what gives a guest or service provider access to their own work and nothing else.';
+
+-- Is the CALLER the live assignee of any occurrence of this template?
+--
+-- A template is not assignable itself, so "scoped to me" means: work generated
+-- from it has actually been given to me. Soft-deleted occurrences do not count.
+create or replace function private.is_assigned_to_task_template(p_template_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.task_instances i
+    join public.task_assignments a
+      on a.task_instance_id = i.id
+    join public.household_members m
+      on m.household_id = a.household_id
+     and m.profile_id = a.assignee_profile_id
+    join public.member_profiles p
+      on p.id = m.profile_id
+     and p.household_id = m.household_id
+    join public.households h
+      on h.id = m.household_id
+    where i.template_id = p_template_id
+      and i.deleted_at is null
+      and a.status in ('proposed', 'accepted')
+      and m.auth_user_id = (select auth.uid())
+      and m.status = 'active'
+      and (m.access_expires_at is null or m.access_expires_at > now())
+      and h.deleted_at is null
+      and p.is_active
+      and p.deleted_at is null
+  );
+$$;
+
+comment on function private.is_assigned_to_task_template(uuid) is
+  'True when the CALLER is the live assignee of at least one live occurrence of this template. Lets a guest or service provider read the definition of work they have actually been given, without exposing the rest of the household chore list.';
+
+-- Is this template adult-only?
+--
+-- Kept as a helper rather than a join inside the policy so that reading
+-- task_templates from a task_instances policy cannot recurse through
+-- task_templates' own policies.
+--
+-- It answers ONLY about the caller's own household. A bare lookup would have
+-- been a one-bit oracle: anybody could ask whether an arbitrary template id is
+-- adult-only. The membership predicate is repeated here rather than delegated,
+-- because that is the invariant 080_wp4_helper_functions.sql enforces over every
+-- function in this schema.
+--
+-- Absent, foreign or unreadable ⇒ false. Safe, because the policies that call
+-- this always AND it with a role check in the same household, so a false answer
+-- can never widen access on its own. A one-off occurrence has no template and is
+-- likewise not adult-only.
+create or replace function private.is_task_template_adult_only(p_template_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select coalesce(
+    (select t.adult_only
+       from public.task_templates t
+       join public.household_members m
+         on m.household_id = t.household_id
+       join public.member_profiles p
+         on p.id = m.profile_id
+        and p.household_id = m.household_id
+       join public.households h
+         on h.id = m.household_id
+      where t.id = p_template_id
+        and m.auth_user_id = (select auth.uid())
+        and m.status = 'active'
+        and (m.access_expires_at is null or m.access_expires_at > now())
+        and h.deleted_at is null
+        and p.is_active
+        and p.deleted_at is null),
+    false
+  );
+$$;
+
+comment on function private.is_task_template_adult_only(uuid) is
+  'True when the template is flagged adult_only AND the caller holds active standing in its household. Scoped to the caller so it cannot be used to probe another household. Only an owner or adult can set the flag, because only they can write task_templates at all — which is what makes it safe to consult from a policy.';
+
+-- The same question, reached from an occurrence rather than a template.
+create or replace function private.is_task_instance_adult_only(p_task_instance_id uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select coalesce(
+    (select t.adult_only
+       from public.task_instances i
+       join public.task_templates t
+         on t.id = i.template_id
+       join public.household_members m
+         on m.household_id = i.household_id
+       join public.member_profiles p
+         on p.id = m.profile_id
+        and p.household_id = m.household_id
+       join public.households h
+         on h.id = m.household_id
+      where i.id = p_task_instance_id
+        and m.auth_user_id = (select auth.uid())
+        and m.status = 'active'
+        and (m.access_expires_at is null or m.access_expires_at > now())
+        and h.deleted_at is null
+        and p.is_active
+        and p.deleted_at is null),
+    false
+  );
+$$;
+
+comment on function private.is_task_instance_adult_only(uuid) is
+  'True when the occurrence came from an adult_only template AND the caller holds active standing in its household. Used by the task_assignments and task_activity_log policies, which hold an instance id rather than a template id.';
+
+revoke all on function private.is_assigned_to_task_instance(uuid) from public, anon;
+revoke all on function private.is_assigned_to_task_template(uuid) from public, anon;
+revoke all on function private.is_task_template_adult_only(uuid) from public, anon;
+revoke all on function private.is_task_instance_adult_only(uuid) from public, anon;
+
+grant execute on function private.is_assigned_to_task_instance(uuid) to authenticated, service_role;
+grant execute on function private.is_assigned_to_task_template(uuid) to authenticated, service_role;
+grant execute on function private.is_task_template_adult_only(uuid) to authenticated, service_role;
+grant execute on function private.is_task_instance_adult_only(uuid) to authenticated, service_role;
+
+-- ---------------------------------------------------------------------------
 -- Row Level Security
 --
 -- Enabled before any GRANT is issued, so there is no window in which the tables
@@ -716,6 +910,22 @@ grant select, insert, update, delete on public.task_activity_log to service_role
 -- adults keep seeing it, which is what makes both soft-delete and the ADR-007
 -- 48-hour restore reachable, and is exactly what the /templates/trash screen
 -- needs. Children, guests and service providers see live rows only.
+--
+-- THE ROLE SCOPE (ADR-040). Membership alone is NOT the read predicate. Every
+-- task SELECT policy asks which of three scopes the caller has, mirroring the
+-- split WP4 already applies to member_profiles and household_members:
+--
+--   owner / adult      the whole household, including the trash.
+--   child              the household week MINUS adult_only chores. A child must
+--                      see the family week including a sibling's chores
+--                      (PILOT_WEEKLY_CHORES.md §3 and §13), and must never see
+--                      adults_only data (06-security-and-permissions.md).
+--   guest / service    ONLY what is actually assigned to them. No household-wide
+--   provider           chore visibility at all.
+--
+-- adult_only therefore stops being a presentation hint and becomes a real
+-- boundary for children. That is safe because only an owner or adult can write
+-- task_templates at all, so a child cannot clear the flag to reveal a row.
 -- ---------------------------------------------------------------------------
 
 -- task_templates -----------------------------------------------------------
@@ -727,15 +937,29 @@ create policy task_templates_select_member
   using (
     private.is_active_household_member(household_id)
     and (
-      deleted_at is null
-      or private.has_household_role(
+      -- Owner/adult: everything, live and soft-deleted. The trash view.
+      private.has_household_role(
         household_id, array['owner', 'adult']::public.household_role[]
+      )
+      -- Child: the live family chore list, minus adult-only chores.
+      or (
+        deleted_at is null
+        and not adult_only
+        and private.has_household_role(
+          household_id, array['child']::public.household_role[]
+        )
+      )
+      -- Guest / service provider: only the definition of work actually given to
+      -- them. No role check is needed — being assigned IS the scope.
+      or (
+        deleted_at is null
+        and private.is_assigned_to_task_template(id)
       )
     )
   );
 
 comment on policy task_templates_select_member on public.task_templates is
-  'Any active member reads the live templates of their own household. Children see them too: a child must be able to see what the chore is. Soft-deleted templates stay visible to owners and adults only — that is the trash view, and without it neither soft-delete nor the ADR-007 restore would be possible, because Postgres applies SELECT policies to the new row of an UPDATE.';
+  'Scoped by role, not by membership alone (ADR-040). Owner/adult read every template including soft-deleted ones — that is the trash view, and without it neither soft-delete nor the ADR-007 restore would be possible, because Postgres applies SELECT policies to the new row of an UPDATE. A child reads the live chore list minus adult_only chores. A guest or service provider reads only templates they hold a live assignment from, so they never see the household chore list.';
 
 create policy task_templates_insert_adult
   on public.task_templates
@@ -778,15 +1002,28 @@ create policy task_instances_select_member
   using (
     private.is_active_household_member(household_id)
     and (
-      deleted_at is null
-      or private.has_household_role(
+      private.has_household_role(
         household_id, array['owner', 'adult']::public.household_role[]
+      )
+      -- A child sees the family week — both children's chores, which §13 makes
+      -- an acceptance criterion — minus anything adult-only.
+      or (
+        deleted_at is null
+        and not private.is_task_template_adult_only(template_id)
+        and private.has_household_role(
+          household_id, array['child']::public.household_role[]
+        )
+      )
+      -- A guest or service provider sees their own assigned occurrences only.
+      or (
+        deleted_at is null
+        and private.is_assigned_to_task_instance(id)
       )
     )
   );
 
 comment on policy task_instances_select_member on public.task_instances is
-  'Any active member reads the live occurrences of their own household. The pilot family view shows both children, so scoping reads per child would break the product (PILOT_WEEKLY_CHORES.md §13). Soft-deleted occurrences remain visible to owners and adults only, for the same reason as on task_templates.';
+  'Scoped by role (ADR-040). Owner/adult read every occurrence including soft-deleted ones. A child reads the whole family week — a sibling''s chores included, because PILOT_WEEKLY_CHORES.md §13 requires it — minus occurrences of adult_only templates. A guest or service provider reads only occurrences assigned to them. A one-off occurrence has no template and is therefore not adult-only.';
 
 create policy task_instances_insert_member
   on public.task_instances
@@ -794,34 +1031,67 @@ create policy task_instances_insert_member
   to authenticated
   with check (
     deleted_at is null
-    and private.is_active_household_member(household_id)
+    -- The family generates and quick-adds chores. A guest or service provider
+    -- does not: they would be creating a row they cannot then see, and adding
+    -- work to a household is not part of doing the work you were given.
+    and private.has_household_role(
+      household_id, array['owner', 'adult', 'child']::public.household_role[]
+    )
   );
 
 comment on policy task_instances_insert_member on public.task_instances is
-  'Any active member may generate or add an occurrence in their own household. Generation is idempotent, so a repeated attempt collides with task_instances_occurrence_key_unique rather than creating a duplicate.';
+  'Owner, adult or child may generate or quick-add an occurrence in their own household; a guest or service provider may not (ADR-040). Generation is idempotent, so a repeated attempt collides with task_instances_occurrence_key_unique rather than creating a duplicate.';
 
 create policy task_instances_update_member
   on public.task_instances
   for update
   to authenticated
-  using (private.is_active_household_member(household_id))
+  using (
+    private.is_active_household_member(household_id)
+    and (
+      private.has_household_role(
+        household_id, array['owner', 'adult']::public.household_role[]
+      )
+      or (
+        deleted_at is null
+        and not private.is_task_template_adult_only(template_id)
+        and private.has_household_role(
+          household_id, array['child']::public.household_role[]
+        )
+      )
+      or (
+        deleted_at is null
+        and private.is_assigned_to_task_instance(id)
+      )
+    )
+  )
   with check (
     private.is_active_household_member(household_id)
-    -- Completing and reopening are open to every member; REMOVING a chore from
-    -- the week is an owner/adult act. Stated here rather than left to the
+    -- Completing and reopening are open to everyone in scope; REMOVING a chore
+    -- from the week is an owner/adult act. Stated here rather than left to the
     -- SELECT policy, so a child attempting it gets a policy refusal instead of
     -- the confusing "new row violates row-level security policy" that the
     -- new-row SELECT check would otherwise produce.
     and (
-      deleted_at is null
-      or private.has_household_role(
+      private.has_household_role(
         household_id, array['owner', 'adult']::public.household_role[]
+      )
+      or (
+        deleted_at is null
+        and not private.is_task_template_adult_only(template_id)
+        and private.has_household_role(
+          household_id, array['child']::public.household_role[]
+        )
+      )
+      or (
+        deleted_at is null
+        and private.is_assigned_to_task_instance(id)
       )
     )
   );
 
 comment on policy task_instances_update_member on public.task_instances is
-  'Any active member may complete or reopen an occurrence in their own household; only an owner or adult may soft-delete or restore one. Whether a CHILD may undo their own completion is a product rule enforced above the database (PILOT_WEEKLY_CHORES.md §10.4), not a policy — every transition is logged either way. The immutability trigger still protects the snapshots.';
+  'Completion and reopening follow the same scope as reading (ADR-040): owner/adult anywhere in the household, a child on any non-adult-only occurrence of the family week, a guest or service provider only on occurrences assigned to them. Only an owner or adult may soft-delete or restore. Whether a CHILD may undo their own completion is a product rule enforced above the database (PILOT_WEEKLY_CHORES.md §10.4), not a policy — every transition is logged either way. The immutability trigger still protects the snapshots.';
 
 -- task_assignments ---------------------------------------------------------
 
@@ -829,10 +1099,28 @@ create policy task_assignments_select_member
   on public.task_assignments
   for select
   to authenticated
-  using (private.is_active_household_member(household_id));
+  using (
+    private.is_active_household_member(household_id)
+    and (
+      private.has_household_role(
+        household_id, array['owner', 'adult']::public.household_role[]
+      )
+      -- A child has to see whose turn it is, including a sibling's turn, but
+      -- not the assignment of an adult-only chore.
+      or (
+        not private.is_task_instance_adult_only(task_instance_id)
+        and private.has_household_role(
+          household_id, array['child']::public.household_role[]
+        )
+      )
+      -- A guest or service provider sees their OWN assignment rows only, and so
+      -- learns nothing about how the rest of the household is organised.
+      or assignee_profile_id = private.current_profile_id(household_id)
+    )
+  );
 
 comment on policy task_assignments_select_member on public.task_assignments is
-  'Any active member reads the assignments of their own household — a child has to be able to see whose turn it is.';
+  'Scoped by role (ADR-040). Owner/adult read every assignment in the household. A child reads the rotation, sibling turns included, minus adult-only chores. A guest or service provider reads only rows where they are themselves the assignee — matched on assignee_profile_id against private.current_profile_id, so history rows naming somebody else stay hidden.';
 
 create policy task_assignments_insert_adult
   on public.task_assignments
@@ -871,10 +1159,24 @@ create policy task_activity_log_select_member
   on public.task_activity_log
   for select
   to authenticated
-  using (private.is_active_household_member(household_id));
+  using (
+    private.is_active_household_member(household_id)
+    and (
+      private.has_household_role(
+        household_id, array['owner', 'adult']::public.household_role[]
+      )
+      or (
+        not private.is_task_instance_adult_only(task_instance_id)
+        and private.has_household_role(
+          household_id, array['child']::public.household_role[]
+        )
+      )
+      or private.is_assigned_to_task_instance(task_instance_id)
+    )
+  );
 
 comment on policy task_activity_log_select_member on public.task_activity_log is
-  'Any active member reads the history of their own household. Transparency is the point: the family should be able to see who did what.';
+  'Scoped by role (ADR-040), and always to the history of occurrences the caller can see in the first place. Owner/adult read the whole household history — transparency within the family is the point. A child reads the history of the family week minus adult-only chores. A guest or service provider reads the history of their own assigned occurrences only.';
 
 create policy task_activity_log_insert_member
   on public.task_activity_log
@@ -882,6 +1184,21 @@ create policy task_activity_log_insert_member
   to authenticated
   with check (
     private.is_active_household_member(household_id)
+    -- You may only write history about an occurrence you are entitled to act on.
+    and (
+      private.has_household_role(
+        household_id, array['owner', 'adult']::public.household_role[]
+      )
+      or (
+        not private.is_task_instance_adult_only(task_instance_id)
+        and private.has_household_role(
+          household_id, array['child']::public.household_role[]
+        )
+      )
+      or private.is_assigned_to_task_instance(task_instance_id)
+    )
+    -- And you may only attribute it to yourself, unless you are an adult acting
+    -- on a child's behalf.
     and (
       acting_profile_id is null
       or acting_profile_id = private.current_profile_id(household_id)
@@ -892,4 +1209,4 @@ create policy task_activity_log_insert_member
   );
 
 comment on policy task_activity_log_insert_member on public.task_activity_log is
-  'A member appends history for their own household, and may only attribute an entry to themselves — unless they are an owner or adult, who may act on behalf of a child (ADR-035). A child cannot forge an entry attributed to a sibling. There is no UPDATE or DELETE policy, and the trigger blocks both for every role.';
+  'Two independent conditions. First, the caller must be entitled to act on that occurrence at all — same scope as reading (ADR-040), so a guest cannot append history to a chore that is not theirs. Second, they may only attribute the entry to themselves unless they are an owner or adult, who may act on behalf of a child (ADR-035); a child cannot forge an entry attributed to a sibling. There is no UPDATE or DELETE policy, and the trigger blocks both for every role.';
