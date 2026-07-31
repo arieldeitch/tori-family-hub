@@ -12,6 +12,16 @@ Operational instructions for Claude Code working on Tori.
 6. [`todo.md`](./todo.md)
 7. [`CLAUDE_HANDOVER.md`](./CLAUDE_HANDOVER.md) and the `LOVABLE_*` docs — as-built implementation, not the PRD.
 
+## Repo state after WP5B (verified 2026-07-31)
+
+- **The first business-domain tables exist**, on `feat/wp5b-task-recurrence-foundation` and **not yet merged to `main`**: `task_templates`, `task_instances`, `task_assignments`, `task_activity_log`, plus eight enums, in `supabase/migrations/20260730120000_wp5b_task_recurrence_foundation.sql`. Structure, grants and the full policy set in one migration (ADR-023). **Not yet applied to the hosted pilot project.**
+- **Gates re-verified after the restart:** typecheck 0 · lint 0 errors / 7 warnings (6 shadcn + 1 pre-existing unused `eslint-disable` in `src/lib/pilot/runtimeConfig.ts:95`) · **app tests 210/210 across 24 files** · build ✓ · `routes:check` ✓ · `check:client-secrets` ✓ · `check:pilot-privacy` ✓ · `pilot:test:hosted-guard` 26/26 · **structural pgTAP 302/302 across 11 files** · **behavioural RLS pgTAP 211/211 across 8 files** · 34/34 integration · 29/29 pilot · `db:verify` ✓.
+- **Two traps found and fixed here, worth remembering** (ADR-039, ADR-040):
+  - A **generated column must be `IMMUTABLE`**, and `some_date::text` is only `STABLE` — it reads `DateStyle`. Postgres rejects the migration; had it not, the same day would have keyed two different ways in two sessions.
+  - **PostgreSQL applies SELECT policies to the NEW row of an UPDATE.** A row can never be updated into invisibility, so a `deleted_at is null` SELECT policy plus a client-writable `deleted_at` makes soft-delete impossible. Scope deleted-row visibility by role instead.
+- **Next is WP5C** — rotation foundation. `task_assignments.assigned_by_rule_id` is already present and deliberately has **no** foreign key until `rotation_rules` exists.
+- **Still no RPC, no task UI, no module wiring.** Every business module still uses the in-memory mocks.
+
 ## Repo state after WP4
 
 - WP0, WP1, WP2, the post-WP2 consistency pass, **WP3** and **WP4** are all merged to `main`.
@@ -33,7 +43,7 @@ Operational instructions for Claude Code working on Tori.
 
  The Family Pilot has a working local access slice: an environment-guarded idempotent bootstrap (`pilot:bootstrap` / `pilot:status` / `pilot:cleanup` / `pilot:test`), one authenticated adult identity, four member profiles, a local sign-in and a profile selector. It needed **no migration and no RLS change**.
 
-Next is **WP5B — Task and recurrence foundation**. No task or rotation table exists yet.
+**WP5B is complete** (see the section above) but not yet merged. Next is **WP5C — child rotation foundation**. No rotation table exists yet.
 
 WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are no longer immediately next.
 
@@ -45,6 +55,8 @@ WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are 
 - **Do not start a business module before Identity, Household, and RLS are stable.**
 - Every schema change requires a migration.
 - Every RLS change requires positive **and** negative tests.
+- A **generated column must be `IMMUTABLE`**. Never cast a date or timestamp to text inside one — that is `STABLE` and DateStyle-dependent (ADR-039).
+- Never combine a `deleted_at is null` SELECT policy with a client-writable `deleted_at`: Postgres checks SELECT policies against the UPDATE's new row, so soft-delete becomes impossible (ADR-040).
 - Authorization helpers live in `private`, are SECURITY DEFINER with `search_path = ''`, and **never take a user id** (ADR-027). Never add one to `public`.
 - Membership and invitation mutations are **RPC-only** (ADR-028). Never grant a client INSERT/UPDATE/DELETE on `household_members` or `household_invitations`.
 - The root `.env` is **tracked on purpose** and may contain **only** `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (ADR-038). `check:client-secrets` enforces that allowlist. Never add anything else to it; local overrides belong in the ignored `.env.local`.

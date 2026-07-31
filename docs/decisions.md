@@ -272,6 +272,40 @@ The repository is **public**, so the hosted project reference and publishable ke
 
 Nothing else changes: Lovable remains frontend-only, Supabase remains the exclusive backend, and no Lovable Cloud database exists (ADR-037).
 
+## ADR-039 — `occurrence_key` is built from immutable date parts, never a `::text` cast (WP5B, Accepted)
+
+`task_instances.occurrence_key` is a stored generated column, `template_id:YYYY-MM-DD`, and it is what makes recurrence generation idempotent: two clients generating the same (template, date) cannot disagree about the key, and the partial unique index turns a concurrent double-generation into a constraint violation the caller treats as a no-op.
+
+The obvious expression, `template_id::text || ':' || occurrence_date::text`, **cannot be used**. A generated column must be `IMMUTABLE`, and date-to-text is only `STABLE` — `date_out` reads the `DateStyle` GUC. PostgreSQL rejects the migration outright with `42P17 generation expression is not immutable`.
+
+That error is a gift. Had the cast been allowed, the same day would render `2026-08-03` under one session's `DateStyle` and `03/08/2026` under another, producing **two different keys for one occurrence** — precisely the disagreement the column exists to prevent, and a silent duplicate-chore bug rather than a loud failure.
+
+**Decision.** Build the date from `extract()` and `lpad()`, both immutable, so the key is ISO-8601 for every session regardless of `DateStyle`. Zero-padding is part of the contract: keys must compare lexicographically.
+
+A pgTAP test inserts under `DateStyle = 'SQL, DMY'` and asserts the ISO key, so the property is pinned rather than assumed.
+
+**Alternative rejected.** Dropping the column and making the partial unique index cover `(household_id, template_id, occurrence_date)` gives the same uniqueness guarantee, but loses the single readable identity that `ON CONFLICT` targeting, logs and debugging use. The column is cheap; the expression is the only subtle part, and it is now documented and tested.
+
+## ADR-040 — A soft-deleted task row stays visible to owners and adults (WP5B, Accepted)
+
+**PostgreSQL applies a table's SELECT policies to the NEW row of an UPDATE, not only to the old one.** A row therefore cannot be updated into invisibility. A SELECT policy of the form `deleted_at is null and is_active_household_member(...)` makes soft-deletion *impossible*: the UPDATE that sets `deleted_at` produces a row the caller may no longer see, and the statement fails with `new row violates row-level security policy`.
+
+The WP5B migration as first written had exactly this shape on `task_templates` and `task_instances` — it granted `deleted_at` on UPDATE and its policy comments promised soft-delete and restore, while the policies made both unreachable. Verified against a minimal two-policy probe table, not inferred.
+
+**Decision.** Scope soft-deleted visibility by role instead of hiding it from everyone:
+
+- **Owners and adults keep seeing soft-deleted templates and occurrences.** That *is* the trash view, it is what the existing `/templates/trash` route needs, and it is the only way the ADR-007 48-hour restore is reachable at all — you cannot restore a row you cannot select.
+- **Children, guests and service providers see live rows only.**
+- On `task_instances` the UPDATE policy's `WITH CHECK` states the owner/adult requirement for `deleted_at` explicitly. Completing and reopening stay open to every active member; **removing** a chore from the week is an owner/adult act. Stated in the policy so a child attempting it gets a clear refusal instead of the confusing new-row error.
+
+**This narrows nothing that was previously open**, and household isolation is untouched: every branch still derives standing from `auth.uid()` through the WP4 `private` helpers. Positive and negative tests cover both the adult trash/restore path and the non-adult refusal.
+
+**Consequence for future tables.** Any table combining a `deleted_at` SELECT filter with a client-writable `deleted_at` inherits this trap. Prefer this role-scoped shape, or move soft-deletion into an RPC.
+
+### Open question deferred to WP5D
+
+Task reads use `private.is_active_household_member`, which is **role-agnostic**: a guest or service provider with active membership currently reads the household's whole chore list. WP4 deliberately narrowed `member_profiles` so guests and service providers see only their own row, so the two surfaces are inconsistent. Left as authored rather than changed here — a service provider who performs chores may legitimately need the list, and narrowing it is a product decision, not a defect to infer. Pinned by an explicit test so the behaviour cannot drift unnoticed, and scheduled for WP5D. **The pilot household has no guest or service-provider profile, so nothing is exposed today.**
+
 ## Notes
 
 - **ADR-006 (rotation determinism)** is reinforced by the WP0 timezone fix: date-only rotation logic must not depend on the runtime timezone. This did not require a new ADR — it is an implementation correction under an existing accepted decision (see [`08-rotation-engine.md`](./08-rotation-engine.md)).

@@ -109,7 +109,14 @@ Each `src/domain/*.ts` module owns its state machine or engine:
 
 ## Tests
 
-162 tests across 19 files. Runs via `bun run test`. Covers domain rules, key repositories, several UI dialogs, the today-service integration, shift-engine timezone determinism (regression), and Supabase public-env validation (WP2).
+**210 app tests across 24 files.** Runs via `bun run test`. Covers domain rules, key repositories, several UI dialogs, the today-service integration, shift-engine timezone determinism (regression), Supabase public-env validation (WP2) and the tracked-`.env` allowlist (ADR-038).
+
+Database tests are separate and need Docker:
+
+- `bun run db:test:structure` — **302 structural pgTAP across 11 files** (schema, constraints, triggers, grants, policy catalog).
+- `bun run db:test:auth-suite` — **211 behavioural RLS pgTAP across 8 files** + **34 Auth-backed integration assertions**, with fixture setup and cleanup.
+- `bun run pilot:test` — 29 pilot bootstrap assertions.
+- `bun run db:verify` — runs the lot from a fresh reset.
 
 ## CI
 
@@ -178,7 +185,8 @@ Confirmed. In-memory only. `localStorage`/`IndexedDB` are **not** used as a fall
 
 ## Known issues
 
-- 6 ESLint `react-refresh/only-export-components` warnings in upstream shadcn files (`src/components/ui/*`). Intentional — not patching upstream. These are the only lint output; the WP0 `.gitattributes` (LF) fix cleared the Windows CRLF `prettier/prettier` noise.
+- 6 ESLint `react-refresh/only-export-components` warnings in upstream shadcn files (`src/components/ui/*`). Intentional — not patching upstream. The WP0 `.gitattributes` (LF) fix cleared the Windows CRLF `prettier/prettier` noise.
+- 1 further warning: an unused `eslint-disable no-new` directive at `src/lib/pilot/runtimeConfig.ts:95`, introduced by WP5A (`5ac99af`). Trivially fixable with `--fix`; left alone as out of scope for WP5B. **7 warnings, 0 errors** in total.
 - `peopleDirectory` alias table is a legacy bridge for transport ids; remove after seed regeneration.
 - No test covers refresh-persistence (there is none to test).
 - PWA `sw.js` is generated but still written to `dist/`, not the Nitro deploy dir (`.output/public`) in a local/CI build — see `LOVABLE_KNOWN_LIMITATIONS.md#pwa`. Precache manifest is correct (WP0); deploying the SW file is deferred until hosting is configured.

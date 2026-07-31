@@ -14,7 +14,8 @@ Prioritized future work. **Do not open several business modules in parallel befo
 - ✅ **WP5A hosted conversion — complete.** Lovable hosts the frontend; the dedicated non-production Supabase project is the only backend (ADR-037). Migrations applied and verified remotely, hosted bootstrap converged and idempotent, hosted Auth verified.
 - ✅ **Lovable published-environment fix — complete.** Tracked root `.env` with the two browser-public values, allowlist-enforced (ADR-038).
 - ⚠️ **Recommended follow-up:** disable signup on the hosted Supabase project. It is currently enabled, and the repository is public, so a stranger can create an Auth account. RLS gives such an account no data, but the pilot ships no signup flow, so the surface is unnecessary.
-- ▶️ **WP5B — Task and recurrence foundation — NEXT.** See [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md); approved schedules in ADR-036.
+- ✅ **WP5B — Task and recurrence foundation — complete** on `feat/wp5b-task-recurrence-foundation`, **not yet merged to `main` and not yet applied to the hosted pilot project.** Four tables, eight enums, deterministic `occurrence_key`, append-only activity log, full RLS with positive and negative tests (ADR-039, ADR-040). 302 structural + 211 behavioural pgTAP. No RPC, no UI, no module wiring.
+- ▶️ **WP5C — Child rotation foundation — NEXT.** See [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md); approved schedules and staggered cursors in ADR-036.
 - ⏸️ **WP4.5 — Identity RPCs — still required, no longer immediately next.**
 - ⏸️ **WP4.6 — Auth account deletion — still required and still BLOCKING before production onboarding or account deletion** (ADR-031). It does not block the non-production pilot, which ships no account management and no account deletion.
 
@@ -22,9 +23,9 @@ Prioritized future work. **Do not open several business modules in parallel befo
 
 1. **Family Pilot — Weekly Child Chores (NEXT).** Five mergeable packages; full definitions in [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md) §12 and the Architecture Approval Brief:
    - ✅ **WP5A** — pilot access and local bootstrap: **done** (ADR-034, ADR-035).
-   - **WP5B** — task and recurrence foundation: `task_templates`, `task_instances`, `task_assignments`, `task_activity_log`, deterministic occurrence keys, RLS with positive **and** negative tests.
-   - **WP5C** — child rotation foundation: `rotation_rules`, `rotation_members`, `rotation_assignment_log`, deterministic assignment reusing `shifts.v1`, persisted `algorithm_version` + `reason_code`, concurrency/idempotency tests.
-   - **WP5D** — weekly chores UI and completion: Sunday→Saturday family and per-child views, completion with confirmed persistence and visible rollback, accessibility and RTL.
+   - ✅ **WP5B** — task and recurrence foundation: **done** (ADR-039, ADR-040). `task_templates`, `task_instances`, `task_assignments`, `task_activity_log`, deterministic occurrence keys, RLS with positive **and** negative tests.
+   - **WP5C (NEXT)** — child rotation foundation: `rotation_rules`, `rotation_members`, `rotation_assignment_log`, deterministic assignment reusing `shifts.v1`, persisted `algorithm_version` + `reason_code`, concurrency/idempotency tests. Add the deferred foreign key from `task_assignments.assigned_by_rule_id` to `rotation_rules` in the same migration, and remove the WP5C `hasnt_table` guards from `supabase/tests/database/010_schema_objects.sql`.
+   - **WP5D** — weekly chores UI and completion: Sunday→Saturday family and per-child views, completion with confirmed persistence and visible rollback, accessibility and RTL. **Also resolve the ADR-040 open question**: task reads currently use the role-agnostic `is_active_household_member`, so a guest or service provider would read the whole chore list, unlike WP4's narrowed `member_profiles` reads.
    - **WP5E** — quick add ("הוספת מטלה") and family UAT with the real household.
 2. **WP4.5 — Identity RPCs.** Every membership and invitation mutation, as authorized, audited, atomic `SECURITY DEFINER` RPCs with a fixed safe `search_path` (ADR-028):
    - Household creation (household + first owner in one transaction).
