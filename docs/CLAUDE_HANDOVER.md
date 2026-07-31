@@ -113,8 +113,8 @@ Each `src/domain/*.ts` module owns its state machine or engine:
 
 Database tests are separate and need Docker:
 
-- `bun run db:test:structure` — **302 structural pgTAP across 11 files** (schema, constraints, triggers, grants, policy catalog).
-- `bun run db:test:auth-suite` — **211 behavioural RLS pgTAP across 8 files** + **34 Auth-backed integration assertions**, with fixture setup and cleanup.
+- `bun run db:test:structure` — **310 structural pgTAP across 11 files** (schema, constraints, triggers, grants, policy catalog, helper contract).
+- `bun run db:test:auth-suite` — **261 behavioural RLS pgTAP across 9 files** + **34 Auth-backed integration assertions**, with fixture setup and cleanup.
 - `bun run pilot:test` — 29 pilot bootstrap assertions.
 - `bun run db:verify` — runs the lot from a fresh reset.
 
@@ -185,8 +185,7 @@ Confirmed. In-memory only. `localStorage`/`IndexedDB` are **not** used as a fall
 
 ## Known issues
 
-- 6 ESLint `react-refresh/only-export-components` warnings in upstream shadcn files (`src/components/ui/*`). Intentional — not patching upstream. The WP0 `.gitattributes` (LF) fix cleared the Windows CRLF `prettier/prettier` noise.
-- 1 further warning: an unused `eslint-disable no-new` directive at `src/lib/pilot/runtimeConfig.ts:95`, introduced by WP5A (`5ac99af`). Trivially fixable with `--fix`; left alone as out of scope for WP5B. **7 warnings, 0 errors** in total.
+- 6 ESLint `react-refresh/only-export-components` warnings in upstream shadcn files (`src/components/ui/*`). Intentional — not patching upstream. The WP0 `.gitattributes` (LF) fix cleared the Windows CRLF `prettier/prettier` noise. **6 warnings, 0 errors** in total — the stray WP5A `eslint-disable no-new` directive in `src/lib/pilot/runtimeConfig.ts` has been removed.
 - `peopleDirectory` alias table is a legacy bridge for transport ids; remove after seed regeneration.
 - No test covers refresh-persistence (there is none to test).
 - PWA `sw.js` is generated but still written to `dist/`, not the Nitro deploy dir (`.output/public`) in a local/CI build — see `LOVABLE_KNOWN_LIMITATIONS.md#pwa`. Precache manifest is correct (WP0); deploying the SW file is deferred until hosting is configured.

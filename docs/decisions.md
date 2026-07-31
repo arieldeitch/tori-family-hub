@@ -302,9 +302,40 @@ The WP5B migration as first written had exactly this shape on `task_templates` a
 
 **Consequence for future tables.** Any table combining a `deleted_at` SELECT filter with a client-writable `deleted_at` inherits this trap. Prefer this role-scoped shape, or move soft-deletion into an RPC.
 
-### Open question deferred to WP5D
+## ADR-041 — Task access is scoped by role, not by membership (WP5B, Accepted)
 
-Task reads use `private.is_active_household_member`, which is **role-agnostic**: a guest or service provider with active membership currently reads the household's whole chore list. WP4 deliberately narrowed `member_profiles` so guests and service providers see only their own row, so the two surfaces are inconsistent. Left as authored rather than changed here — a service provider who performs chores may legitimately need the list, and narrowing it is a product decision, not a defect to infer. Pinned by an explicit test so the behaviour cannot drift unnoticed, and scheduled for WP5D. **The pilot household has no guest or service-provider profile, so nothing is exposed today.**
+Supersedes the open question ADR-040 first recorded. The initial WP5B policies used `private.is_active_household_member` alone, which is **role-agnostic**: any active member — including a guest or a service provider — read the household's entire chore list, its assignments and its history. WP4 had already rejected that shape for identity, narrowing `member_profiles` and `household_members` so a guest or service provider sees **only their own row**. Tasks were inconsistent with the rest of the schema.
+
+**Decision.** Membership is the outer gate; the read predicate is the caller's **role**, in three scopes:
+
+| Scope | `task_templates` | `task_instances` | `task_assignments` | `task_activity_log` |
+| --- | --- | --- | --- | --- |
+| **owner / adult** | all, **including soft-deleted** (trash) | all, including soft-deleted | all | all |
+| **child** | live, **excluding `adult_only`** | live family week, excluding occurrences of `adult_only` templates | all, excluding adult-only chores | history of what they can see |
+| **guest / service provider** | only templates they hold a **live assignment** from | only occurrences **assigned to them** | only rows where **they are the assignee** | only history of their own assigned occurrences |
+
+Writes follow the same scope: owner/adult define templates and assignments; owner/adult/child may generate or quick-add an occurrence and complete one in scope; a guest or service provider may complete **only** the occurrence assigned to them, and may add nothing. Soft-delete and restore stay owner/adult everywhere. No client holds `DELETE` on anything.
+
+### Why the child keeps the family week
+
+A child is **not** narrowed to their own assigned chores. `PILOT_WEEKLY_CHORES.md` §3 and §13 make "the family view shows both children's chores" an acceptance criterion, so per-child read scoping would break the approved product. The child's correct scope is the family week **minus adult-only chores**, which is exactly what `06-security-and-permissions.md` already required: *"a child does not see `adults_only` or `restricted` data."*
+
+### `adult_only` becomes a real boundary
+
+It was documented as a presentation hint that "RLS never consults". It is now enforced for children. That is safe: only an owner or adult can write `task_templates` at all, so a child cannot clear the flag to reveal a row. It is **not** a general secrecy flag — a guest or service provider explicitly assigned an adult-only chore can still see and complete it, because they have to do the work.
+
+### Implementation
+
+Four new `private` helpers (ADR-027 contract — SECURITY DEFINER, STABLE, `search_path = ''`, exactly one uuid argument, no user id): `is_assigned_to_task_instance`, `is_assigned_to_task_template`, `is_task_template_adult_only`, `is_task_instance_adult_only`.
+
+Two properties worth keeping in mind:
+
+- **Access follows the LIVE assignment.** Only `proposed` and `accepted` count. Once an assignment is `reassigned` or `declined` the former assignee loses access to the chore immediately, while still seeing their own historical assignment row — their record, not somebody else's.
+- **Standing is re-verified inside every helper**, so a suspended or expired assignee loses access at once without anybody rewriting assignment rows. The `adult_only` lookups are scoped to the caller's household for the same reason: a bare lookup would have been a one-bit oracle over arbitrary ids. `080_wp4_helper_functions.sql` enforces this contract over **every** function in the schema, which is what caught it.
+
+**No pilot impact.** The pilot household is two adults and two children, with no guest or service-provider profile, so nothing that worked before stops working.
+
+Covered by 48 dedicated behavioural tests in `supabase/tests/rls/180_task_role_scope_rls.sql`, positive and negative for every role.
 
 ## Notes
 
