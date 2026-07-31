@@ -1,7 +1,7 @@
 -- WP4 — policy catalog and GRANT matrix.
 -- Structural only: runs while the business tables are empty, needs no fixtures.
 begin;
-select plan(53);
+select plan(54);
 
 -- Exact policy sets -------------------------------------------------------
 select policies_are('public', 'households',
@@ -35,11 +35,23 @@ select is(
       and cmd <> 'SELECT'),
   0::bigint,
   'no INSERT/UPDATE/DELETE policy exists on household_members or household_invitations');
+-- Scoped to the WP3 identity tables. WP5B adds INSERT policies to the task
+-- tables by design; identity remains unwritable by clients (ADR-028), and the
+-- absence of a DELETE policy anywhere at all is asserted separately below.
 select is(
   (select count(*) from pg_policies
-    where schemaname = 'public' and cmd in ('INSERT', 'DELETE')),
+    where schemaname = 'public'
+      and tablename in ('households', 'member_profiles', 'household_members', 'household_invitations')
+      and cmd in ('INSERT', 'DELETE')),
   0::bigint,
-  'no INSERT or DELETE policy exists on any WP3 table');
+  'no INSERT or DELETE policy exists on any WP3 identity table');
+
+-- Nothing in the schema may be physically deleted by a client: every table
+-- either soft-deletes or is append-only.
+select is(
+  (select count(*) from pg_policies where schemaname = 'public' and cmd = 'DELETE'),
+  0::bigint,
+  'no DELETE policy exists on any public table — clients never hard-delete');
 
 -- Every policy targets `authenticated` only, never PUBLIC or anon.
 select is(
@@ -61,15 +73,26 @@ select is(
   0::bigint,
   'no policy expression references the household_members table directly — recursion is impossible');
 
--- Every policy expression routes through a private helper.
+-- Every policy routes through a private helper. An INSERT policy has no USING
+-- clause at all (polqual is NULL), so the assertion looks at whichever
+-- expressions the policy actually has and requires every one of them to derive
+-- standing from auth.uid() through the helpers — never from a client-supplied
+-- household_id.
 select is(
   (select count(*) from pg_policy p
     join pg_class c on c.oid = p.polrelid
     join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'public'
-      and coalesce(pg_get_expr(p.polqual, p.polrelid), '') not like '%private.%'),
+      and (
+        (p.polqual is not null
+          and pg_get_expr(p.polqual, p.polrelid) not like '%private.%')
+        or (p.polwithcheck is not null
+          and pg_get_expr(p.polwithcheck, p.polrelid) not like '%private.%')
+        -- A policy with neither expression would be unconditional.
+        or (p.polqual is null and p.polwithcheck is null)
+      )),
   0::bigint,
-  'every policy USING expression calls a private authorization helper');
+  'every policy expression — USING and WITH CHECK — calls a private authorization helper');
 
 -- anon gets nothing at all --------------------------------------------------
 select table_privs_are('public', 'households', 'anon', array[]::text[],
