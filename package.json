@@ -27,6 +27,7 @@
     "db:test:auth-suite": "bun scripts/db-auth-suite.ts",
     "db:fixtures": "bun scripts/db-auth-fixtures.ts",
     "check:client-secrets": "bun scripts/check-client-secrets.ts",
+    "check:bundle-endpoints": "bun scripts/check-bundle-endpoints.ts",
     "check:pilot-privacy": "bun scripts/check-pilot-privacy.ts",
     "pilot:bootstrap": "bun scripts/pilot-bootstrap.ts",
     "pilot:status": "bun scripts/pilot-status.ts",
