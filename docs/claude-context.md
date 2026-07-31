@@ -12,6 +12,19 @@ Operational instructions for Claude Code working on Tori.
 6. [`todo.md`](./todo.md)
 7. [`CLAUDE_HANDOVER.md`](./CLAUDE_HANDOVER.md) and the `LOVABLE_*` docs — as-built implementation, not the PRD.
 
+## Repo state after WP5B (verified 2026-07-31)
+
+- **The first business-domain tables exist** and are merged to `main` (PR #12, `b2834b8`): `task_templates`, `task_instances`, `task_assignments`, `task_activity_log`, plus eight enums, in `supabase/migrations/20260730120000_wp5b_task_recurrence_foundation.sql`. Structure, grants and the full policy set in one migration (ADR-023). **Not yet applied to the hosted pilot project.**
+- **Task access is scoped by ROLE, not by membership** (ADR-041). owner/adult → the whole household including the trash · child → the family week minus `adult_only` chores · guest/service_provider → **only what is assigned to them**, and they cannot add chores at all. Access follows the **live** assignment (`proposed`/`accepted`), and every helper re-verifies standing, so a retired assignment or an expired membership revokes access at once. Canonical matrix: `06-security-and-permissions.md`.
+- **Seven `private` helpers** now: three identity (WP4) + four task-scope (WP5B). `080_wp4_helper_functions.sql` holds every one of them to the ADR-027 contract.
+- **Gates re-verified after the restart:** typecheck 0 · lint 0 errors / 6 warnings (the known shadcn ones) · **app tests 210/210 across 24 files** · build ✓ · `routes:check` ✓ · `check:client-secrets` ✓ · `check:pilot-privacy` ✓ · `pilot:test:hosted-guard` 26/26 · **structural pgTAP 310/310 across 11 files** · **behavioural RLS pgTAP 261/261 across 9 files** · 34/34 integration · 29/29 pilot · `db:verify` ✓.
+- **Three traps found and fixed here, worth remembering** (ADR-039, ADR-040, ADR-041):
+  - A **generated column must be `IMMUTABLE`**, and `some_date::text` is only `STABLE` — it reads `DateStyle`. Postgres rejects the migration; had it not, the same day would have keyed two different ways in two sessions.
+  - **PostgreSQL applies SELECT policies to the NEW row of an UPDATE.** A row can never be updated into invisibility, so a `deleted_at is null` SELECT policy plus a client-writable `deleted_at` makes soft-delete impossible. Scope deleted-row visibility by role instead.
+  - **`is_active_household_member` alone is not a read predicate for a business table.** It is role-agnostic, so a guest or service provider silently gains household-wide visibility. Scope by role.
+- **Next is WP5C** — rotation foundation. `task_assignments.assigned_by_rule_id` is already present and deliberately has **no** foreign key until `rotation_rules` exists.
+- **Still no RPC, no task UI, no module wiring.** Every business module still uses the in-memory mocks.
+
 ## Repo state (verified 2026-07-30)
 
 - WP0, WP1, WP2, the post-WP2 consistency pass, **WP3**, **WP4** and **WP5A** (including the hosted conversion) are merged to `main`.
@@ -45,7 +58,7 @@ Operational instructions for Claude Code working on Tori.
 
  The Family Pilot has a working access slice: an environment-guarded idempotent bootstrap (`pilot:bootstrap` / `pilot:status` / `pilot:cleanup` / `pilot:test`, plus the hosted `pilot:bootstrap:hosted` / `pilot:status:hosted`), one authenticated adult identity, four member profiles, sign-in and a profile selector. It needed **no migration and no RLS change**.
 
-**ADR-038 is merged** (PR #10 / `b9c603b`), so a published build from `main` configures itself. The current work is **WP5B — Task and recurrence foundation**.
+**ADR-038 is merged** (PR #10 / `b9c603b`), so a published build from `main` configures itself. **WP5B is complete and merged** (PR #12 / `b2834b8`); see the section above. Next is **WP5C — child rotation foundation**. No rotation table exists yet.
 
 ⚠️ **Signup is still enabled on the hosted pilot project** and the repository is public. RLS means such an account reads nothing, but the surface is unnecessary. It cannot be closed from this machine — see the entry above.
 
@@ -59,6 +72,10 @@ WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are 
 - **Do not start a business module before Identity, Household, and RLS are stable.**
 - Every schema change requires a migration.
 - Every RLS change requires positive **and** negative tests.
+- A **generated column must be `IMMUTABLE`**. Never cast a date or timestamp to text inside one — that is `STABLE` and DateStyle-dependent (ADR-039).
+- Never combine a `deleted_at is null` SELECT policy with a client-writable `deleted_at`: Postgres checks SELECT policies against the UPDATE's new row, so soft-delete becomes impossible (ADR-040).
+- **Never make membership the whole read predicate on a business table.** Scope by role, or guests and service providers get household-wide visibility (ADR-041).
+- Every `private` helper must re-derive standing from `auth.uid()` — including one that only looks up a flag, or it becomes an oracle over arbitrary ids. `080_wp4_helper_functions.sql` enforces this schema-wide.
 - Authorization helpers live in `private`, are SECURITY DEFINER with `search_path = ''`, and **never take a user id** (ADR-027). Never add one to `public`.
 - Membership and invitation mutations are **RPC-only** (ADR-028). Never grant a client INSERT/UPDATE/DELETE on `household_members` or `household_invitations`.
 - The root `.env` is **tracked on purpose** and may contain **only** `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (ADR-038). `check:client-secrets` enforces that allowlist. Never add anything else to it; local overrides belong in the ignored `.env.local`.

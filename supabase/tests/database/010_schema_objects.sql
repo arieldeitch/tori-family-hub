@@ -1,6 +1,6 @@
 -- WP3 — expected enums, tables, columns, defaults and nullability exist.
 begin;
-select plan(32);
+select plan(34);
 
 -- Enums -------------------------------------------------------------------
 select has_type('public', 'household_role', 'household_role enum exists');
@@ -26,8 +26,16 @@ select has_table('public', 'household_invitations', 'household_invitations exist
 -- WP3 must not create business-module tables.
 select hasnt_table('public', 'user_roles',
   'no user_roles table: role lives on household_members (D2)');
-select hasnt_table('public', 'task_instances',
-  'no business-module tables in WP3');
+-- The WP5B task tables now exist and are asserted in 090; scope discipline is
+-- kept by proving the NEXT package has not leaked in early. rotation_rules is
+-- WP5C, and task_assignments.assigned_by_rule_id deliberately has no FK until
+-- it arrives.
+select hasnt_table('public', 'rotation_rules',
+  'no rotation_rules table: the rotation engine is WP5C, not WP5B');
+select hasnt_table('public', 'rotation_members',
+  'no rotation_members table: the rotation engine is WP5C, not WP5B');
+select hasnt_table('public', 'rotation_assignment_log',
+  'no rotation_assignment_log table: the rotation engine is WP5C, not WP5B');
 
 -- Columns -----------------------------------------------------------------
 select columns_are('public', 'households', array[
