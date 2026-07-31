@@ -113,6 +113,8 @@ Each `src/domain/*.ts` module owns its state machine or engine:
 
 **210 app tests across 24 files.** Runs via `bun run test`. Covers domain rules, key repositories, several UI dialogs, the today-service integration, shift-engine timezone determinism (regression), Supabase public-env validation (WP2) and the tracked-`.env` allowlist (ADR-038).
 
+**303 app tests across 29 files** after WP5D, which added the weekly chores view, the backend capability probe (ADR-044) and the pure `src/domain/week.ts` week maths.
+
 Database tests are separate and need Docker:
 
 - `bun run db:test:structure` — **310 structural pgTAP across 11 files** (schema, constraints, triggers, grants, policy catalog, helper contract).

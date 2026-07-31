@@ -3,14 +3,13 @@
 // Confirms the household loaded under RLS and hosts the profile selector. The
 // weekly chores view itself is WP5D and is deliberately not built here.
 import { useEffect, useMemo, useState } from "react";
-import { CalendarRange, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-  PermissionDeniedState,
-} from "@/components/design-system";
+import { ErrorState, LoadingState, PermissionDeniedState } from "@/components/design-system";
+import { useSchemaCapability } from "@/lib/pilot/useSchemaCapability";
+import { useWeeklyChores } from "@/lib/pilot/useWeeklyChores";
+import { PilotUpgradePendingState } from "./PilotUpgradePendingState";
+import { WeeklyChoresView } from "./WeeklyChoresView";
 import {
   readCachedPerspectiveId,
   resolveSelectedPerspectiveProfile,
@@ -36,6 +35,13 @@ export function PilotLandingScreen({
   storage,
 }: PilotLandingScreenProps) {
   const { status, household, profiles, failure, reload } = householdState;
+
+  // Ask once whether the backend is new enough, then load the week only if it is.
+  const capability = useSchemaCapability(status === "ready");
+  const weekly = useWeeklyChores({
+    enabled: status === "ready" && capability.status === "ready",
+    householdId: household?.id ?? null,
+  });
 
   const resolvedStorage = useMemo<Pick<Storage, "getItem" | "setItem"> | null>(() => {
     if (storage) return storage;
@@ -126,15 +132,37 @@ export function PilotLandingScreen({
             />
 
             <div className="mt-6">
-              <EmptyState
-                icon={<CalendarRange className="h-8 w-8" aria-hidden="true" />}
-                title="תצוגת המטלות השבועית עדיין לא נבנתה"
-                description={
-                  selectedPerspectiveProfile
-                    ? `כשהתצוגה תיבנה, כאן יופיע השבוע של ${selectedPerspectiveProfile.displayName} מיום ראשון עד שבת.`
-                    : "כאן תופיע תצוגת השבוע מיום ראשון עד שבת."
-                }
-              />
+              {/*
+                The backend may legitimately be older than this build: WP5B/WP5C
+                are merged here but applying them to the hosted project is a
+                separate approval-gated step. Until then the family gets a calm
+                upgrade-pending screen instead of an error, and the real view
+                switches itself on the moment the tables appear — no redeploy.
+              */}
+              {capability.status === "checking" ? (
+                <LoadingState title="בודק את מצב השרת…" />
+              ) : capability.status === "upgrade_pending" ? (
+                <PilotUpgradePendingState
+                  onCheckAgain={capability.checkAgain}
+                  checking={capability.checking}
+                />
+              ) : capability.status === "error" ? (
+                <ErrorState
+                  title={capability.failure?.message ?? "לא הצלחנו לבדוק את מצב השרת"}
+                  description={capability.failure?.hint ?? "נסו שוב בעוד רגע."}
+                  action={
+                    <Button variant="outline" className="min-h-11" onClick={capability.checkAgain}>
+                      נסו שוב
+                    </Button>
+                  }
+                />
+              ) : (
+                <WeeklyChoresView
+                  weekly={weekly}
+                  profiles={profiles}
+                  actingProfile={selectedPerspectiveProfile}
+                />
+              )}
             </div>
 
             <p className="mt-4 text-center text-xs text-muted-foreground">
