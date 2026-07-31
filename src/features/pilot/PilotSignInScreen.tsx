@@ -8,9 +8,10 @@ import { Loader2, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/design-system";
+import type { ClassifiedError } from "@/lib/errors/classifyError";
 
 export interface PilotSignInScreenProps {
-  onSignIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  onSignIn: (email: string, password: string) => Promise<{ failure: ClassifiedError | null }>;
   /** Prefilled for the local pilot; still editable. */
   defaultEmail?: string;
 }
@@ -18,24 +19,26 @@ export interface PilotSignInScreenProps {
 export function PilotSignInScreen({ onSignIn, defaultEmail = "" }: PilotSignInScreenProps) {
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ClassifiedError | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     if (submitting) return;
     setSubmitting(true);
-    setError(null);
+    setFailure(null);
 
     const result = await onSignIn(email.trim(), password);
-    if (result.error) {
-      // A generic, non-enumerating message — never echo the credential.
-      setError("הפרטים שהוזנו אינם נכונים. בדקו את כתובת הדוא״ל והסיסמה ונסו שוב.");
-      setSubmitting(false);
-      return;
-    }
+    // Name the actual fault. A wrong password and a server with the Email
+    // provider switched off are different problems, and only one of them is
+    // something the person at the keyboard can do anything about. The message is
+    // still non-enumerating: it never reveals whether the ADDRESS exists, and it
+    // never echoes the credential.
+    setFailure(result.failure);
     setSubmitting(false);
   }
+
+  const error = failure ? `${failure.message}. ${failure.hint}` : null;
 
   return (
     <main

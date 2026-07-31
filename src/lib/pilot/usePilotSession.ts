@@ -14,6 +14,7 @@
 // instead of rendering a blank page.
 import { useCallback, useEffect, useState } from "react";
 import { getSupabaseClient } from "@/infrastructure/supabase";
+import { classifyError, describeForLog, type ClassifiedError } from "@/lib/errors/classifyError";
 import { readPilotRuntimeConfig, type PilotRuntimeConfigError } from "./runtimeConfig";
 
 export interface AuthenticatedActor {
@@ -29,7 +30,13 @@ export interface PilotSessionState {
   authenticatedActor: AuthenticatedActor | null;
   /** Present only when status is "unconfigured". Names only, never values. */
   configError: PilotRuntimeConfigError | null;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  /**
+   * Returns a CLASSIFIED failure, never a raw driver string. The sign-in screen
+   * used to render one hard-coded "wrong credentials" message for every failure,
+   * so a server with the Email provider switched off told the family their
+   * password was wrong — a fault they could never fix by retrying (ADR-042).
+   */
+  signIn: (email: string, password: string) => Promise<{ failure: ClassifiedError | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -87,10 +94,21 @@ export function usePilotSession(): PilotSessionState {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const config = readPilotRuntimeConfig();
-    if (!config.ok) return { error: config.message };
-    const { error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
-    // Surface a message, never the raw credential or token.
-    return { error: error ? error.message : null };
+    if (!config.ok) {
+      return { failure: classifyError({ error: { code: "MISSING_RUNTIME_CONFIG" } }) };
+    }
+    try {
+      const { error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
+      if (!error) return { failure: null };
+      const failure = classifyError({ error, status: error.status ?? null });
+      // Kind and code only — never the address, the password or a token.
+      console.warn(describeForLog(failure));
+      return { failure };
+    } catch (err: unknown) {
+      const failure = classifyError({ error: err });
+      console.warn(describeForLog(failure));
+      return { failure };
+    }
   }, []);
 
   const signOut = useCallback(async () => {

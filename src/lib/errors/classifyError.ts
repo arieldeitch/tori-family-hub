@@ -15,6 +15,8 @@ export type ErrorKind =
   | "network" // transport-level failure while apparently online
   | "timeout" // the request took too long
   | "auth" // not signed in / session expired (401)
+  | "invalid_credentials" // the email or password really is wrong
+  | "auth_disabled" // the server has the sign-in method switched OFF
   | "permission" // signed in, but not allowed (403 / RLS)
   | "missing_schema" // table, view or RPC does not exist (deploy skew)
   | "config" // the app was not given its runtime configuration
@@ -55,6 +57,19 @@ const MESSAGES: Record<ErrorKind, { message: string; hint: string; retryable: bo
   auth: {
     message: "ההתחברות פגה",
     hint: "יש להתחבר מחדש כדי להמשיך.",
+    retryable: false,
+  },
+  invalid_credentials: {
+    message: "הפרטים שהוזנו אינם נכונים",
+    hint: "בדקו את כתובת הדוא״ל והסיסמה ונסו שוב.",
+    retryable: true,
+  },
+  // Telling somebody their password is wrong when the server has the sign-in
+  // method switched off is the worst kind of wrong answer: they will try the
+  // password forever and never find the fault, because the fault is not theirs.
+  auth_disabled: {
+    message: "הכניסה עם דוא״ל מושבתת בשרת",
+    hint: "זו תקלת הגדרה בפרויקט Supabase, לא סיסמה שגויה. יש להפעיל את ספק ה-Email בהגדרות האימות.",
     retryable: false,
   },
   permission: {
@@ -167,7 +182,25 @@ export function classifyError({ error, status, online }: ClassifyInput = {}): Cl
     return build("timeout", "timeout_message");
   }
 
-  // 4. Explicit HTTP status wins over message sniffing.
+  // 4. A sign-in method the server has switched off. GoTrue reports this as 422
+  //    with error_code `email_provider_disabled`, and it is returned for EVERY
+  //    address — an existing, confirmed account included — so it must never be
+  //    reported as a credential problem.
+  const errorCode =
+    typeof (err as { error_code?: unknown }).error_code === "string"
+      ? (err as { error_code: string }).error_code
+      : "";
+  if (
+    code === "email_provider_disabled" ||
+    errorCode === "email_provider_disabled" ||
+    lower.includes("email logins are disabled") ||
+    lower.includes("signups not allowed") ||
+    code === "email_provider_not_enabled"
+  ) {
+    return build("auth_disabled", "email_provider_disabled");
+  }
+
+  // 5. Explicit HTTP status wins over message sniffing.
   if (httpStatus !== null) {
     if (httpStatus === 401) return build("auth", "http_401");
     if (httpStatus === 403) {
@@ -187,9 +220,13 @@ export function classifyError({ error, status, online }: ClassifyInput = {}): Cl
   if (MISSING_SCHEMA_CODES.has(code)) return build("missing_schema", `pg_${code}`);
   if (PERMISSION_CODES.has(code)) return build("permission", `pg_${code}`);
 
-  // 6. Auth phrasing from GoTrue, which does not always carry a status.
+  // 7. Auth phrasing from GoTrue, which does not always carry a status. A wrong
+  //    email/password is distinct from an expired session: only the first is the
+  //    person's own doing, and only the first is worth retrying.
+  if (code === "invalid_credentials" || lower.includes("invalid login credentials")) {
+    return build("invalid_credentials", "invalid_credentials");
+  }
   if (
-    lower.includes("invalid login credentials") ||
     lower.includes("jwt expired") ||
     lower.includes("invalid claim") ||
     lower.includes("not authenticated") ||
