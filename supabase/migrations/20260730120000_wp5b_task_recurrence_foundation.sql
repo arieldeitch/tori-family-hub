@@ -274,10 +274,21 @@ create table public.task_instances (
   -- A one-off task (template_id IS NULL) is excluded from the uniqueness rule
   -- via the partial index, because two distinct one-off chores on the same day
   -- are perfectly legitimate.
+  --
+  -- The date is formatted from extracted parts rather than with the obvious
+  -- `occurrence_date::text`. A generated column must be IMMUTABLE, and
+  -- date-to-text is only STABLE: it reads the DateStyle GUC, so the same day
+  -- would render '2026-08-03' for one session and '03/08/2026' for another —
+  -- two different keys for one occurrence, which is precisely the disagreement
+  -- this column exists to prevent. extract() and lpad() are immutable, so this
+  -- form is ISO-8601 for every session regardless of DateStyle.
   occurrence_key text generated always as (
     case
       when template_id is null then null
-      else template_id::text || ':' || occurrence_date::text
+      else template_id::text || ':'
+        || lpad(extract(year  from occurrence_date)::int::text, 4, '0') || '-'
+        || lpad(extract(month from occurrence_date)::int::text, 2, '0') || '-'
+        || lpad(extract(day   from occurrence_date)::int::text, 2, '0')
     end
   ) stored,
 
@@ -349,7 +360,7 @@ create table public.task_instances (
 comment on table public.task_instances is
   'One dated occurrence of a chore — the row a family member marks done. Carries snapshots so editing the template never rewrites history.';
 comment on column public.task_instances.occurrence_key is
-  'Generated idempotency key, template_id:occurrence_date. NULL for one-off tasks. Never client-supplied: generation is idempotent because the database computes the key, and the partial unique index makes a concurrent duplicate a constraint violation rather than a second row.';
+  'Generated idempotency key, template_id:YYYY-MM-DD. NULL for one-off tasks. Never client-supplied: generation is idempotent because the database computes the key, and the partial unique index makes a concurrent duplicate a constraint violation rather than a second row. The date is built from extract()/lpad() rather than a ::text cast, which is only STABLE and would vary the key with the session DateStyle.';
 comment on column public.task_instances.occurrence_date is
   'The household-calendar date this occurrence belongs to. A date, never a timestamp, so a chore does not drift across a timezone boundary.';
 comment on column public.task_instances.completed_by is
@@ -692,6 +703,19 @@ grant select, insert, update, delete on public.task_activity_log to service_role
 -- Deliberately NO DELETE policy on any table. Clients soft-delete by setting
 -- deleted_at; physical deletion is unreachable, so a family can always recover
 -- and audit.
+--
+-- WHY THE SELECT POLICIES DO NOT SIMPLY FILTER `deleted_at is null`:
+-- PostgreSQL applies a table's SELECT policies to the NEW row of an UPDATE, not
+-- only to the old one. A policy that hides soft-deleted rows from everybody
+-- therefore makes soft-deletion itself impossible — the UPDATE that sets
+-- deleted_at produces a row the caller may no longer see, and Postgres rejects
+-- it with "new row violates row-level security policy". A row can never be
+-- updated into invisibility.
+--
+-- So visibility of a soft-deleted row is scoped by ROLE instead: owners and
+-- adults keep seeing it, which is what makes both soft-delete and the ADR-007
+-- 48-hour restore reachable, and is exactly what the /templates/trash screen
+-- needs. Children, guests and service providers see live rows only.
 -- ---------------------------------------------------------------------------
 
 -- task_templates -----------------------------------------------------------
@@ -701,12 +725,17 @@ create policy task_templates_select_member
   for select
   to authenticated
   using (
-    deleted_at is null
-    and private.is_active_household_member(household_id)
+    private.is_active_household_member(household_id)
+    and (
+      deleted_at is null
+      or private.has_household_role(
+        household_id, array['owner', 'adult']::public.household_role[]
+      )
+    )
   );
 
 comment on policy task_templates_select_member on public.task_templates is
-  'Any active member reads the live templates of their own household. Children see them too: a child must be able to see what the chore is.';
+  'Any active member reads the live templates of their own household. Children see them too: a child must be able to see what the chore is. Soft-deleted templates stay visible to owners and adults only — that is the trash view, and without it neither soft-delete nor the ADR-007 restore would be possible, because Postgres applies SELECT policies to the new row of an UPDATE.';
 
 create policy task_templates_insert_adult
   on public.task_templates
@@ -747,12 +776,17 @@ create policy task_instances_select_member
   for select
   to authenticated
   using (
-    deleted_at is null
-    and private.is_active_household_member(household_id)
+    private.is_active_household_member(household_id)
+    and (
+      deleted_at is null
+      or private.has_household_role(
+        household_id, array['owner', 'adult']::public.household_role[]
+      )
+    )
   );
 
 comment on policy task_instances_select_member on public.task_instances is
-  'Any active member reads the live occurrences of their own household. The pilot family view shows both children, so scoping reads per child would break the product (PILOT_WEEKLY_CHORES.md §13).';
+  'Any active member reads the live occurrences of their own household. The pilot family view shows both children, so scoping reads per child would break the product (PILOT_WEEKLY_CHORES.md §13). Soft-deleted occurrences remain visible to owners and adults only, for the same reason as on task_templates.';
 
 create policy task_instances_insert_member
   on public.task_instances
@@ -771,10 +805,23 @@ create policy task_instances_update_member
   for update
   to authenticated
   using (private.is_active_household_member(household_id))
-  with check (private.is_active_household_member(household_id));
+  with check (
+    private.is_active_household_member(household_id)
+    -- Completing and reopening are open to every member; REMOVING a chore from
+    -- the week is an owner/adult act. Stated here rather than left to the
+    -- SELECT policy, so a child attempting it gets a policy refusal instead of
+    -- the confusing "new row violates row-level security policy" that the
+    -- new-row SELECT check would otherwise produce.
+    and (
+      deleted_at is null
+      or private.has_household_role(
+        household_id, array['owner', 'adult']::public.household_role[]
+      )
+    )
+  );
 
 comment on policy task_instances_update_member on public.task_instances is
-  'Any active member may complete, reopen or soft-delete an occurrence in their own household. Whether a CHILD may undo their own completion is a product rule enforced above the database (PILOT_WEEKLY_CHORES.md §10.4), not a policy — every transition is logged either way. The immutability trigger still protects the snapshots.';
+  'Any active member may complete or reopen an occurrence in their own household; only an owner or adult may soft-delete or restore one. Whether a CHILD may undo their own completion is a product rule enforced above the database (PILOT_WEEKLY_CHORES.md §10.4), not a policy — every transition is logged either way. The immutability trigger still protects the snapshots.';
 
 -- task_assignments ---------------------------------------------------------
 
