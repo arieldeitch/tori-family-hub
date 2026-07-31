@@ -188,6 +188,35 @@ describe("real hosted-project responses", () => {
     expect(result.message).not.toBe(OFFLINE_TEXT);
   });
 
+  it("classifies the hosted 'Email logins are disabled' as a server switch, not a bad password", () => {
+    // Captured verbatim from the hosted project on 2026-07-31:
+    //   POST /auth/v1/token?grant_type=password
+    //   422 {"code":422,"error_code":"email_provider_disabled",
+    //        "msg":"Email logins are disabled"}
+    // It was returned for EVERY address, the existing confirmed owner included,
+    // so it can never mean "your password is wrong".
+    const result = classifyError({
+      online: true,
+      status: 422,
+      error: { error_code: "email_provider_disabled", message: "Email logins are disabled" },
+    });
+    expect(result.kind).toBe("auth_disabled");
+    expect(result.message).toBe("הכניסה עם דוא״ל מושבתת בשרת");
+    expect(result.retryable).toBe(false);
+    expect(result.message).not.toBe(OFFLINE_TEXT);
+  });
+
+  it("still calls a genuinely wrong password a wrong password", () => {
+    const result = classifyError({
+      online: true,
+      status: 400,
+      error: { code: "invalid_credentials", message: "Invalid login credentials" },
+    });
+    expect(result.kind).toBe("invalid_credentials");
+    expect(result.message).toBe("הפרטים שהוזנו אינם נכונים");
+    expect(result.retryable).toBe(true);
+  });
+
   it("classifies a table missing from the hosted schema as a migration gap", () => {
     // GET /rest/v1/task_instances → 404 PGRST205 on the hosted project, because
     // WP5B has not been applied there. Reporting this as a network failure would

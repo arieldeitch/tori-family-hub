@@ -55,6 +55,32 @@ Behavioural verification with headless Chromium, after waiting for the worker to
 
 `?sw=off` remains unreliable as a general escape hatch and must not be relied on — see the note in [`PWA.md`](./PWA.md). The recovery that actually works when the app cannot boot is the self-healing offline page.
 
+## Hosted pilot sign-in is disabled at the project level (BLOCKING, 2026-07-31)
+
+**Nobody can sign in to the hosted pilot, and no password change can fix it.** The Email provider is switched off on the hosted Supabase project.
+
+Evidence, gathered read-only with the public publishable key:
+
+```
+GET  /auth/v1/settings           → external.email: false, disable_signup: true
+POST /auth/v1/token?grant_type=password
+     arieldeitch@gmail.com       → 422 {"error_code":"email_provider_disabled",
+                                        "msg":"Email logins are disabled"}
+     pilot-owner@tori.local      → 422 (identical)
+```
+
+It is returned for **every** address, so it says nothing about whether an account exists, is confirmed, or has the right password. `disable_signup: true` is correct and wanted (it closes the open-signup risk recorded above); `external.email: false` is the fault — it disables password **sign-in** as well as signup.
+
+**This cannot be fixed with the service-role/secret key.** The Admin API can create and update users, but enabling an auth provider is project configuration, reachable only through the Supabase Dashboard or the Management API with a personal access token.
+
+**The one manual step:** Supabase Dashboard → the `tori-family-pilot` project → Authentication → Providers → **Email → enable**. Leave *"Allow new users to sign up"* **off** — that is the wanted posture, and it does not block sign-in.
+
+Until then the owner-login work (set password, confirm email, verify the membership binding) cannot be completed or verified end to end, because step "sign in and load the household under RLS" is rejected before any credential is checked.
+
+### What was fixed here instead
+
+The screen lied about the cause. `PilotSignInScreen` rendered one hard-coded message — *"הפרטים שהוזנו אינם נכונים"* — for **every** sign-in failure, discarding the real error. So a server with the provider switched off told the family their password was wrong, which is a fault they can never fix by retrying. This is the third instance of the ADR-042 principle, and it is now classified: `email_provider_disabled` renders **"הכניסה עם דוא״ל מושבתת בשרת"** with a hint naming the configuration fix, and a genuinely wrong password still renders the credential message. Sign-in failures now flow through `classifyError` like every other failure.
+
 ## Audit of 2026-07-30 — what was verified and what was corrected
 
 A full state audit was run against the repository, not against chat history.

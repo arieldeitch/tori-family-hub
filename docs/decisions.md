@@ -368,6 +368,21 @@ The routing rules now live in `src/lib/pwa/workboxOptions.ts` so these invariant
 - Retry is offered only when retrying could plausibly succeed, so an expired session no longer shows a button that cannot help.
 - Technical detail goes to the console via `describeForLog`, which emits `kind` and a short code and never the raw driver message, which can carry row values.
 
+### Third instance: the sign-in screen (2026-07-31)
+
+`PilotSignInScreen` rendered one hard-coded message — *"הפרטים שהוזנו אינם נכונים. בדקו את כתובת הדוא״ל והסיסמה ונסו שוב."* — for **every** sign-in failure, discarding the actual error. The intent was sound (do not enumerate accounts, never echo a credential), but the effect was the same fault as the offline screen: a confident, wrong diagnosis.
+
+It mattered in production. The hosted project has the Email provider switched off, so `POST /auth/v1/token` returns `422 email_provider_disabled` — *"Email logins are disabled"* — for every address including the existing confirmed owner. The screen told the owner their password was wrong. No password would ever have worked, and the real fault is a project setting.
+
+**Decision.** Sign-in failures go through `classifyError` like everything else. Two new kinds:
+
+- **`auth_disabled`** — the server has the sign-in method switched off. *"הכניסה עם דוא״ל מושבתת בשרת"*, with a hint naming the configuration fix. Not retryable.
+- **`invalid_credentials`** — the email or password really is wrong. *"הפרטים שהוזנו אינם נכונים"*. Retryable, and kept distinct from `auth` (an expired session), which is not the same situation.
+
+Non-enumeration is preserved: the message still never reveals whether an address exists, and the credential is never echoed. What changed is that the app no longer blames the person for the server's configuration.
+
+**The general rule this keeps re-proving:** a message that names the wrong cause is worse than one that names none, because it sends people to fix something that is not broken — a working router, then a correct password.
+
 ### Production must not depend on a developer's machine
 
 `bun run check:bundle-endpoints` asserts the inlined `VITE_SUPABASE_URL` in the built client is a **remote https origin**. A bundle pointing at `127.0.0.1` works on the machine that built it and fails for everyone else in a way that looks exactly like "no internet". CI has no `.env.local`, so it builds exactly as a published Lovable build does and the check guards the real artefact.
