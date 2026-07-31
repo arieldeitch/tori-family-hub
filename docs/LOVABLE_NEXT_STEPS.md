@@ -2,7 +2,7 @@
 
 Recommended order. Each step is one focused prompt/PR.
 
-> **Status note (WP tracking).** The live, authoritative roadmap is [`todo.md`](./todo.md) / [`project-status.md`](./project-status.md). Mapping to the packages below: WP0/WP1 (foundation + docs) are merged. **WP2 delivered a local-first Supabase workflow** (local CLI, migrations, seed, generated types, smoke, CI `database` job) — the local half of step 1 below; merged to `main` via PR #3. Still pending: a **remote** Supabase project, Auth (step 2), business schema + RLS (step 3 → WP3 schema foundation, WP4 RLS), and repository swaps (step 4 → WP5+). No remote project, Auth, or RLS exists yet.
+> **Status note, updated 2026-07-30.** The live, authoritative roadmap is [`todo.md`](./todo.md) / [`project-status.md`](./project-status.md); this file is the prototype-era plan and is kept for its rationale, not its status. What has since landed: WP0/WP1 (foundation + docs), **WP2** (local Supabase workflow), **WP3** (Identity & Household schema), **WP4** (RLS, grants, negative tests) and **WP5A** (pilot access, then the hosted conversion of ADR-037). So the earlier claim that "no remote project, Auth, or RLS exists yet" is **obsolete**: a hosted non-production project exists and is the runtime backend, real Auth sign-in exists for the pilot adult, and RLS is enforced on the identity tables. Steps 2 and 3 below survive only as the *long-term* Auth and business-schema work — note that step 2's `user_roles` table was explicitly **rejected** (ADR-024: the role lives on `household_members`). Still genuinely pending: business schema (starting at WP5B) and the repository swaps of step 4.
 
 ## 1. Enable Lovable Cloud (Supabase)
 - Provision the project, generate `src/integrations/supabase/*` clients.

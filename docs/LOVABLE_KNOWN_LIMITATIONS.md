@@ -1,5 +1,7 @@
 # Known Limitations
 
+> **Correction, 2026-07-30.** This file describes the Lovable prototype and several of its "Auth & security" and "Backend" statements below are **no longer true**. Superseded, in order: **RLS exists and is enforced** on the four identity tables with positive and negative tests (WP4); **a remote Supabase project exists** — the hosted non-production pilot, which is now the runtime backend (ADR-037); **authentication exists** for one adult pilot identity via real Supabase Auth password sign-in (WP5A). Still accurate: no business schema, no business-module persistence, no notification delivery, no server functions, PIN is not a credential, and every business permission check is client-side. The canonical current state is [`project-status.md`](./project-status.md).
+
 ## Persistence
 - **No persistence.** All data lives in in-memory JS objects (`src/data/*Repo.ts`). Any browser refresh resets to seeded demo data.
 - No localStorage/IndexedDB fallback. Deliberate — chosen to avoid coupling UX to a store that will be replaced by Supabase.

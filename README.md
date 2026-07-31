@@ -2,13 +2,14 @@
 
 **Tori is a Family Operations Hub** — Hebrew-first (RTL), mobile-first. The product promise: *the house knows who does what.* The Today screen is the center of the product.
 
-> ⚠️ **No real backend wired in yet.** All business data lives in in-memory mock repositories and is lost on refresh. There is **no authentication flow and no real persistence in the app**. A **local-only** Supabase dev workflow exists (WP2), the Identity & Household schema exists (WP3), and **RLS is now enforced on it with positive and negative tests** (WP4) — but **no module reads or writes those tables**. Roles and PIN in the UI are UX guards only — not security.
+> ⚠️ **No business backend wired in yet.** All business data lives in in-memory mock repositories and is lost on refresh. The Identity & Household schema exists (WP3) with **RLS enforced and positive and negative tests** (WP4), and the **Family Pilot slice does real Supabase Auth sign-in and real household reads** (WP5A) — but **no business module reads or writes the database**. Roles, child mode and PIN in the UI are UX guards only — not security.
 
 ## Status
 
 - Prototype built in Lovable; GitHub connected; Claude Code active.
 - **WP0 (foundation fixes)** and **WP1 (Knowledge Pack)** complete and merged to `main`.
-- **WP2 (Supabase Local Workflow)** — complete and **merged to `main`** (PR #3): locked Supabase CLI dev dependency + `@supabase/supabase-js`, `supabase/` (config + empty foundation migration + business-empty seed), a typed infrastructure-only client, `db:*` scripts, and a CI `database` job. Local-only — no remote project, no schema, no Auth/RLS. **162/162 tests pass** across 19 test files; lint 0 errors / 6 known shadcn warnings; build and CI green.
+- **WP2 (Supabase Local Workflow)** — complete and **merged to `main`** (PR #3): locked Supabase CLI dev dependency + `@supabase/supabase-js`, `supabase/` (config + empty foundation migration + business-empty seed), a typed infrastructure client, `db:*` scripts, and a CI `database` job. It shipped local-only; WP3, WP4, WP5A and ADR-037 have since added schema, RLS, Auth and a hosted project.
+- **Current gate results (re-verified 2026-07-30):** **210/210 tests pass across 24 test files**; typecheck clean; lint **0 errors / 7 warnings**; `build`, `routes:check`, `check:client-secrets`, `check:pilot-privacy` and `pilot:test:hosted-guard` all green. The database suites were not re-run on that date — see [`docs/project-status.md`](./docs/project-status.md).
 - **Post-WP2 consistency pass** — the committed generated route tree (`src/routeTree.gen.ts`) is in sync with the generator and CI verifies its freshness (see [`docs/decisions.md`](./docs/decisions.md), ADR-022).
 - **WP3 (Identity & Household Schema)** — complete and merged: enums `household_role` + `household_membership_status` and tables `households`, `member_profiles`, `household_members`, `household_invitations`, with household consistency enforced by composite foreign keys. **RLS is enabled with zero policies and no client grants** (ADR-023) — the tables are unreachable until WP4. **102 pgTAP tests** run in CI.
 - **WP4 (Identity & Household RLS)** — complete and merged: three `SECURITY DEFINER` authorization helpers in a non-exposed `private` schema, minimum **column-level** grants, six RLS policies, and negative-access tests. `anon` holds nothing; membership and invitation mutations are RPC-only; `date_of_birth`, `token_hash` and `auth_user_id` are unreachable by clients. **181 structural + 117 behavioural pgTAP tests and 34 Auth-backed integration assertions** run in CI.
@@ -64,7 +65,7 @@ Copy `.env.example` to `.env.local`. Only public `VITE_*` values live there. No 
 
 ## Local Supabase (development)
 
-WP2 added a **local-only** Supabase workflow, WP3 the Identity & Household schema, and WP4 the RLS policies and minimum grants. There is still no Auth flow and the client is not wired to any module (all modules still use mock repositories). Access is column-level only: `anon` holds nothing, `authenticated` reads its own household, and every membership or invitation mutation remains RPC-only.
+WP2 added the local Supabase workflow, WP3 the Identity & Household schema, and WP4 the RLS policies and minimum grants. The local stack is now the **development and CI** environment; the hosted non-production project is the pilot runtime (ADR-037). The pilot slice performs real Auth and real household reads; **no business module is wired to the database** — those still use mock repositories. Access is column-level only: `anon` holds nothing, `authenticated` reads its own household, and every membership or invitation mutation remains RPC-only.
 
 1. Start Docker Desktop (or a compatible engine).
 2. `bun run supabase:start` — starts the local stack (Supabase CLI is a locked dev dependency; run via `bunx supabase`).
