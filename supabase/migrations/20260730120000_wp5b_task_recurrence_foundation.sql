@@ -165,13 +165,9 @@ $$;
 comment on function public.prevent_task_activity_mutation() is
   'Blocks UPDATE and DELETE on task_activity_log for every role including service_role. History is written once. Correcting a mistake means appending a new entry, not editing the old one.';
 
--- ---------------------------------------------------------------------------
--- Task authorization helpers  (private schema, ADR-027)
---
--- Created AFTER the tables they read, at the bottom of this file. They are
--- declared here in comment form only so the reading order stays: functions,
--- tables, indexes, triggers, RLS, grants, policies.
--- ---------------------------------------------------------------------------
+-- Note: the `private` task authorization helpers (ADR-027, ADR-041) are defined
+-- further down, after the tables they read and immediately before the policies
+-- that call them.
 
 -- ---------------------------------------------------------------------------
 -- task_templates
