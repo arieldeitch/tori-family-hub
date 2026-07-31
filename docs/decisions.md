@@ -4,46 +4,46 @@ Approved decisions and their history. Every decision below has status **Accepted
 
 This is the canonical decision log. The prototype-era `LOVABLE_DECISIONS.md` records implementation-level ADRs (D1–D13) for the as-built app and does not override these.
 
-| ADR | Decision | Status |
-| --- | --- | --- |
-| ADR-001 | Tori is a Family Operations Hub. | Accepted |
-| ADR-002 | The PRD ([`01-product-requirements.md`](./01-product-requirements.md)) is the single business source of truth. | Accepted |
-| ADR-003 | The Today screen is the default. | Accepted |
-| ADR-004 | Template and instance are separate entities. | Accepted |
-| ADR-005 | An active task needs responsibility, a due time, or a follow-up. | Accepted |
-| ADR-006 | Rotation is deterministic and explained. | Accepted |
-| ADR-007 | Soft delete with 48 hours of restore. | Accepted |
-| ADR-008 | Hebrew and RTL from day one. | Accepted |
-| ADR-009 | Supabase is the default backend. | Accepted |
-| ADR-010 | PostgreSQL is the source of truth. | Accepted |
-| ADR-011 | Multiple critical changes are atomic. | Accepted |
-| ADR-012 | Permissions are enforced on the server and in RLS. | Accepted |
-| ADR-013 | A child does not require email; PIN is limited access. | Accepted |
-| ADR-014 | Transport is an independent module. | Accepted |
-| ADR-015 | `waiting_external` requires a next follow-up or an opt-out. | Accepted |
-| ADR-016 | Notifications are intent-based with dedupe and escalation. | Accepted |
-| ADR-017 | Full offline is not a condition for MVP. | Accepted |
-| ADR-018 | Points and competition are not the core of the product. | Accepted |
-| ADR-019 | Development starts only with product-owner approval. | Accepted |
-| ADR-020 | A coding agent works in a closed task and updates the handover. | Accepted |
-| ADR-021 | Supabase runs local-first: the CLI is a locked dev dependency, migrations in the repo are the only way to change schema, and remote projects are configured separately later. | Accepted |
-| ADR-022 | Generated files are committed as source, reproducibly generated, CI-verified fresh, and never hand-edited. | Accepted |
-| ADR-023 | WP3 ships schema with RLS enabled, zero policies and no client privileges; WP4 opens access with the minimum GRANTs and the complete policy set together. | Accepted |
-| ADR-024 | The household role lives on `household_members`, which is the dedicated membership/authorization table. There is no `user_roles` table. | Accepted |
-| ADR-025 | PIN credential material is never stored on `member_profiles`. Future credentials live in an unexposed `private.member_pin_credentials`, reachable only through a secured server/RPC boundary. | Accepted |
-| ADR-026 | A household may have multiple active owners. Protecting the last active owner is the responsibility of future RPCs, not a database constraint. | Accepted |
-| ADR-027 | Authorization helpers live in a non-exposed `private` schema, are SECURITY DEFINER with a fixed empty `search_path`, and never accept a user id. | Accepted |
-| ADR-028 | Membership and invitation mutations are RPC-only. No client may insert, update or delete `household_members` or `household_invitations`. | Accepted |
-| ADR-029 | Column-level grants protect sensitive data. `date_of_birth`, `token_hash`, `auth_user_id` and audit columns are unreachable through ordinary table grants. | Accepted |
-| ADR-030 | `service_role` holds DML on the identity tables for server-side administration and deterministic test fixtures only; its key never reaches the browser. | Accepted |
-| ADR-031 | `household_members.auth_user_id ON DELETE RESTRICT` is deferred to WP4.6, which blocks production account deletion and onboarding until it lands. | Accepted |
-| ADR-032 | The structural and Auth-backed database suites are separated, and the shared `seed.sql` stays business-empty. | Accepted |
+| ADR     | Decision                                                                                                                                                                                                 | Status   |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| ADR-001 | Tori is a Family Operations Hub.                                                                                                                                                                         | Accepted |
+| ADR-002 | The PRD ([`01-product-requirements.md`](./01-product-requirements.md)) is the single business source of truth.                                                                                           | Accepted |
+| ADR-003 | The Today screen is the default.                                                                                                                                                                         | Accepted |
+| ADR-004 | Template and instance are separate entities.                                                                                                                                                             | Accepted |
+| ADR-005 | An active task needs responsibility, a due time, or a follow-up.                                                                                                                                         | Accepted |
+| ADR-006 | Rotation is deterministic and explained.                                                                                                                                                                 | Accepted |
+| ADR-007 | Soft delete with 48 hours of restore.                                                                                                                                                                    | Accepted |
+| ADR-008 | Hebrew and RTL from day one.                                                                                                                                                                             | Accepted |
+| ADR-009 | Supabase is the default backend.                                                                                                                                                                         | Accepted |
+| ADR-010 | PostgreSQL is the source of truth.                                                                                                                                                                       | Accepted |
+| ADR-011 | Multiple critical changes are atomic.                                                                                                                                                                    | Accepted |
+| ADR-012 | Permissions are enforced on the server and in RLS.                                                                                                                                                       | Accepted |
+| ADR-013 | A child does not require email; PIN is limited access.                                                                                                                                                   | Accepted |
+| ADR-014 | Transport is an independent module.                                                                                                                                                                      | Accepted |
+| ADR-015 | `waiting_external` requires a next follow-up or an opt-out.                                                                                                                                              | Accepted |
+| ADR-016 | Notifications are intent-based with dedupe and escalation.                                                                                                                                               | Accepted |
+| ADR-017 | Full offline is not a condition for MVP.                                                                                                                                                                 | Accepted |
+| ADR-018 | Points and competition are not the core of the product.                                                                                                                                                  | Accepted |
+| ADR-019 | Development starts only with product-owner approval.                                                                                                                                                     | Accepted |
+| ADR-020 | A coding agent works in a closed task and updates the handover.                                                                                                                                          | Accepted |
+| ADR-021 | Supabase runs local-first: the CLI is a locked dev dependency, migrations in the repo are the only way to change schema, and remote projects are configured separately later.                            | Accepted |
+| ADR-022 | Generated files are committed as source, reproducibly generated, CI-verified fresh, and never hand-edited.                                                                                               | Accepted |
+| ADR-023 | WP3 ships schema with RLS enabled, zero policies and no client privileges; WP4 opens access with the minimum GRANTs and the complete policy set together.                                                | Accepted |
+| ADR-024 | The household role lives on `household_members`, which is the dedicated membership/authorization table. There is no `user_roles` table.                                                                  | Accepted |
+| ADR-025 | PIN credential material is never stored on `member_profiles`. Future credentials live in an unexposed `private.member_pin_credentials`, reachable only through a secured server/RPC boundary.            | Accepted |
+| ADR-026 | A household may have multiple active owners. Protecting the last active owner is the responsibility of future RPCs, not a database constraint.                                                           | Accepted |
+| ADR-027 | Authorization helpers live in a non-exposed `private` schema, are SECURITY DEFINER with a fixed empty `search_path`, and never accept a user id.                                                         | Accepted |
+| ADR-028 | Membership and invitation mutations are RPC-only. No client may insert, update or delete `household_members` or `household_invitations`.                                                                 | Accepted |
+| ADR-029 | Column-level grants protect sensitive data. `date_of_birth`, `token_hash`, `auth_user_id` and audit columns are unreachable through ordinary table grants.                                               | Accepted |
+| ADR-030 | `service_role` holds DML on the identity tables for server-side administration and deterministic test fixtures only; its key never reaches the browser.                                                  | Accepted |
+| ADR-031 | `household_members.auth_user_id ON DELETE RESTRICT` is deferred to WP4.6, which blocks production account deletion and onboarding until it lands.                                                        | Accepted |
+| ADR-032 | The structural and Auth-backed database suites are separated, and the shared `seed.sql` stays business-empty.                                                                                            | Accepted |
 | ADR-033 | Family Pilot (Weekly Child Chores) is the next milestone. In-app user management is deferred **for the pilot only** and the long-term Auth, PIN, invitation and permission requirements stand unchanged. | Accepted |
 | ADR-034 | Personal pilot data never enters a migration or the shared seed. It is loaded by an environment-guarded, idempotent bootstrap, and pilot mode is non-production unless separately hardened and approved. | Accepted |
-| ADR-035 | The temporary pilot access model: one authenticated adult identity, four profiles, and a profile selector that is attribution/display only. | Accepted |
-| ADR-036 | Approved pilot chore schedules and per-chore staggered rotation cursors. Editable defaults, not permanent product rules. | Accepted |
-| ADR-037 | Lovable hosts the frontend only; Supabase remains the exclusive backend. Lovable Cloud database is rejected. Supersedes the local-only runtime hosting of ADR-033/ADR-034, nothing else. | Accepted |
-| ADR-038 | The two browser-public Supabase values are committed in a tracked root `.env`, because published Lovable builds do not receive ignored files. An enforced allowlist keeps everything else out. | Accepted |
+| ADR-035 | The temporary pilot access model: one authenticated adult identity, four profiles, and a profile selector that is attribution/display only.                                                              | Accepted |
+| ADR-036 | Approved pilot chore schedules and per-chore staggered rotation cursors. Editable defaults, not permanent product rules.                                                                                 | Accepted |
+| ADR-037 | Lovable hosts the frontend only; Supabase remains the exclusive backend. Lovable Cloud database is rejected. Supersedes the local-only runtime hosting of ADR-033/ADR-034, nothing else.                 | Accepted |
+| ADR-038 | The two browser-public Supabase values are committed in a tracked root `.env`, because published Lovable builds do not receive ignored files. An enforced allowlist keeps everything else out.           | Accepted |
 
 ## ADR-021 — Supabase local workflow (WP2)
 
@@ -201,7 +201,7 @@ They must never appear in a migration, in `supabase/seed.sql`, in committed auto
 - **The second adult and both children have no Auth identity.** Children keep `auth_user_id IS NULL`, exactly as ADR-013 intends, so real per-person identities can be attached later without a data migration.
 - **Profile selection is attribution and display only.** It chooses whose week is shown. It is never sent as an authorization input, it writes nothing to the database, and it is cached only as a disposable UI preference that is re-validated against the profiles RLS actually returned.
 - **Server authority always derives from `auth.uid()`.** A client-supplied profile id is never trusted. Any future write on behalf of another profile must go through a server-side use case that re-verifies household membership and records both the authenticated actor and the acting profile.
-- **This is explicitly non-production.** Pilot commands fail closed unless `TORI_PILOT_MODE=local` *and* the Supabase target independently proves to be the local CLI stack. Within one household this model cannot distinguish which family member acted — acceptable for a scheduling pilot, and precisely why child PIN and per-person identities remain required (ADR-013, ADR-025).
+- **This is explicitly non-production.** Pilot commands fail closed unless `TORI_PILOT_MODE=local` _and_ the Supabase target independently proves to be the local CLI stack. Within one household this model cannot distinguish which family member acted — acceptable for a scheduling pilot, and precisely why child PIN and per-person identities remain required (ADR-013, ADR-025).
 
 WP5A implemented this and required **no migration and no RLS change**: the existing WP4 policies already let the signed-in adult read their household and all four profiles.
 
@@ -209,11 +209,11 @@ WP5A implemented this and required **no migration and no RLS change**: the exist
 
 Approved defaults for the three initial chores. They are **editable pilot defaults, not permanent product rules**, and they are recorded here only — implementation belongs to WP5B (schedule) and WP5C (rotation).
 
-| Chore | Schedule | Rotation starts with |
-| --- | --- | --- |
-| Dishwasher unloading | every day, no fixed time | the **first** child profile |
-| Dishwasher loading | every day, no fixed time | the **second** child profile |
-| Taking out the trash | Sunday, Tuesday, Thursday, no fixed time | the **first** child profile |
+| Chore                | Schedule                                 | Rotation starts with         |
+| -------------------- | ---------------------------------------- | ---------------------------- |
+| Dishwasher unloading | every day, no fixed time                 | the **first** child profile  |
+| Dishwasher loading   | every day, no fixed time                 | the **second** child profile |
+| Taking out the trash | Sunday, Tuesday, Thursday, no fixed time | the **first** child profile  |
 
 - **Each chore keeps its own rotation cursor.** The two daily dishwasher chores are staggered so that on any given day one child unloads and the other loads.
 - **The cursor continues across weeks and never resets on Sunday.** The trash chore therefore alternates by occurrence, and a week may end 9–8 with the split reversing the following week. That imbalance is expected and self-correcting.
@@ -252,7 +252,7 @@ Both values are **public by design**. Every Supabase browser client ships them t
 
 **Confidentiality of the anon key was never the control — RLS is.** WP4 verified on this hosted project that `anon` holds **zero table privileges and zero column privileges**, RLS is enabled on all four identity tables, and every policy requires an active authenticated membership. An attacker holding the URL and publishable key can reach exactly nothing.
 
-The values that *are* secret — service-role key, database password, Supabase access token, pilot passwords — remain out of the repository entirely and out of every browser variable (ADR-030, ADR-037).
+The values that _are_ secret — service-role key, database password, Supabase access token, pilot passwords — remain out of the repository entirely and out of every browser variable (ADR-030, ADR-037).
 
 ### What keeps this safe over time
 
@@ -288,13 +288,13 @@ A pgTAP test inserts under `DateStyle = 'SQL, DMY'` and asserts the ISO key, so 
 
 ## ADR-040 — A soft-deleted task row stays visible to owners and adults (WP5B, Accepted)
 
-**PostgreSQL applies a table's SELECT policies to the NEW row of an UPDATE, not only to the old one.** A row therefore cannot be updated into invisibility. A SELECT policy of the form `deleted_at is null and is_active_household_member(...)` makes soft-deletion *impossible*: the UPDATE that sets `deleted_at` produces a row the caller may no longer see, and the statement fails with `new row violates row-level security policy`.
+**PostgreSQL applies a table's SELECT policies to the NEW row of an UPDATE, not only to the old one.** A row therefore cannot be updated into invisibility. A SELECT policy of the form `deleted_at is null and is_active_household_member(...)` makes soft-deletion _impossible_: the UPDATE that sets `deleted_at` produces a row the caller may no longer see, and the statement fails with `new row violates row-level security policy`.
 
 The WP5B migration as first written had exactly this shape on `task_templates` and `task_instances` — it granted `deleted_at` on UPDATE and its policy comments promised soft-delete and restore, while the policies made both unreachable. Verified against a minimal two-policy probe table, not inferred.
 
 **Decision.** Scope soft-deleted visibility by role instead of hiding it from everyone:
 
-- **Owners and adults keep seeing soft-deleted templates and occurrences.** That *is* the trash view, it is what the existing `/templates/trash` route needs, and it is the only way the ADR-007 48-hour restore is reachable at all — you cannot restore a row you cannot select.
+- **Owners and adults keep seeing soft-deleted templates and occurrences.** That _is_ the trash view, it is what the existing `/templates/trash` route needs, and it is the only way the ADR-007 48-hour restore is reachable at all — you cannot restore a row you cannot select.
 - **Children, guests and service providers see live rows only.**
 - On `task_instances` the UPDATE policy's `WITH CHECK` states the owner/adult requirement for `deleted_at` explicitly. Completing and reopening stay open to every active member; **removing** a chore from the week is an owner/adult act. Stated in the policy so a child attempting it gets a clear refusal instead of the confusing new-row error.
 
@@ -308,17 +308,17 @@ Supersedes the open question ADR-040 first recorded. The initial WP5B policies u
 
 **Decision.** Membership is the outer gate; the read predicate is the caller's **role**, in three scopes:
 
-| Scope | `task_templates` | `task_instances` | `task_assignments` | `task_activity_log` |
-| --- | --- | --- | --- | --- |
-| **owner / adult** | all, **including soft-deleted** (trash) | all, including soft-deleted | all | all |
-| **child** | live, **excluding `adult_only`** | live family week, excluding occurrences of `adult_only` templates | all, excluding adult-only chores | history of what they can see |
-| **guest / service provider** | only templates they hold a **live assignment** from | only occurrences **assigned to them** | only rows where **they are the assignee** | only history of their own assigned occurrences |
+| Scope                        | `task_templates`                                    | `task_instances`                                                  | `task_assignments`                        | `task_activity_log`                            |
+| ---------------------------- | --------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------- |
+| **owner / adult**            | all, **including soft-deleted** (trash)             | all, including soft-deleted                                       | all                                       | all                                            |
+| **child**                    | live, **excluding `adult_only`**                    | live family week, excluding occurrences of `adult_only` templates | all, excluding adult-only chores          | history of what they can see                   |
+| **guest / service provider** | only templates they hold a **live assignment** from | only occurrences **assigned to them**                             | only rows where **they are the assignee** | only history of their own assigned occurrences |
 
 Writes follow the same scope: owner/adult define templates and assignments; owner/adult/child may generate or quick-add an occurrence and complete one in scope; a guest or service provider may complete **only** the occurrence assigned to them, and may add nothing. Soft-delete and restore stay owner/adult everywhere. No client holds `DELETE` on anything.
 
 ### Why the child keeps the family week
 
-A child is **not** narrowed to their own assigned chores. `PILOT_WEEKLY_CHORES.md` §3 and §13 make "the family view shows both children's chores" an acceptance criterion, so per-child read scoping would break the approved product. The child's correct scope is the family week **minus adult-only chores**, which is exactly what `06-security-and-permissions.md` already required: *"a child does not see `adults_only` or `restricted` data."*
+A child is **not** narrowed to their own assigned chores. `PILOT_WEEKLY_CHORES.md` §3 and §13 make "the family view shows both children's chores" an acceptance criterion, so per-child read scoping would break the approved product. The child's correct scope is the family week **minus adult-only chores**, which is exactly what `06-security-and-permissions.md` already required: _"a child does not see `adults_only` or `restricted` data."_
 
 ### `adult_only` becomes a real boundary
 
@@ -336,6 +336,45 @@ Two properties worth keeping in mind:
 **No pilot impact.** The pilot household is two adults and two children, with no guest or service-provider profile, so nothing that worked before stops working.
 
 Covered by 48 dedicated behavioural tests in `supabase/tests/rls/180_task_role_scope_rls.sql`, positive and negative for every role.
+
+## ADR-042 — The offline screen is a fallback, and "no network" is a claim we must earn (Accepted)
+
+The hosted app showed **"אין חיבור לרשת כרגע"** on a healthy connection, permanently. Two separate faults, one visible symptom.
+
+### Fault 1 — the service worker never let the app run
+
+`vite.config.ts` set `workbox.navigateFallback: "/offline.html"`. That reads like "show the offline page when offline". It is not what Workbox does with it. It generates:
+
+```js
+registerRoute(new NavigationRoute(createHandlerBoundToURL("/offline.html"), …))
+```
+
+which serves the **precached** offline page for **every** navigation, online or not. Worse, Workbox matches routes in registration order and this route is emitted **before** `runtimeCaching`, so the `NetworkFirst` navigation route beneath it was unreachable dead code. With `skipWaiting` and `clientsClaim`, the worker took control immediately, so from the first controlled navigation onward the application never executed at all. Nothing was "classifying" the failure as offline — the classifier never ran.
+
+**Decision.** No `navigateFallback`, ever, in this app. The offline page is reached **only** through `precacheFallback` on the navigation route, which runs after the handler has genuinely failed. A reachable server always wins.
+
+`navigateFallback` must also be set explicitly to `undefined`, because vite-plugin-pwa defaults it to `"index.html"` — wrong twice here: this is a server-rendered TanStack Start app with no static `index.html`, so the precache manifest has no such entry and `createHandlerBoundToURL` would throw and take the whole worker down.
+
+The routing rules now live in `src/lib/pwa/workboxOptions.ts` so these invariants are unit-tested rather than reviewed. `public/offline.html` also self-heals: if it renders while `navigator.onLine` is true, it says so honestly, unregisters workers, clears caches and reloads **once** per tab — so a client already pinned by the old worker recovers without clearing storage by hand.
+
+### Fault 2 — every failure was reported as a network failure
+
+`"אין חיבור לרשת"` is a **claim about the network**. Used as the generic fallback it is not a harmless simplification: it sends the family to reboot a working router while the real fault — an expired session, an RLS refusal, a missing migration, an unconfigured deployment — stays invisible. **A wrong diagnosis is worse than a vague one.**
+
+**Decision.** `src/lib/errors/classifyError.ts` maps failures to distinct kinds, each with its own Hebrew message, hint and retryability: `offline` · `network` · `timeout` · `auth` · `permission` · `missing_schema` · `config` · `server` · `unknown`.
+
+- **`offline` is returned only when the browser itself reports being offline.** Nothing else earns that message.
+- A `fetch` TypeError while the browser is online is **`network`** ("לא הצלחנו להגיע לשרת"), not offline — DNS, CORS, TLS and connection-refused are server or deployment faults, not the family's internet.
+- Retry is offered only when retrying could plausibly succeed, so an expired session no longer shows a button that cannot help.
+- Technical detail goes to the console via `describeForLog`, which emits `kind` and a short code and never the raw driver message, which can carry row values.
+
+### Production must not depend on a developer's machine
+
+`bun run check:bundle-endpoints` asserts the inlined `VITE_SUPABASE_URL` in the built client is a **remote https origin**. A bundle pointing at `127.0.0.1` works on the machine that built it and fails for everyone else in a way that looks exactly like "no internet". CI has no `.env.local`, so it builds exactly as a published Lovable build does and the check guards the real artefact.
+
+Loopback strings still appear inside supabase-js (its GoTrue default and its own allowlist) and inside our own loopback **detector** in `runtimeConfig.ts`. Those are not endpoints the app calls, so the check asserts on the inlined configuration value rather than grepping for the word `localhost`.
+
+**Verified 2026-07-31:** a published-style build (no `.env.local`) inlines only `https://nrfelnchbmofwrfajfai.supabase.co`.
 
 ## Notes
 

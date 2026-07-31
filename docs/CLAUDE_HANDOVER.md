@@ -4,7 +4,7 @@ Read this first for the **as-built implementation**. It is the source of truth f
 
 ## What exists in practice
 
-A Hebrew (RTL), mobile-first family-coordination **prototype**. All *business* screens, flows and logic are implemented against **in-memory mock repositories**; refreshing the browser resets them to seed data.
+A Hebrew (RTL), mobile-first family-coordination **prototype**. All _business_ screens, flows and logic are implemented against **in-memory mock repositories**; refreshing the browser resets them to seed data.
 
 > **Correction, 2026-07-30.** "No backend, no auth, no persistence" was true of the prototype and is no longer true of the repository. The Family Pilot slice (WP5A) performs real Supabase Auth sign-in and real household reads under RLS, and the hosted non-production Supabase project is the runtime backend (ADR-037). What remains true: **no business module** has a backend, auth gate or persistence. See [`project-status.md`](./project-status.md) for the verified current state.
 
@@ -123,12 +123,15 @@ Database tests are separate and need Docker:
 ## CI
 
 `.github/workflows/ci.yml` — on push to `main` + all PRs. Two jobs:
+
 - `verify`: `bun install --frozen-lockfile` → `typecheck` → `lint` → `test` → `build`.
 - `database` (WP2): lean local Supabase → migrations + seed → generated-types freshness check → public-key-only smoke test → stop. No secrets, no remote project.
 
 ## PWA status
 
 Basic app-shell PWA only. `vite-plugin-pwa` `generateSW`, `NetworkFirst` HTML, `CacheFirst` hashed assets, offline fallback page (`public/offline.html`). Guarded registration: skipped in dev and inside iframes. See `docs/PWA.md`.
+
+**There is deliberately no `navigateFallback`** — it generates a `NavigationRoute` that answers every navigation from the precache and shadows the network-first route, which took the hosted app down with a permanent offline screen (ADR-042). Routing rules live in `src/lib/pwa/workboxOptions.ts` and are unit-tested; the offline page is reachable only via `precacheFallback`, and self-heals if it ever renders while the browser is online.
 
 ## What is NOT connected
 

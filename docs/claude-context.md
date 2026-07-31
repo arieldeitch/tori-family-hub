@@ -56,7 +56,7 @@ Operational instructions for Claude Code working on Tori.
 
 **WP5A is merged to `main`, and the pilot now runs hosted** (ADR-037): Lovable hosts the frontend, the non-production Supabase project `tori-family-pilot` is the only backend, and Docker is no longer needed for family use. CI still runs against the local stack.
 
- The Family Pilot has a working access slice: an environment-guarded idempotent bootstrap (`pilot:bootstrap` / `pilot:status` / `pilot:cleanup` / `pilot:test`, plus the hosted `pilot:bootstrap:hosted` / `pilot:status:hosted`), one authenticated adult identity, four member profiles, sign-in and a profile selector. It needed **no migration and no RLS change**.
+The Family Pilot has a working access slice: an environment-guarded idempotent bootstrap (`pilot:bootstrap` / `pilot:status` / `pilot:cleanup` / `pilot:test`, plus the hosted `pilot:bootstrap:hosted` / `pilot:status:hosted`), one authenticated adult identity, four member profiles, sign-in and a profile selector. It needed **no migration and no RLS change**.
 
 **ADR-038 is merged** (PR #10 / `b9c603b`), so a published build from `main` configures itself. **WP5B is complete and merged** (PR #12 / `b2834b8`); see the section above. Next is **WP5C — child rotation foundation**. No rotation table exists yet.
 
@@ -76,6 +76,8 @@ WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are 
 - Never combine a `deleted_at is null` SELECT policy with a client-writable `deleted_at`: Postgres checks SELECT policies against the UPDATE's new row, so soft-delete becomes impossible (ADR-040).
 - **Never make membership the whole read predicate on a business table.** Scope by role, or guests and service providers get household-wide visibility (ADR-041).
 - Every `private` helper must re-derive standing from `auth.uid()` — including one that only looks up a flag, or it becomes an oracle over arbitrary ids. `080_wp4_helper_functions.sql` enforces this schema-wide.
+- **Never set `workbox.navigateFallback`.** It builds a `NavigationRoute` that answers EVERY navigation from the precache and is matched before `runtimeCaching`, so it silently disables the network-first route. It took the hosted app down completely (ADR-042). The offline page is reachable only via `precacheFallback`. Routing lives in `src/lib/pwa/workboxOptions.ts` and is unit-tested.
+- **Never use "אין חיבור לרשת" as a generic failure message.** It is a claim about the network; using it for an auth, permission, schema or config fault sends the family to reboot a working router while the real fault stays invisible. Classify with `src/lib/errors/classifyError.ts` (ADR-042).
 - Authorization helpers live in `private`, are SECURITY DEFINER with `search_path = ''`, and **never take a user id** (ADR-027). Never add one to `public`.
 - Membership and invitation mutations are **RPC-only** (ADR-028). Never grant a client INSERT/UPDATE/DELETE on `household_members` or `household_invitations`.
 - The root `.env` is **tracked on purpose** and may contain **only** `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (ADR-038). `check:client-secrets` enforces that allowlist. Never add anything else to it; local overrides belong in the ignored `.env.local`.
