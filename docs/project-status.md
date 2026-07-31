@@ -55,6 +55,22 @@ Behavioural verification with headless Chromium, after waiting for the worker to
 
 `?sw=off` remains unreliable as a general escape hatch and must not be relied on — see the note in [`PWA.md`](./PWA.md). The recovery that actually works when the app cannot boot is the self-healing offline page.
 
+## Verified state after WP5C — rotation foundation
+
+Measured 2026-07-31 against a freshly reset local stack.
+
+- **`supabase/migrations/20260731140000_wp5c_rotation_foundation.sql`** adds three enums and three tables — `rotation_rules`, `rotation_members`, `rotation_assignment_log` — with structure, grants and the full policy set in one migration (ADR-023).
+- **The engine is not reimplemented.** `src/domain/shifts.ts` (`shifts.v1`) already selects deterministically and is tested; this is the durable memory around it, as `08-rotation-engine.md` requires.
+- **The cursor is a stored column** (`rotation_rules.cursor_profile_id`), never derived and never client-writable — see **ADR-043**. Deriving it from the current week would silently reset every Sunday, which ADR-036 forbids.
+- **Allocation is idempotent by index**: one decision per `(rule, occurrence)`, so a retry or a concurrent second allocator collides instead of assigning twice. `rotation_rules_one_live_per_template` prevents two competing cursors on one chore.
+- **`advance_mode` is a column**, not a constant, because `PILOT_WEEKLY_CHORES.md` §10 leaves the decision open.
+- **Every decision is explainable**: `reason_code`, `algorithm_version`, candidate snapshot, the cursor before the decision, and the exact Hebrew sentence shown, stored verbatim so it cannot drift.
+- **Role-scoped RLS (ADR-041)**: owner/adult see the whole household; a child sees the rotation of chores they can see — including the participant order, which is what makes "whose turn is next" not a mystery — minus adult-only; a guest or service provider sees only the rule behind work assigned to them.
+- **The deferred foreign key landed**: `task_assignments.assigned_by_rule_id` now references `rotation_rules` as a composite `(rule, household)` key, `ON DELETE SET NULL` so removing a rule never erases the assignment it produced.
+- **`rotation_members` is the schema's only client-deletable table**, deliberately; `070` now asserts the exact delete-policy set by name.
+- **381 structural pgTAP across 12 files** and **302 behavioural RLS pgTAP across 10 files** (from 310/11 and 261/9). App tests 252/26. `db:verify` ✓ end to end.
+- **No UI, no RPC, no module wiring.** WP5C is schema and policy only.
+
 ## Hosted pilot sign-in is disabled at the project level (BLOCKING, 2026-07-31)
 
 **Nobody can sign in to the hosted pilot, and no password change can fix it.** The Email provider is switched off on the hosted Supabase project.

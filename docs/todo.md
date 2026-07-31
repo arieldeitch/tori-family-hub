@@ -22,7 +22,10 @@ _Reviewed against the repository on **2026-07-30**, then updated after PR #10 wa
 - ✅ **Lovable published-environment fix — complete and merged to `main`** (PR #10, merge commit `b9c603b`, 2026-07-30). Tracked root `.env` with the two browser-public values, allowlist-enforced (ADR-038).
 - ⚠️ **Still open since 2026-07-26 — disable signup on the hosted Supabase project.** See P0 above; it cannot be done from this machine.
 - ✅ **WP5B — Task and recurrence foundation — complete and merged to `main`** (PR #12, merge commit `b2834b8`, 2026-07-31), **not yet applied to the hosted pilot project.** Four tables, eight enums, deterministic `occurrence_key`, append-only activity log, and role-scoped RLS with positive and negative tests (ADR-039, ADR-040, ADR-041). 310 structural + 261 behavioural pgTAP. No RPC, no UI, no module wiring.
-- ▶️ **WP5C — Child rotation foundation — NEXT.** See [`PILOT_WEEKLY_CHORES.md`](./PILOT_WEEKLY_CHORES.md); approved schedules and staggered cursors in ADR-036.
+- ✅ **WP5C — Child rotation foundation — complete.** `rotation_rules`, `rotation_members`, `rotation_assignment_log`, a persisted per-chore cursor, one-decision-per-occurrence idempotency, role-scoped RLS, and the deferred `assigned_by_rule_id` foreign key. 381 structural + 302 behavioural pgTAP. No UI, no RPC.
+- ⛔ **BLOCKED — WP5B is not applied to the hosted pilot project.** An Approval Brief was produced on 2026-07-31; applying it needs approval **and** access the repository does not have (the local Supabase CLI is authenticated to a different account). Until it lands, WP5D cannot be exercised against hosted data and the approved pilot chores cannot be bootstrapped.
+- ⛔ **BLOCKED — hosted email sign-in is disabled** (`external.email: false`), so nobody can sign in to the hosted pilot at all. Dashboard → Authentication → Providers → Email → enable. Keep signup off.
+- ▶️ **WP5D — Weekly chores UI — NEXT once the two blockers above clear.**
 - ⏸️ **WP4.5 — Identity RPCs — still required, no longer immediately next.**
 - ⏸️ **WP4.6 — Auth account deletion — still required and still BLOCKING before production onboarding or account deletion** (ADR-031). It does not block the non-production pilot, which ships no account management and no account deletion.
 

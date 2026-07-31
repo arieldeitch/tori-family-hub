@@ -1,6 +1,6 @@
--- WP3 — expected enums, tables, columns, defaults and nullability exist.
+﻿-- WP3 ג€” expected enums, tables, columns, defaults and nullability exist.
 begin;
-select plan(34);
+select plan(36);
 
 -- Enums -------------------------------------------------------------------
 select has_type('public', 'household_role', 'household_role enum exists');
@@ -26,16 +26,19 @@ select has_table('public', 'household_invitations', 'household_invitations exist
 -- WP3 must not create business-module tables.
 select hasnt_table('public', 'user_roles',
   'no user_roles table: role lives on household_members (D2)');
--- The WP5B task tables now exist and are asserted in 090; scope discipline is
--- kept by proving the NEXT package has not leaked in early. rotation_rules is
--- WP5C, and task_assignments.assigned_by_rule_id deliberately has no FK until
--- it arrives.
-select hasnt_table('public', 'rotation_rules',
-  'no rotation_rules table: the rotation engine is WP5C, not WP5B');
-select hasnt_table('public', 'rotation_members',
-  'no rotation_members table: the rotation engine is WP5C, not WP5B');
-select hasnt_table('public', 'rotation_assignment_log',
-  'no rotation_assignment_log table: the rotation engine is WP5C, not WP5B');
+-- The WP5B task tables and the WP5C rotation tables now exist and are asserted
+-- in 090 and 100. Scope discipline is kept by proving the NEXT package has not
+-- leaked in early: WP5D is UI only and must add no table at all.
+select has_table('public', 'rotation_rules', 'rotation_rules exists (WP5C)');
+select has_table('public', 'rotation_members', 'rotation_members exists (WP5C)');
+select has_table('public', 'rotation_assignment_log', 'rotation_assignment_log exists (WP5C)');
+
+-- WP5D wires the weekly view to the tables that already exist. If any of these
+-- appear, a UI package has quietly grown a schema.
+select hasnt_table('public', 'task_comments',
+  'no task_comments table: WP5D is UI only and introduces no schema');
+select hasnt_table('public', 'notifications',
+  'no notifications table: delivery is post-pilot work, not WP5D');
 
 -- Columns -----------------------------------------------------------------
 select columns_are('public', 'households', array[

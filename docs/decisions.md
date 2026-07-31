@@ -422,6 +422,34 @@ Lovable republished about 40 minutes after the merge. **A merge to `main` is not
 
 Served artefacts moved from `NavigationRoute` ×1 / `PrecacheFallbackPlugin` ×0 to **×0 / ×1**, and the offline page now carries the self-heal script.
 
+## ADR-043 — The rotation cursor is a stored column, not a derived value (WP5C, Accepted)
+
+WP5C persists the rotation: `rotation_rules`, `rotation_members`, `rotation_assignment_log`. It does **not** reimplement the engine — `src/domain/shifts.ts` (`ALGORITHM_VERSION = "shifts.v1"`) already selects deterministically and is tested, and `08-rotation-engine.md` is explicit that the pilot reuses it. This is the durable memory around that engine.
+
+**Decision: the cursor lives in `rotation_rules.cursor_profile_id`.**
+
+The tempting alternative is to derive "whose turn is next" from this week's occurrences. That cannot work here. ADR-036 requires each chore's cursor to **continue across weeks and never reset on Sunday** — which is exactly what makes the trash chore alternate by occurrence and lets a week legitimately end 9–8 with the split reversing next week. A value derived from the current week has no memory of where the previous week stopped, so it would silently reset every Sunday and produce the imbalance ADR-036 explicitly accepts as *self-correcting*.
+
+Storing it also makes determinism real rather than coincidental: two devices computing the same week agree because they read the same cursor, not because they happen to run the same code at the same moment.
+
+**The cursor is never client-writable.** It is `SELECT`-only for `authenticated`. Letting a client set it would let somebody hand themselves the easy chore forever — precisely the hidden decision this package exists to prevent. It moves server-side, alongside the log entry explaining the move.
+
+### Idempotency is a unique index, not a convention
+
+`rotation_assignment_log` carries a unique index on `(rotation_rule_id, task_instance_id)`. One decision per occurrence, enforced by the database. A retry, a double-tap or a second device collides with the index and can treat the violation as a no-op instead of allocating the same chore twice. `rotation_rules_one_live_per_template` does the same job one level up: a chore can never have two competing cursors.
+
+### `advance_mode` is a column because the product has not decided
+
+`PILOT_WEEKLY_CHORES.md` §10 leaves "per occurrence or per week?" open, and `08-rotation-engine.md` requires it to be configurable. So it is `rotation_advance_mode`, defaulting to `per_occurrence` (what staggers the two dishwasher chores). Hard-coding it would have quietly closed a decision that is still the owner's to make.
+
+### Explainability is stored verbatim
+
+Each decision records `reason_code`, `algorithm_version`, the candidate snapshot, the cursor as it stood **before** the decision, and the exact Hebrew sentence shown. The sentence is stored rather than re-derived so the explanation can never drift from what the family actually read — the same principle as the WP5B instance snapshots.
+
+### The one DELETE policy in the schema
+
+`rotation_members` is the only table a client may hard-delete from. Removing somebody from a rotation edits a forward-looking list; every turn they already took survives in the append-only log. `070_wp4_policies_and_grants.sql` now asserts the **exact** delete-policy set by name, so a second exception cannot slip in unnoticed.
+
 ## Notes
 
 - **ADR-006 (rotation determinism)** is reinforced by the WP0 timezone fix: date-only rotation logic must not depend on the runtime timezone. This did not require a new ADR — it is an implementation correction under an existing accepted decision (see [`08-rotation-engine.md`](./08-rotation-engine.md)).
