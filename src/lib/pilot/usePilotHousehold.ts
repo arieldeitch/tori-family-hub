@@ -7,6 +7,7 @@
 // them (ADR-027).
 import { useCallback, useEffect, useState } from "react";
 import { getSupabaseClient } from "@/infrastructure/supabase";
+import { classifyError, describeForLog, type ClassifiedError } from "@/lib/errors/classifyError";
 import type { PerspectiveProfile } from "./perspective";
 
 export interface PilotHousehold {
@@ -18,7 +19,12 @@ export interface PilotHouseholdState {
   status: "loading" | "ready" | "error";
   household: PilotHousehold | null;
   profiles: PerspectiveProfile[];
-  error: string | null;
+  /**
+   * A classified failure, never a raw driver message. Reporting "no network" for
+   * an expired session or a missing migration sends the family to reboot a
+   * working router while the real fault stays invisible.
+   */
+  failure: ClassifiedError | null;
   reload: () => void;
 }
 
@@ -26,16 +32,25 @@ export function usePilotHousehold(enabled: boolean): PilotHouseholdState {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [household, setHousehold] = useState<PilotHousehold | null>(null);
   const [profiles, setProfiles] = useState<PerspectiveProfile[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<ClassifiedError | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   const reload = useCallback(() => setReloadToken((n) => n + 1), []);
+
+  const fail = useCallback((error: unknown, status?: number | null): void => {
+    const classified = classifyError({ error, status: status ?? null });
+    // Technical detail goes to the console, never to the screen: a PostgREST
+    // message can carry row values.
+    console.warn(describeForLog(classified));
+    setFailure(classified);
+    setStatus("error");
+  }, []);
 
   useEffect(() => {
     if (!enabled) return;
     let active = true;
     setStatus("loading");
-    setError(null);
+    setFailure(null);
 
     const load = async (): Promise<void> => {
       const client = getSupabaseClient();
@@ -51,10 +66,11 @@ export function usePilotHousehold(enabled: boolean): PilotHouseholdState {
 
       if (!active) return;
 
-      const failure = householdResult.error ?? profileResult.error;
-      if (failure) {
-        setError(failure.message);
-        setStatus("error");
+      const queryError = householdResult.error ?? profileResult.error;
+      if (queryError) {
+        const status =
+          (householdResult.error ? householdResult.status : profileResult.status) ?? null;
+        fail(queryError, status);
         return;
       }
 
@@ -72,14 +88,13 @@ export function usePilotHousehold(enabled: boolean): PilotHouseholdState {
 
     void load().catch((err: unknown) => {
       if (!active) return;
-      setError(err instanceof Error ? err.message : String(err));
-      setStatus("error");
+      fail(err);
     });
 
     return () => {
       active = false;
     };
-  }, [enabled, reloadToken]);
+  }, [enabled, reloadToken, fail]);
 
-  return { status, household, profiles, error, reload };
+  return { status, household, profiles, failure, reload };
 }

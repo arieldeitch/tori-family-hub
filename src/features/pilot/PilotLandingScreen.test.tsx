@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { PilotLandingScreen } from "./PilotLandingScreen";
 import { PERSPECTIVE_STORAGE_KEY, type PerspectiveProfile } from "@/lib/pilot/perspective";
 import type { PilotHouseholdState } from "@/lib/pilot/usePilotHousehold";
+import { classifyError } from "@/lib/errors/classifyError";
 
 // Generic placeholder people — never the real pilot household (ADR-034).
 const PROFILES: PerspectiveProfile[] = [
@@ -28,7 +29,7 @@ function householdState(overrides: Partial<PilotHouseholdState> = {}): PilotHous
     status: "ready",
     household: { id: "h-1", name: "משק בית לדוגמה" },
     profiles: PROFILES,
-    error: null,
+    failure: null,
     reload: vi.fn(),
     ...overrides,
   };
@@ -121,12 +122,66 @@ describe("PilotLandingScreen", () => {
     expect(screen.getByText(/טוען את בני הבית/)).toBeInTheDocument();
   });
 
-  it("shows an actionable error state and can retry", () => {
+  it("shows an actionable error state and can retry when retrying could help", () => {
     const reload = vi.fn();
-    setup(householdState({ status: "error", error: "boom", reload }));
-    expect(screen.getByText(/לא הצלחנו לטעון/)).toBeInTheDocument();
+    const failure = classifyError({ online: true, status: 503 });
+    setup(householdState({ status: "error", failure, reload }));
+    expect(screen.getByText(/השרת נתקל בשגיאה/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "נסו שוב" }));
     expect(reload).toHaveBeenCalled();
+  });
+
+  // The whole point of the classification work: the screen must name the actual
+  // fault instead of blaming the family's internet connection.
+  it("never claims the network is down when the browser is online", () => {
+    for (const failure of [
+      classifyError({ online: true, status: 401 }),
+      classifyError({ online: true, status: 500 }),
+      classifyError({ online: true, status: 404, error: { code: "PGRST205" } }),
+      classifyError({ online: true, error: { code: "MISSING_RUNTIME_CONFIG" } }),
+    ]) {
+      const { unmount } = render(
+        <PilotLandingScreen
+          authenticatedActor={ACTOR}
+          householdState={householdState({ status: "error", failure })}
+          onSignOut={vi.fn()}
+          storage={memoryStorage()}
+        />,
+      );
+      expect(screen.queryByText(/אין חיבור לרשת/)).toBeNull();
+      unmount();
+    }
+  });
+
+  it("shows the offline message only for a genuinely offline browser", () => {
+    setup(householdState({ status: "error", failure: classifyError({ online: false }) }));
+    expect(screen.getByText(/אין חיבור לרשת כרגע/)).toBeInTheDocument();
+  });
+
+  it("names an expired session and does not offer a pointless retry", () => {
+    setup(
+      householdState({ status: "error", failure: classifyError({ online: true, status: 401 }) }),
+    );
+    expect(screen.getByText(/ההתחברות פגה/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "נסו שוב" })).toBeNull();
+  });
+
+  it("names a missing migration rather than a network fault", () => {
+    setup(
+      householdState({
+        status: "error",
+        failure: classifyError({ online: true, status: 404, error: { code: "PGRST205" } }),
+      }),
+    );
+    expect(screen.getByText(/חסר עדכון במסד הנתונים/)).toBeInTheDocument();
+  });
+
+  it("renders a permission refusal as a permission state, not an error to retry", () => {
+    setup(
+      householdState({ status: "error", failure: classifyError({ online: true, status: 403 }) }),
+    );
+    expect(screen.getByText(/אין הרשאה לפעולה הזו/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "נסו שוב" })).toBeNull();
   });
 
   it("shows a permission-denied state when RLS returns no profiles", () => {
