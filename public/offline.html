@@ -6,10 +6,21 @@
     <meta name="theme-color" content="#2C7A7B" />
     <title>אין חיבור — Tori</title>
     <style>
-      :root { color-scheme: light dark; }
-      html, body { margin: 0; padding: 0; }
+      :root {
+        color-scheme: light dark;
+      }
+      html,
       body {
-        font-family: "Heebo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          "Heebo",
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
         background: #fafaf9;
         color: #111827;
         min-height: 100vh;
@@ -20,15 +31,20 @@
         line-height: 1.5;
       }
       @media (prefers-color-scheme: dark) {
-        body { background: #111827; color: #f3f4f6; }
-        .card { background: #1f2937; }
+        body {
+          background: #111827;
+          color: #f3f4f6;
+        }
+        .card {
+          background: #1f2937;
+        }
       }
       .card {
         max-width: 420px;
         background: #ffffff;
         border-radius: 16px;
         padding: 24px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
         text-align: center;
       }
       .badge {
@@ -37,18 +53,25 @@
         gap: 8px;
         padding: 6px 12px;
         border-radius: 999px;
-        background: rgba(44,122,123,0.12);
-        color: #2C7A7B;
+        background: rgba(44, 122, 123, 0.12);
+        color: #2c7a7b;
         font-size: 13px;
         font-weight: 600;
         margin-bottom: 16px;
       }
-      h1 { font-size: 20px; margin: 0 0 8px; }
-      p { font-size: 15px; margin: 0 0 16px; opacity: 0.85; }
+      h1 {
+        font-size: 20px;
+        margin: 0 0 8px;
+      }
+      p {
+        font-size: 15px;
+        margin: 0 0 16px;
+        opacity: 0.85;
+      }
       button {
         appearance: none;
         border: 0;
-        background: #2C7A7B;
+        background: #2c7a7b;
         color: #fff;
         padding: 10px 20px;
         border-radius: 10px;
@@ -56,17 +79,104 @@
         font-weight: 600;
         cursor: pointer;
       }
-      button:hover { filter: brightness(1.05); }
-      .muted { font-size: 12px; opacity: 0.6; margin-top: 12px; }
+      button:hover {
+        filter: brightness(1.05);
+      }
+      .muted {
+        font-size: 12px;
+        opacity: 0.6;
+        margin-top: 12px;
+      }
     </style>
   </head>
   <body>
     <main class="card" role="alert" aria-live="polite">
-      <div class="badge">מצב לא מקוון</div>
-      <h1>אין חיבור לרשת כרגע</h1>
-      <p>הצגנו את מסגרת האפליקציה מהמטמון. פעולות משפחתיות שדורשות רשת יחזרו לפעול ברגע שהחיבור יחזור.</p>
-      <button onclick="location.reload()">נסה שוב</button>
-      <p class="muted">בשלב זה אין סנכרון ברקע. שינויים שנעשו אחרי הניתוק אינם נשמרים.</p>
+      <div class="badge" id="badge">מצב לא מקוון</div>
+      <h1 id="title">אין חיבור לרשת כרגע</h1>
+      <p id="body">
+        הצגנו את מסגרת האפליקציה מהמטמון. פעולות משפחתיות שדורשות רשת יחזרו לפעול ברגע שהחיבור
+        יחזור.
+      </p>
+      <button id="retry" type="button">נסה שוב</button>
+      <p class="muted" id="note">בשלב זה אין סנכרון ברקע. שינויים שנעשו אחרי הניתוק אינם נשמרים.</p>
     </main>
+
+    <script>
+      // This page is a FALLBACK. If it is showing while the browser reports a
+      // working connection, the page itself is the bug — that is exactly what a
+      // stale or misrouted service worker does, and it is what pinned the hosted
+      // app on this screen. So: tell the truth, and self-heal once.
+      (function () {
+        var RECOVERY_FLAG = "tori.offline.recovery-attempted";
+
+        function setOnlineButBrokenCopy() {
+          document.getElementById("badge").textContent = "תקלה בטעינת האפליקציה";
+          document.getElementById("title").textContent = "החיבור לאינטרנט תקין";
+          document.getElementById("body").textContent =
+            "לא הצלחנו לטעון את האפליקציה למרות שהרשת פועלת. ייתכן שנשמרה גרסה תקולה במכשיר. " +
+            "אנחנו מנקים אותה ומרעננים.";
+          document.getElementById("note").textContent =
+            "אם המסך הזה חוזר, נסו לרענן שוב או לפתוח את האפליקציה בכרטיסייה חדשה.";
+        }
+
+        async function clearWorkersAndCaches() {
+          try {
+            if ("serviceWorker" in navigator) {
+              var regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(
+                regs.map(function (r) {
+                  return r.unregister();
+                }),
+              );
+            }
+          } catch (e) {
+            /* best effort */
+          }
+          try {
+            if (window.caches && caches.keys) {
+              var keys = await caches.keys();
+              await Promise.all(
+                keys.map(function (k) {
+                  return caches.delete(k);
+                }),
+              );
+            }
+          } catch (e) {
+            /* best effort */
+          }
+        }
+
+        async function recover() {
+          await clearWorkersAndCaches();
+          // Cache-bust so the reload cannot be answered from any surviving cache.
+          location.replace(
+            location.pathname === "/offline.html" ? "/" : location.href.split("#")[0],
+          );
+        }
+
+        document.getElementById("retry").addEventListener("click", function () {
+          // An explicit retry always clears first: if the user is looking at this
+          // page, whatever is cached has not been helping them.
+          sessionStorage.removeItem(RECOVERY_FLAG);
+          recover();
+        });
+
+        if (navigator.onLine) {
+          setOnlineButBrokenCopy();
+          // Recover automatically, but only once per tab, so a genuinely broken
+          // server cannot turn into a reload loop.
+          var attempted = false;
+          try {
+            attempted = sessionStorage.getItem(RECOVERY_FLAG) === "1";
+          } catch (e) {}
+          if (!attempted) {
+            try {
+              sessionStorage.setItem(RECOVERY_FLAG, "1");
+            } catch (e) {}
+            recover();
+          }
+        }
+      })();
+    </script>
   </body>
 </html>
