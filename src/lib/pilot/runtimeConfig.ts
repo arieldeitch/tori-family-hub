@@ -92,7 +92,6 @@ export function readPilotRuntimeConfig(
   }
 
   try {
-    // eslint-disable-next-line no-new
     new URL(url as string);
   } catch {
     return {

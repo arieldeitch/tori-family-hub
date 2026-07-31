@@ -4,13 +4,13 @@ Source of truth for security and permissions.
 
 > In the current app, roles and PIN are **UX guards only** — not security. Real enforcement (Auth + RLS) is future work. See [`project-status.md`](./project-status.md) and [`LOVABLE_KNOWN_LIMITATIONS.md`](./LOVABLE_KNOWN_LIMITATIONS.md).
 
-## Current enforcement state (after WP4)
+## Current enforcement state (after WP4 and WP5B)
 
-RLS is **enforced** on the four identity tables. Access is granted at **column level only** — `authenticated` holds no table-wide privilege anywhere, so a column added by a future migration is unreadable until deliberately granted.
+RLS is **enforced** on the four identity tables and the four task tables. Access is granted at **column level only** — `authenticated` holds no table-wide privilege anywhere, so a column added by a future migration is unreadable until deliberately granted.
 
 `anon` holds **nothing**: no schema `USAGE`, no function `EXECUTE`, no table or column privilege, no policy. There is no unauthenticated surface in this domain.
 
-### Policy matrix
+### Policy matrix — identity (WP4)
 
 | Table                   | SELECT                                                                                                                                   | UPDATE                                                                                                          | INSERT     | DELETE     |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------- | ---------- |
@@ -20,6 +20,38 @@ RLS is **enforced** on the four identity tables. Access is granted at **column l
 | `household_invitations` | **active owner only**, safe columns, **never `token_hash` or `created_by`**                                                              | **none**                                                                                                        | **none**   | **none**   |
 
 Updatable columns: `households` — `name`, `timezone`, `locale`, `week_starts_on`, quiet hours. `member_profiles` — `display_name`, `avatar_path`, `color_token`.
+
+### Policy matrix — tasks (WP5B)
+
+Membership is only the outer gate. The read predicate is the caller's **role** (ADR-041), in three scopes.
+
+| Table                | owner / adult                          | child                                                        | guest / service_provider                       |
+| -------------------- | -------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------- |
+| `task_templates`     | all, **including soft-deleted** (trash) | live, **excluding `adult_only`**                             | only templates they hold a **live assignment** from |
+| `task_instances`     | all, including soft-deleted            | live family week, excluding occurrences of `adult_only` templates | only occurrences **assigned to them**          |
+| `task_assignments`   | all                                    | all, excluding adult-only chores                             | only rows where **they are the assignee**      |
+| `task_activity_log`  | all                                    | history of what they can see                                 | only history of their own assigned occurrences |
+
+Writes follow the same scope:
+
+| Action                              | Permitted to                                                        |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| Define / edit a template            | owner, adult                                                        |
+| Create or change an assignment      | owner, adult                                                        |
+| Generate or quick-add an occurrence | owner, adult, child — **never** guest or service_provider          |
+| Complete / reopen an occurrence     | owner, adult; child in scope; guest/service_provider **only on their own assigned occurrence** |
+| Soft-delete or restore              | **owner, adult only**                                               |
+| Append to the activity log          | anyone entitled to act on that occurrence, attributed to themselves — owner/adult may attribute to a child (ADR-035) |
+| Hard delete anything                | **nobody** — no DELETE policy and no DELETE grant exists            |
+
+Two properties that are easy to lose:
+
+- **Access follows the LIVE assignment** (`proposed`/`accepted` only). A `reassigned` or `declined` row stops granting access immediately, though the former assignee still sees their own historical assignment row.
+- **Standing is re-verified inside every helper**, so a suspended or expired assignee loses access at once, without anybody having to rewrite assignment rows.
+
+`task_templates.adult_only` is a **real boundary for children**, not a presentation hint — this is where *"a child does not see `adults_only` data"* below is enforced. It is not general secrecy: a guest or service provider explicitly assigned an adult-only chore can still see and complete it. Only an owner or adult can write templates, so a child cannot clear the flag.
+
+A child is deliberately **not** narrowed to their own chores: `PILOT_WEEKLY_CHORES.md` §3 and §13 make the whole-family week an acceptance criterion.
 
 ### What this makes impossible
 
@@ -103,6 +135,7 @@ These require an RPC or a server endpoint (never a client-side write):
 - Membership predicate — implemented in `private.is_active_household_member` and its siblings, which additionally require unexpired access, a live household and an active caller profile:
   `EXISTS (SELECT 1 FROM household_members WHERE household_id = x AND auth_user_id = auth.uid() AND status = 'active')`.
 - Roles live in a dedicated table, never on a profile row. That dedicated table is **`household_members`** (ADR-024) — the role is household-scoped and there is no separate `user_roles` table. `private.has_household_role`, SECURITY DEFINER with a fixed empty `search_path`, gates privileged checks (ADR-027).
-- Authorization helpers live in the non-exposed `private` schema and never accept a user id, so they cannot be called as Data API RPCs and cannot be used to probe another account (ADR-027).
+- Authorization helpers live in the non-exposed `private` schema and never accept a user id, so they cannot be called as Data API RPCs and cannot be used to probe another account (ADR-027). There are **seven**: three identity helpers (WP4) and four task-scope helpers (WP5B). Every one of them re-derives standing from `auth.uid()` and re-checks status, expiry, soft deletion and profile activity — including the ones that merely look up a flag, which would otherwise be a one-bit oracle over arbitrary ids. `080_wp4_helper_functions.sql` enforces this over the whole schema.
+- **Membership is never the whole read predicate on a business table.** Scope by role, or a guest silently gains household-wide visibility (ADR-041).
 - Sensitive columns are protected by **column-level grants**, since RLS cannot express column visibility (ADR-029).
 - Every RLS change requires positive **and** negative tests (see [`09-testing-strategy.md`](./09-testing-strategy.md#rls-negative-tests)).
