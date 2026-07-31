@@ -32,6 +32,13 @@ jobs:
       - name: Check no service-role material reaches the client
         run: bun run check:client-secrets
 
+      # CI has no .env.local, so this builds exactly the way a published Lovable
+      # build does. It asserts the inlined VITE_SUPABASE_URL is a remote https
+      # origin — a bundle pointing at a developer's localhost works on that one
+      # machine and fails for the family as "no internet" (ADR-042).
+      - name: Check the client bundle depends on no local endpoint
+        run: bun run check:bundle-endpoints
+
       # Fails if pilot household data ever reaches a tracked file, and proves
       # pilot-household.local.json is ignored and untracked (ADR-034). Skips
       # cleanly in CI, where no local pilot configuration exists.

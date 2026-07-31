@@ -1,5 +1,6 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { VitePWA } from "vite-plugin-pwa";
+import { buildWorkboxOptions } from "./src/lib/pwa/workboxOptions";
 
 // The Nitro client output directory differs by build environment: the Lovable
 // sandbox build emits the client bundle to `dist/client`, while a normal local
@@ -58,51 +59,11 @@ export default defineConfig({
             },
           ],
         },
-        workbox: {
-          // App-shell only. NetworkFirst for HTML navigations, CacheFirst for hashed
-          // same-origin assets. OAuth is excluded from navigation fallback.
-          navigateFallback: "/offline.html",
-          navigateFallbackDenylist: [/^\/api\//, /^\/~oauth/],
-          // Point Workbox at the real client output dir (see `pwaGlobDirectory`
-          // above) so the hashed app-shell assets are precached instead of
-          // globbing an empty directory.
-          globDirectory: pwaGlobDirectory,
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
-          cleanupOutdatedCaches: true,
-          skipWaiting: true,
-          clientsClaim: true,
-          runtimeCaching: [
-            {
-              // HTML navigations — always try network first so users don't get stuck
-              // on stale shells. Falls back to the offline shell handled above.
-              urlPattern: ({ request }) => request.mode === "navigate",
-              handler: "NetworkFirst",
-              options: {
-                cacheName: "html-navigations",
-                networkTimeoutSeconds: 3,
-                expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 },
-              },
-            },
-            {
-              urlPattern: ({ request, sameOrigin }) =>
-                sameOrigin && ["style", "script", "worker"].includes(request.destination),
-              handler: "CacheFirst",
-              options: {
-                cacheName: "static-assets",
-                expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
-              },
-            },
-            {
-              urlPattern: ({ request, sameOrigin }) =>
-                sameOrigin && request.destination === "image",
-              handler: "CacheFirst",
-              options: {
-                cacheName: "images",
-                expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
-              },
-            },
-          ],
-        },
+        // Routing rules live in src/lib/pwa/workboxOptions.ts so their invariants
+        // can be unit-tested. In short: the offline page is a FALLBACK, never a
+        // destination, and there is deliberately NO navigateFallback. See the
+        // comments there and docs/PWA.md for what went wrong when there was one.
+        workbox: buildWorkboxOptions({ globDirectory: pwaGlobDirectory }),
       }),
     ],
   },

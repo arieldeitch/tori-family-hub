@@ -35,7 +35,7 @@ export function PilotLandingScreen({
   onSignOut,
   storage,
 }: PilotLandingScreenProps) {
-  const { status, household, profiles, error, reload } = householdState;
+  const { status, household, profiles, failure, reload } = householdState;
 
   const resolvedStorage = useMemo<Pick<Storage, "getItem" | "setItem"> | null>(() => {
     if (storage) return storage;
@@ -93,17 +93,25 @@ export function PilotLandingScreen({
         {status === "loading" ? (
           <LoadingState title="טוען את בני הבית…" />
         ) : status === "error" ? (
-          // A read denied by RLS and a transport failure look the same to the
-          // client, so offer both readings rather than guessing.
-          <ErrorState
-            title="לא הצלחנו לטעון את בני הבית"
-            description={error ?? "נסו שוב בעוד רגע."}
-            action={
-              <Button onClick={reload} variant="outline">
-                נסו שוב
-              </Button>
-            }
-          />
+          // The failure is classified, so the screen names the actual fault
+          // instead of blaming the network for an expired session, a permission
+          // refusal or a missing migration. Retry is offered only when retrying
+          // could plausibly help.
+          failure?.kind === "permission" ? (
+            <PermissionDeniedState title={failure.message} description={failure.hint} />
+          ) : (
+            <ErrorState
+              title={failure?.message ?? "לא הצלחנו לטעון את בני הבית"}
+              description={failure?.hint ?? "נסו שוב בעוד רגע."}
+              action={
+                failure?.retryable !== false ? (
+                  <Button onClick={reload} variant="outline">
+                    נסו שוב
+                  </Button>
+                ) : undefined
+              }
+            />
+          )
         ) : profiles.length === 0 ? (
           <PermissionDeniedState
             title="אין פרופילים להצגה"
