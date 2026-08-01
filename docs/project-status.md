@@ -2,7 +2,61 @@
 
 **Verified facts only.** When a canonical requirement differs from the code, the gap is recorded here and in [`todo.md`](./todo.md) — the requirement is not rewritten and the code is not changed outside a dedicated task. Business truth lives in [`01-product-requirements.md`](./01-product-requirements.md).
 
-_Last updated: **2026-07-31** — hosted offline-screen outage fixed (ADR-042), after WP5B. The 2026-07-30 audit section below is retained as the point-in-time record it was._
+_Last updated: **2026-08-01, 19:05 Asia/Jerusalem (16:05 UTC)** — end-of-session consolidation. Earlier dated sections below are retained as the point-in-time records they were._
+
+> For a thirty-second resume, read [`ai/CURRENT_STATE.md`](./ai/CURRENT_STATE.md) and [`ai/NEXT_STEPS.md`](./ai/NEXT_STEPS.md). This document explains _why_; those are optimised for _where_.
+
+## Snapshot — 2026-08-01
+
+**Everything below was verified against the repository, GitHub, the hosted Supabase project or the live origin on 2026-08-01.**
+
+### Repository
+
+`main` @ **`0523f22`**, in sync with `origin/main` (0 ahead / 0 behind). Working tree **clean**; no stashes; **no open PRs**; last four CI runs on `main` all **success**.
+
+### The four states a piece of work can be in
+
+The distinction matters here, because this project has twice reported merged work as though it were live.
+
+|                                 |                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ **Complete in code, merged** | WP0–WP4 (foundation, knowledge pack, Supabase workflow, identity schema, RLS) · WP5A (pilot access, hosted conversion) · WP5B (task/recurrence foundation) · WP5C (rotation foundation) · WP5D (weekly chores UI, capability probe) · application-shell restoration (ADR-045) · error classification (ADR-042) · service-worker fix (ADR-042) |
+| ✅ **Deployed — backend**       | All 5 migrations applied to `tori-family-pilot`; 68 occurrences, 68 assignments, 68 rotation decisions generated; Email sign-in enabled with signup closed                                                                                                                                                                                    |
+| ⚠️ **Merged but NOT live**      | The entire frontend since **PR #18**. The live origin serves a bundle predating WP5D — so the weekly chores module and the restored navigation **do not exist for a user right now**                                                                                                                                                          |
+| ⛔ **Awaiting external action** | A Lovable Publish. See the blocker below                                                                                                                                                                                                                                                                                                      |
+
+### Database and migrations
+
+Local ledger = remote ledger, all five migrations applied:
+
+`20260724153731` WP2 · `20260725143927` WP3 · `20260725154640` WP4 · `20260730120000` WP5B · `20260731140000` WP5C
+
+Hosted rows on 2026-08-01: `task_templates` 3 · `task_instances` **68** · `task_assignments` **68** · `rotation_assignment_log` **68** · `rotation_rules` 3 · `rotation_members` 6 · `task_activity_log` **0** (correct — nothing completed yet).
+
+Week 2026-07-26 → 2026-08-01: **17 occurrences, all seven days populated**, 17/17 assigned, 17/17 carrying a reason code and an algorithm version. The generated window extends to **2026-08-22**, so the week starting 2026-08-02 is covered. **After that date the view will empty** unless `pilot:week:hosted` is re-run — there is no scheduler.
+
+### Security and RLS
+
+11 tables, 11 RLS-enabled, 26 policies, **0** `USING (true)`, **0** RLS-disabled. `anon` is refused on all 11 (`401 · 42501`) and holds no grant on the task or rotation tables. 9 `private` helpers, each re-deriving standing from `auth.uid()`. Hosted Auth: `external.email: true`, `disable_signup: true`.
+
+### Tests and CI
+
+381 structural pgTAP (12 files) · 302 behavioural RLS pgTAP (10 files) · 34 Auth-backed integration · 29 pilot bootstrap · 26 hosted-guard · **304 app tests** (29 files) · typecheck 0 errors · lint 0 errors / 6 known upstream shadcn warnings · build ✓ · `routes:check` ✓ · `check:client-secrets` ✓ · `check:pilot-privacy` ✓.
+
+### Current blocker — one, external
+
+**Lovable has not rebuilt since PR #18** (merged 2026-07-31 16:25 UTC). Verified by fetching every asset the live page references and finding neither `שדרוג הפיילוט ממתין` (PR #18) nor `מטלות השבוע` (PR #20).
+
+The next gate is therefore: **press Publish in Lovable, then verify the live flow in a browser at 360px and 390px.** Closing it also needs the hosted pilot adult's password, which was not available in the verified environment.
+
+### Known limitations
+
+- **Quick chore creation and editing from the UI are not built** (`PILOT_WEEKLY_CHORES.md` §8). The schema supports both; only the UI is missing.
+- **Occurrence generation is manual.** No scheduler re-runs `pilot:week:hosted`.
+- **Supabase CLI access to the hosted project has been intermittent** — it vanished and returned twice on 2026-08-01. Treat a 403 on the login-role endpoint as this, not a new fault.
+- **WP4.6 still blocks production**: `household_members.auth_user_id` remains `ON DELETE CASCADE` (ADR-031).
+- **Every business module except weekly chores is mock-backed** and resets on refresh.
+- Two owner decisions remain genuinely open (`PILOT_WEEKLY_CHORES.md` §10): whether a child may undo their own completion, and whether adults appear in the weekly view by default.
 
 ## Hosted outage — the app showed "אין חיבור לרשת כרגע" on a working connection
 
@@ -37,12 +91,12 @@ The fix was merged to `main` (`9c05d8f`) and Lovable republished roughly 40 minu
 
 Verified on the live origin, 2026-07-31, with `Cache-Control: no-cache` and cache-busted requests:
 
-| Artefact | Before | After |
-| --- | --- | --- |
-| `/sw.js` `NavigationRoute` | 1 | **0** |
-| `/sw.js` `PrecacheFallbackPlugin` | 0 | **1**, `{fallbackURL:"/offline.html"}` |
-| `/offline.html` self-heal script | absent | **present** |
-| client bundle hash | `usePilotSession-B2Y5eo5F.js` | **`usePilotSession-C5ftLP9Y.js`** |
+| Artefact                          | Before                        | After                                  |
+| --------------------------------- | ----------------------------- | -------------------------------------- |
+| `/sw.js` `NavigationRoute`        | 1                             | **0**                                  |
+| `/sw.js` `PrecacheFallbackPlugin` | 0                             | **1**, `{fallbackURL:"/offline.html"}` |
+| `/offline.html` self-heal script  | absent                        | **present**                            |
+| client bundle hash                | `usePilotSession-B2Y5eo5F.js` | **`usePilotSession-C5ftLP9Y.js`**      |
 
 Behavioural verification with headless Chromium, after waiting for the worker to **activate and claim the client** — the state in which the bug used to appear:
 
@@ -50,7 +104,7 @@ Behavioural verification with headless Chromium, after waiting for the worker to
 - second reload → same
 - `/?sw=off` → works again; no longer intercepted
 - visiting `/offline.html` **directly while online** → self-heals and lands on `/pilot/signin`, which is the recovery path for anyone still holding a bad worker
-- a failed sign-in produced `https://nrfelnchbmofwrfajfai.supabase.co/auth/v1/token` (422) and the app showed *"הפרטים שהוזנו אינם נכונים…"* — an auth failure reported as an auth failure, not as a network failure
+- a failed sign-in produced `https://nrfelnchbmofwrfajfai.supabase.co/auth/v1/token` (422) and the app showed _"הפרטים שהוזנו אינם נכונים…"_ — an auth failure reported as an auth failure, not as a network failure
 - hosts contacted: the app origin, Google Fonts, Lovable's CDN and the hosted Supabase. **No loopback or local endpoint was requested at any point.** No failed requests.
 
 `?sw=off` remains unreliable as a general escape hatch and must not be relied on — see the note in [`PWA.md`](./PWA.md). The recovery that actually works when the app cannot boot is the self-healing offline page.
@@ -59,37 +113,37 @@ Behavioural verification with headless Chromium, after waiting for the worker to
 
 Two separate faults, both reported as "the app is broken" (**ADR-045**).
 
-**1. The navigation disappeared.** `src/routes/index.tsx` sent every signed-in person to `/pilot`, a screen that renders *outside* `AppShell` and therefore has no header, bottom navigation or sidebar. All forty-odd other routes still existed and still rendered inside the shell — they were simply unreachable. **Nothing had been deleted.** The front door had been pointed at one room.
+**1. The navigation disappeared.** `src/routes/index.tsx` sent every signed-in person to `/pilot`, a screen that renders _outside_ `AppShell` and therefore has no header, bottom navigation or sidebar. All forty-odd other routes still existed and still rendered inside the shell — they were simply unreachable. **Nothing had been deleted.** The front door had been pointed at one room.
 
 Restored: the root route now sends a signed-in person to **`/today`**; the weekly chores are a first-class module at **`/chores`** inside `AppShell`; `/pilot` is a thin account screen that links back into the app instead of trapping people. `nav.chores` joins the primary bottom navigation, and the mock-backed `/tasks` prototype moves to the secondary list.
 
 Reachable again, all inside the shell with working direct visits and refresh: **Today · מטלות השבוע (chores) · calendar · shopping · more · tasks · transport · errands · follow-ups · shifts · household · notifications · settings · child view · templates · search**.
 
-**2. The weekly view was empty because definitions are not occurrences.** `pilot:chores` creates templates, rotation rules and participants — no dated rows. The view queries `task_instances` for a date range, so it correctly found nothing. The earlier "3 / 3 / 6" convergence was real but proved nothing about a *week*.
+**2. The weekly view was empty because definitions are not occurrences.** `pilot:chores` creates templates, rotation rules and participants — no dated rows. The view queries `task_instances` for a date range, so it correctly found nothing. The earlier "3 / 3 / 6" convergence was real but proved nothing about a _week_.
 
 New `pilot:week` / `pilot:week:hosted` generate the dated rolling window using `shifts.v1`, persisting occurrences, live assignments, rotation decisions with reason codes and verbatim Hebrew explanations, and advancing the cursor only after a decision is recorded.
 
 **Verified locally** (idempotency and determinism):
 
-| Run | Occurrences created | Totals |
-| --- | --- | --- |
-| 1 | 53 | 0 → 53 |
-| 2 | 15 (back-filled week start) | 53 → 68 |
-| 3 | **0** | **68 → 68** |
+| Run | Occurrences created         | Totals      |
+| --- | --------------------------- | ----------- |
+| 1   | 53                          | 0 → 53      |
+| 2   | 15 (back-filled week start) | 53 → 68     |
+| 3   | **0**                       | **68 → 68** |
 
 Rotation on three consecutive days: one child unloads while the other loads, swapping each day — the ADR-036 stagger. Trash falls on Sunday/Tuesday/Thursday only. Every decision `NEXT_IN_SEQUENCE`.
 
 ### Hosted week generated (2026-08-01)
 
-| Table | Before | After |
-| --- | --- | --- |
-| `task_templates` | 3 | 3 |
-| `task_instances` | **0** | **68** |
-| `task_assignments` | **0** | **68** |
-| `rotation_assignment_log` | **0** | **68** |
-| `rotation_rules` | 3 | 3 |
-| `rotation_members` | 6 | 6 |
-| `task_activity_log` | 0 | 0 (no completions yet — correct) |
+| Table                     | Before | After                            |
+| ------------------------- | ------ | -------------------------------- |
+| `task_templates`          | 3      | 3                                |
+| `task_instances`          | **0**  | **68**                           |
+| `task_assignments`        | **0**  | **68**                           |
+| `rotation_assignment_log` | **0**  | **68**                           |
+| `rotation_rules`          | 3      | 3                                |
+| `rotation_members`        | 6      | 6                                |
+| `task_activity_log`       | 0      | 0 (no completions yet — correct) |
 
 `task_instances` at **0** is the precise root cause of the empty weekly view, now closed.
 
@@ -115,24 +169,24 @@ No remote-only entry existed, so there was no drift. `db push --dry-run` listed 
 
 ### Verified on the hosted project after applying
 
-| Check | Result |
-| --- | --- |
-| Migration ledger | all five local = remote |
-| Tables | **11** created, **11** `ENABLE ROW LEVEL SECURITY` |
-| Policies | **26** (6 identity + 11 WP5B + 9 WP5C), matching per-table counts exactly |
-| `USING (true)` / RLS disabled | **0 / 0** |
-| `anon` probe, all 11 tables | **401 · `42501`** — exists, refused. None returned 200 |
-| `anon` grants on the new tables | **0** |
-| `private` helpers | **9** (3 identity + 4 task + 2 rotation) |
-| Idempotency indexes | `task_instances_occurrence_key_unique`, `rotation_assignment_log_one_per_instance` present |
-| Append-only triggers | `task_activity_log` and `rotation_assignment_log` no-update/no-delete present |
+| Check                           | Result                                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| Migration ledger                | all five local = remote                                                                    |
+| Tables                          | **11** created, **11** `ENABLE ROW LEVEL SECURITY`                                         |
+| Policies                        | **26** (6 identity + 11 WP5B + 9 WP5C), matching per-table counts exactly                  |
+| `USING (true)` / RLS disabled   | **0 / 0**                                                                                  |
+| `anon` probe, all 11 tables     | **401 · `42501`** — exists, refused. None returned 200                                     |
+| `anon` grants on the new tables | **0**                                                                                      |
+| `private` helpers               | **9** (3 identity + 4 task + 2 rotation)                                                   |
+| Idempotency indexes             | `task_instances_occurrence_key_unique`, `rotation_assignment_log_one_per_instance` present |
+| Append-only triggers            | `task_activity_log` and `rotation_assignment_log` no-update/no-delete present              |
 
 ### Approved chores, loaded through the guarded bootstrap
 
 `bun run pilot:chores:hosted` reuses `assertHostedPilotEnvironment` verbatim and shares its convergence logic with the local command, so "converged" cannot mean two different things in two environments. No pilot data entered a migration or `seed.sql` (ADR-034).
 
 - **Idempotent**: `0 → 3` templates, `0 → 3` rules, `0 → 6` participants on the first run, then **3 → 3 and 6 → 6** on two further runs.
-- **Guard proven**: a non-allowlisted project reference is refused with *"is not in the approved allowlist"*.
+- **Guard proven**: a non-allowlisted project reference is refused with _"is not in the approved allowlist"_.
 - **ADR-036 stagger verified on hosted**: the two dishwasher chores start with **different** children, and the trash chore starts with the same child as unloading. Each rule has its own `cursor_profile_id`, currently `null` (never run).
 - All three rules are `fixed_sequence` · `shifts.v1` · `per_occurrence`.
 
@@ -188,13 +242,13 @@ It is returned for **every** address, so it says nothing about whether an accoun
 
 **This cannot be fixed with the service-role/secret key.** The Admin API can create and update users, but enabling an auth provider is project configuration, reachable only through the Supabase Dashboard or the Management API with a personal access token.
 
-**The one manual step:** Supabase Dashboard → the `tori-family-pilot` project → Authentication → Providers → **Email → enable**. Leave *"Allow new users to sign up"* **off** — that is the wanted posture, and it does not block sign-in.
+**The one manual step:** Supabase Dashboard → the `tori-family-pilot` project → Authentication → Providers → **Email → enable**. Leave _"Allow new users to sign up"_ **off** — that is the wanted posture, and it does not block sign-in.
 
 Until then the owner-login work (set password, confirm email, verify the membership binding) cannot be completed or verified end to end, because step "sign in and load the household under RLS" is rejected before any credential is checked.
 
 ### What was fixed here instead
 
-The screen lied about the cause. `PilotSignInScreen` rendered one hard-coded message — *"הפרטים שהוזנו אינם נכונים"* — for **every** sign-in failure, discarding the real error. So a server with the provider switched off told the family their password was wrong, which is a fault they can never fix by retrying. This is the third instance of the ADR-042 principle, and it is now classified: `email_provider_disabled` renders **"הכניסה עם דוא״ל מושבתת בשרת"** with a hint naming the configuration fix, and a genuinely wrong password still renders the credential message. Sign-in failures now flow through `classifyError` like every other failure.
+The screen lied about the cause. `PilotSignInScreen` rendered one hard-coded message — _"הפרטים שהוזנו אינם נכונים"_ — for **every** sign-in failure, discarding the real error. So a server with the provider switched off told the family their password was wrong, which is a fault they can never fix by retrying. This is the third instance of the ADR-042 principle, and it is now classified: `email_provider_disabled` renders **"הכניסה עם דוא״ל מושבתת בשרת"** with a hint naming the configuration fix, and a genuinely wrong password still renders the credential message. Sign-in failures now flow through `classifyError` like every other failure.
 
 ## Audit of 2026-07-30 — what was verified and what was corrected
 

@@ -2,6 +2,29 @@
 
 Operational instructions for Claude Code working on Tori.
 
+---
+
+## ▶️ Start here (2026-08-01)
+
+**How to behave** — inspection, autonomy, invariants, known traps — now lives in
+[`ai/CLAUDE_INSTRUCTIONS.md`](./ai/CLAUDE_INSTRUCTIONS.md). Read it first.
+
+**Where things are** — branch, commit, hosted rows, deployment, the blocker — lives in
+[`ai/CURRENT_STATE.md`](./ai/CURRENT_STATE.md), and the ordered plan in
+[`ai/NEXT_STEPS.md`](./ai/NEXT_STEPS.md).
+
+### The three things to know before touching anything
+
+1. **Inspect the repository first.** `git status`, `git log`, `git stash list`, `gh pr list`, `gh run list`. Conversation memory does not persist and is not evidence; a previous session's summary is a lead to verify.
+2. **Continue from the current blocker, don't rediscover it.** As of 2026-08-01 that is: _the live Lovable frontend predates PR #18, so the merged weekly-chores module and restored navigation are not live._ Everything upstream of that — code, migrations, hosted data — is done and verified.
+3. **Done means verified live user functionality.** Not merged code, not green tests, not database rows. This project has twice reported merged work as though it were live.
+
+Work autonomously; do not ask for routine approvals. Stop only for a missing credential, an irreversible action, a new material cost, secret exposure, or a product decision the canonical documents do not settle. When one blocker appears, finish every independent thing first, then report it with the exact evidence needed to clear it.
+
+After substantial work: update the documents that own the facts you changed, commit coherently, push, and deliver **one** evidence-based report.
+
+---
+
 ## Mandatory reading order
 
 1. [`00-knowledge-pack-readme.md`](./00-knowledge-pack-readme.md)

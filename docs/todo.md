@@ -2,12 +2,31 @@
 
 Prioritized future work. **Do not open several business modules in parallel before Identity, Household, and RLS are stable.**
 
-_Reviewed against the repository on **2026-07-30**, then updated after PR #10 was merged into `main` as `b9c603b`. Every ✅ below was re-checked for evidence in the repository; nothing is marked complete on the strength of a scaffold file._
+_Reviewed against the repository, GitHub, the hosted Supabase project and the live origin on **2026-08-01, 19:05 Asia/Jerusalem**. Every ✅ was re-checked for evidence; nothing is marked complete on the strength of a scaffold file, and nothing is marked live on the strength of a merge._
 
-## P0 — done, except one dashboard action
+## ▶️ THE NEXT ACTION — publish the frontend from Lovable
 
-- ✅ **PR #10 merged 2026-07-30** as `b9c603b`, branch deleted. `main` now carries the ADR-038 tracked root `.env`, verified to hold exactly `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. A published Lovable build from `main` can configure itself.
-- ⚠️ **Still open — disable signup on the hosted `tori-family-pilot` project.** Attempted 2026-07-30 and **not possible from this machine**: the Supabase CLI here is authenticated to a different account that cannot see the pilot project, which lives in a personal organisation. No workaround was attempted. Manual action: _Supabase Dashboard → `tori-family-pilot` → Authentication → Providers → Email → disable new user signups._ Leave existing sign-in working and other providers untouched.
+**Everything else is finished and waiting on this one step.** `main` is green, the migrations are applied, and the hosted database holds 68 dated occurrences — but the live origin still serves a frontend that **predates PR #18**, so the weekly chores module and the restored navigation do not exist for a user.
+
+**Do:** open the Lovable project and press **Publish / Update**.
+
+**Acceptance evidence** — a hit from this proves it, nothing else does:
+
+```bash
+curl -s https://home-flow-joy.lovable.app/ -o /tmp/L.html
+for a in $(grep -a -o '/assets/[^"]*\.js' /tmp/L.html | sort -u); do
+  curl -s "https://home-flow-joy.lovable.app$a" | grep -aq 'מטלות השבוע' && echo "PUBLISHED: $a"
+done
+```
+
+**Then**, and only then, verify the live flow in a browser at 360px and 390px — see [`ai/NEXT_STEPS.md`](./ai/NEXT_STEPS.md) step 2 for the full acceptance list. That needs the hosted pilot adult's password, which was not available in the verified environment.
+
+⚠️ **Requires human access.** No Lovable interface was authenticated where this was verified.
+
+## P0 — closed
+
+- ✅ **PR #10 merged 2026-07-30** as `b9c603b`, branch deleted. `main` carries the ADR-038 tracked root `.env`, verified to hold exactly `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- ✅ **Signup disabled on the hosted project.** Verified 2026-08-01: `disable_signup: true` with `external.email: true`, so password sign-in works and public signup is closed. This was open from 2026-07-26 to 2026-07-31.
 
 ## Status
 
