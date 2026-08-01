@@ -38,7 +38,9 @@
     "pilot:status:hosted": "bun scripts/pilot-status-hosted.ts",
     "pilot:test:hosted-guard": "bun scripts/pilot-hosted-guard-tests.ts",
     "db:verify": "supabase db reset && bun scripts/db-types-check.ts && bun scripts/db-smoke.ts && supabase test db --local supabase/tests/database && bun scripts/db-auth-suite.ts && bun scripts/pilot-tests.ts",
-    "pilot:chores:hosted": "bun scripts/pilot-chores-hosted.ts"
+    "pilot:chores:hosted": "bun scripts/pilot-chores-hosted.ts",
+    "pilot:week": "bun scripts/pilot-week.ts",
+    "pilot:week:hosted": "bun scripts/pilot-week-hosted.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

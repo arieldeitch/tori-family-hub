@@ -81,12 +81,24 @@ export async function ensureApprovedChores(
     throw new Error("pilot configuration: the approved rotation needs at least two child profiles");
   }
 
+  // A chore starts at the beginning of the week it is added, not at the moment
+  // it is added. Otherwise a household set up on a Saturday sees six empty days
+  // and one populated one, which reads as "the app is broken" rather than "the
+  // chore is new". Past-week occurrences are generated as `pending`, which is
+  // accurate — they were not done — and the default missed_policy of
+  // `remain_overdue` is exactly the designed treatment for that (ADR-036).
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setUTCDate(today.getUTCDate() - today.getUTCDay());
+  const startsOn = weekStart.toISOString().slice(0, 10);
+
   // 1. Templates. recurrence_rule is the jsonb the app interprets (WP5B);
   //    an empty weekday list means "every day".
   const templateRows = APPROVED_CHORES.map((chore) => ({
     id: CHORE_TEMPLATE_IDS[chore.key]!,
     household_id: config.household.id,
     title: chore.title,
+    starts_on: startsOn,
     recurrence_rule: chore.weekdays.length === 0 ? { every: "day" } : { weekdays: chore.weekdays },
     // "No fixed time" is the approved pilot default (ADR-036).
     time_window_start: null,

@@ -15,6 +15,7 @@ export const he = {
   },
   nav: {
     today: "היום",
+    chores: "מטלות השבוע",
     calendar: "לוח",
     tasks: "משימות",
     shopping: "קניות",

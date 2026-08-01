@@ -481,6 +481,40 @@ The weekly data layer does **no** client-side visibility filtering. A child sees
 
 The update uses `.select()` so the write returns the row it changed. Without it, a zero-row update — an RLS refusal, or a row somebody else already moved — would be indistinguishable from success, which `PILOT_WEEKLY_CHORES.md` §7 forbids outright. Zero rows is reported as a permission fault; the activity-log entry is appended only **after** the state change is confirmed, so history can never claim a transition that did not happen.
 
+## ADR-045 — The pilot is a module of the product, not the product (Accepted)
+
+Two regressions, one cause and one omission. Both were reported by the owner as "the app is broken".
+
+### The navigation disappeared because the root route sent everyone to the pilot
+
+`src/routes/index.tsx` redirected every signed-in person to `/pilot`. That screen renders **outside `AppShell`**, so it has no header, no bottom navigation and no sidebar. All forty-odd other routes still existed, still compiled and still rendered inside `AppShell` — they were simply unreachable, because nothing linked to them and the user was placed somewhere with no way out.
+
+Nothing was deleted. The product was intact the whole time; the front door had been pointed at one room.
+
+**Decision.**
+
+- The root route sends a signed-in person to **`/today`**, which every canonical document names as the centre of the product.
+- The weekly chores are a **first-class module at `/chores`**, mounted inside `AppShell` like every other module, so navigation, direct visits and browser refresh all work.
+- `/pilot` remains as a thin account screen — profile selector, sign-out — and now **links into the application** instead of being a dead end.
+- `nav.chores` joins the primary bottom navigation. Five items is the ceiling for a thumb-reachable bar, so the mock-backed `/tasks` prototype moves to the secondary list and the real, Supabase-backed weekly view takes the primary slot.
+
+**The general rule:** a pilot adds a surface; it must never become the only surface. A redirect is a product decision, not a routing detail.
+
+### The week was empty because definitions are not occurrences
+
+`pilot:chores` creates chore **definitions** — templates, rotation rules, participants. It creates no dated rows. The weekly view queries `task_instances` for a date range, so it correctly found nothing and rendered its empty state. The earlier "3 templates, 3 rules, 6 participants" convergence was real but proved nothing about a *week*.
+
+**Decision.** A separate, re-runnable convergence step (`pilot:week`, `pilot:week:hosted`) generates the dated window. It is separate from the chores bootstrap on purpose: definitions are written once, whereas a week must be regenerated as time moves forward.
+
+- Assignment reuses **`src/domain/shifts.ts` (`shifts.v1`)**. Nothing re-implements selection.
+- The cursor is read from and advanced on `rotation_rules` **only after a decision is recorded**, so a read never moves it and the same window recomputes without drift.
+- Idempotency is delegated to three database guarantees rather than to application cleverness: one occurrence per `(household, template, date)`, one live assignment per occurrence, one decision per `(rule, occurrence)`. Every write is read-then-insert, and a lost race surfaces as a unique violation treated as *"somebody else already did it"* — never an error, never a duplicate.
+- Existing rows are never rewritten, so a chore somebody already ticked stays ticked.
+
+**A chore starts at the beginning of the week it is added**, not at the moment it is added. A household set up on a Saturday would otherwise see six empty days and one populated one, which reads as a broken app rather than a new chore. Back-filled occurrences are `pending`, which is accurate, and `remain_overdue` is already the designed treatment (ADR-036).
+
+Verified locally: run 1 created 53, run 2 created the 15 back-filled days, run 3 created **0** with totals unchanged at 68. On three consecutive days one child unloads while the other loads, swapping each day — the ADR-036 stagger, every decision `NEXT_IN_SEQUENCE`.
+
 ## Notes
 
 - **ADR-006 (rotation determinism)** is reinforced by the WP0 timezone fix: date-only rotation logic must not depend on the runtime timezone. This did not require a new ADR — it is an implementation correction under an existing accepted decision (see [`08-rotation-engine.md`](./08-rotation-engine.md)).
