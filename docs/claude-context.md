@@ -76,6 +76,8 @@ WP4.5 (Identity RPCs) and WP4.6 (Auth account deletion) remain required but are 
 - Never combine a `deleted_at is null` SELECT policy with a client-writable `deleted_at`: Postgres checks SELECT policies against the UPDATE's new row, so soft-delete becomes impossible (ADR-040).
 - **Never make membership the whole read predicate on a business table.** Scope by role, or guests and service providers get household-wide visibility (ADR-041).
 - **The app may be newer than its backend.** Before reading a table a migration added, ask `detectSchemaCapability()`; a missing table is an upgrade-pending state, never an error and never offline (ADR-044). Probe once per session — never in a render loop.
+- **A pilot adds a surface; it must never become the only surface** (ADR-045). Any screen rendered outside `AppShell` has no navigation, so redirecting the root route at one is enough to make the whole product unreachable without deleting a single file. New modules mount **inside** `AppShell`.
+- **Definitions are not occurrences.** Creating templates and rotation rules populates nothing dated; the weekly view reads `task_instances`. Run `pilot:week` after `pilot:chores`, and never hand-insert rows to make a screen look non-empty.
 - **A write is not a success until the row comes back.** Use `.select()` on updates: a zero-row update is an RLS refusal, not a completion (PILOT §7).
 - **Do not filter visibility in the browser.** RLS already returned only the permitted rows; a second copy of the rule in a weaker place will eventually disagree with the first.
 - Every `private` helper must re-derive standing from `auth.uid()` — including one that only looks up a flag, or it becomes an oracle over arbitrary ids. `080_wp4_helper_functions.sql` enforces this schema-wide.

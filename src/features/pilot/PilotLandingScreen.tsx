@@ -1,21 +1,17 @@
-// Family Pilot — landing shell (WP5A).
+// Family Pilot — landing shell (WP5A, re-scoped by WP5D).
 //
-// Confirms the household loaded under RLS and hosts the profile selector. The
-// weekly chores view itself is WP5D and is deliberately not built here.
-import { useEffect, useMemo, useState } from "react";
-import { LogOut } from "lucide-react";
+// This screen used to BE the product: the root route sent every signed-in person
+// here, and because it renders outside AppShell it had no navigation, so the
+// other forty routes became unreachable. That was the regression.
+//
+// It is now a thin account screen. The weekly chores live at /chores as a module
+// inside the application shell, and the root route sends signed-in people to
+// /today. Anyone landing here still gets a way INTO the app rather than a dead
+// end.
+import { CalendarRange, LayoutGrid, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorState, LoadingState, PermissionDeniedState } from "@/components/design-system";
-import { useSchemaCapability } from "@/lib/pilot/useSchemaCapability";
-import { useWeeklyChores } from "@/lib/pilot/useWeeklyChores";
-import { PilotUpgradePendingState } from "./PilotUpgradePendingState";
-import { WeeklyChoresView } from "./WeeklyChoresView";
-import {
-  readCachedPerspectiveId,
-  resolveSelectedPerspectiveProfile,
-  writeCachedPerspectiveId,
-  type PerspectiveProfile,
-} from "@/lib/pilot/perspective";
+import { usePerspectiveProfile } from "@/lib/pilot/usePerspectiveProfile";
 import type { AuthenticatedActor } from "@/lib/pilot/usePilotSession";
 import type { PilotHouseholdState } from "@/lib/pilot/usePilotHousehold";
 import { ProfileSelector } from "./ProfileSelector";
@@ -35,45 +31,10 @@ export function PilotLandingScreen({
   storage,
 }: PilotLandingScreenProps) {
   const { status, household, profiles, failure, reload } = householdState;
-
-  // Ask once whether the backend is new enough, then load the week only if it is.
-  const capability = useSchemaCapability(status === "ready");
-  const weekly = useWeeklyChores({
-    enabled: status === "ready" && capability.status === "ready",
-    householdId: household?.id ?? null,
-  });
-
-  const resolvedStorage = useMemo<Pick<Storage, "getItem" | "setItem"> | null>(() => {
-    if (storage) return storage;
-    return typeof window === "undefined" ? null : window.localStorage;
-  }, [storage]);
-
-  const [selectedPerspectiveProfileId, setSelectedPerspectiveProfileId] = useState<string | null>(
-    null,
+  const { selectedPerspectiveProfile, selectPerspective } = usePerspectiveProfile(
+    profiles,
+    storage,
   );
-
-  // The cached id is untrusted: it is only ever resolved against the profiles
-  // RLS actually returned, so a stale or edited cache falls back safely.
-  const selectedPerspectiveProfile = useMemo(
-    () =>
-      resolveSelectedPerspectiveProfile({
-        profiles,
-        cachedProfileId:
-          selectedPerspectiveProfileId ??
-          (resolvedStorage ? readCachedPerspectiveId(resolvedStorage) : null),
-      }),
-    [profiles, selectedPerspectiveProfileId, resolvedStorage],
-  );
-
-  useEffect(() => {
-    if (selectedPerspectiveProfile && resolvedStorage) {
-      writeCachedPerspectiveId(resolvedStorage, selectedPerspectiveProfile.id);
-    }
-  }, [selectedPerspectiveProfile, resolvedStorage]);
-
-  function handleSelectPerspective(profile: PerspectiveProfile): void {
-    setSelectedPerspectiveProfileId(profile.id);
-  }
 
   return (
     <main dir="rtl" className="mx-auto min-h-screen w-full max-w-md bg-background px-4 py-6">
@@ -99,10 +60,6 @@ export function PilotLandingScreen({
         {status === "loading" ? (
           <LoadingState title="טוען את בני הבית…" />
         ) : status === "error" ? (
-          // The failure is classified, so the screen names the actual fault
-          // instead of blaming the network for an expired session, a permission
-          // refusal or a missing migration. Retry is offered only when retrying
-          // could plausibly help.
           failure?.kind === "permission" ? (
             <PermissionDeniedState title={failure.message} description={failure.hint} />
           ) : (
@@ -111,7 +68,7 @@ export function PilotLandingScreen({
               description={failure?.hint ?? "נסו שוב בעוד רגע."}
               action={
                 failure?.retryable !== false ? (
-                  <Button onClick={reload} variant="outline">
+                  <Button onClick={reload} variant="outline" className="min-h-11">
                     נסו שוב
                   </Button>
                 ) : undefined
@@ -128,41 +85,30 @@ export function PilotLandingScreen({
             <ProfileSelector
               profiles={profiles}
               selectedPerspectiveProfile={selectedPerspectiveProfile}
-              onSelectPerspective={handleSelectPerspective}
+              onSelectPerspective={selectPerspective}
             />
 
-            <div className="mt-6">
-              {/*
-                The backend may legitimately be older than this build: WP5B/WP5C
-                are merged here but applying them to the hosted project is a
-                separate approval-gated step. Until then the family gets a calm
-                upgrade-pending screen instead of an error, and the real view
-                switches itself on the moment the tables appear — no redeploy.
-              */}
-              {capability.status === "checking" ? (
-                <LoadingState title="בודק את מצב השרת…" />
-              ) : capability.status === "upgrade_pending" ? (
-                <PilotUpgradePendingState
-                  onCheckAgain={capability.checkAgain}
-                  checking={capability.checking}
-                />
-              ) : capability.status === "error" ? (
-                <ErrorState
-                  title={capability.failure?.message ?? "לא הצלחנו לבדוק את מצב השרת"}
-                  description={capability.failure?.hint ?? "נסו שוב בעוד רגע."}
-                  action={
-                    <Button variant="outline" className="min-h-11" onClick={capability.checkAgain}>
-                      נסו שוב
-                    </Button>
-                  }
-                />
-              ) : (
-                <WeeklyChoresView
-                  weekly={weekly}
-                  profiles={profiles}
-                  actingProfile={selectedPerspectiveProfile}
-                />
-              )}
+            {/* The way back into the application. Without these, this screen is
+                a dead end — which is exactly what the regression was.
+
+                Plain anchors rather than router links: this screen renders
+                outside the application shell, and a full navigation is what we
+                actually want here — it mounts AppShell cleanly with its
+                navigation, rather than swapping a subtree into a shell-less
+                tree. It also keeps this screen renderable without a router. */}
+            <div className="mt-6 grid gap-2">
+              <Button asChild className="min-h-11 w-full">
+                <a href="/chores">
+                  <CalendarRange className="me-1.5 h-4 w-4" aria-hidden="true" />
+                  מטלות השבוע
+                </a>
+              </Button>
+              <Button asChild variant="outline" className="min-h-11 w-full">
+                <a href="/today">
+                  <LayoutGrid className="me-1.5 h-4 w-4" aria-hidden="true" />
+                  מעבר לאפליקציה
+                </a>
+              </Button>
             </div>
 
             <p className="mt-4 text-center text-xs text-muted-foreground">

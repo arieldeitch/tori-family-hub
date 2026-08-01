@@ -24,6 +24,7 @@ import { Route as MoreRouteImport } from './routes/more'
 import { Route as HouseholdRouteImport } from './routes/household'
 import { Route as ErrandsRouteImport } from './routes/errands'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
+import { Route as ChoresRouteImport } from './routes/chores'
 import { Route as ChildRouteImport } from './routes/child'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as IndexRouteImport } from './routes/index'
@@ -126,6 +127,11 @@ const ErrandsRoute = ErrandsRouteImport.update({
 const DesignSystemRoute = DesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChoresRoute = ChoresRouteImport.update({
+  id: '/chores',
+  path: '/chores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChildRoute = ChildRouteImport.update({
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/child': typeof ChildRoute
+  '/chores': typeof ChoresRoute
   '/design-system': typeof DesignSystemRoute
   '/errands': typeof ErrandsRouteWithChildren
   '/household': typeof HouseholdRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/child': typeof ChildRoute
+  '/chores': typeof ChoresRoute
   '/design-system': typeof DesignSystemRoute
   '/household': typeof HouseholdRoute
   '/more': typeof MoreRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/calendar': typeof CalendarRoute
   '/child': typeof ChildRoute
+  '/chores': typeof ChoresRoute
   '/design-system': typeof DesignSystemRoute
   '/errands': typeof ErrandsRouteWithChildren
   '/household': typeof HouseholdRoute
@@ -404,6 +413,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/child'
+    | '/chores'
     | '/design-system'
     | '/errands'
     | '/household'
@@ -449,6 +459,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/child'
+    | '/chores'
     | '/design-system'
     | '/household'
     | '/more'
@@ -486,6 +497,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/child'
+    | '/chores'
     | '/design-system'
     | '/errands'
     | '/household'
@@ -532,6 +544,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CalendarRoute: typeof CalendarRoute
   ChildRoute: typeof ChildRoute
+  ChoresRoute: typeof ChoresRoute
   DesignSystemRoute: typeof DesignSystemRoute
   ErrandsRoute: typeof ErrandsRouteWithChildren
   HouseholdRoute: typeof HouseholdRoute
@@ -656,6 +669,13 @@ declare module '@tanstack/react-router' {
       path: '/design-system'
       fullPath: '/design-system'
       preLoaderRoute: typeof DesignSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chores': {
+      id: '/chores'
+      path: '/chores'
+      fullPath: '/chores'
+      preLoaderRoute: typeof ChoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/child': {
@@ -991,6 +1011,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CalendarRoute: CalendarRoute,
   ChildRoute: ChildRoute,
+  ChoresRoute: ChoresRoute,
   DesignSystemRoute: DesignSystemRoute,
   ErrandsRoute: ErrandsRouteWithChildren,
   HouseholdRoute: HouseholdRoute,

@@ -189,13 +189,21 @@ describe("PilotLandingScreen", () => {
     expect(screen.queryByRole("radiogroup")).toBeNull();
   });
 
-  // WP5D replaced the placeholder. The weekly area is now gated on a backend
-  // capability probe, so before that probe resolves it reports that it is
-  // checking — never the old "not built yet" copy, and never an error.
-  it("gates the weekly area on the backend capability probe", async () => {
+  // This screen used to BE the product, which is what made every other module
+  // unreachable. It is now a thin account screen, and its most important job is
+  // that it is not a dead end: it must offer a way into the application shell.
+  it("is not a dead end — it links into the application and the chores module", () => {
+    setup();
+    const chores = screen.getByRole("link", { name: /מטלות השבוע/ });
+    const app = screen.getByRole("link", { name: /מעבר לאפליקציה/ });
+    expect(chores).toHaveAttribute("href", "/chores");
+    expect(app).toHaveAttribute("href", "/today");
+  });
+
+  it("no longer embeds the weekly view — that is a module at /chores now", () => {
     setup();
     expect(screen.queryByText(/תצוגת המטלות השבועית עדיין לא נבנתה/)).toBeNull();
-    expect(await screen.findByText(/בודק את מצב השרת/)).toBeInTheDocument();
+    expect(screen.queryByText(/שבוע המטלות/)).toBeNull();
   });
 
   it("never shows the offline screen merely because the probe has not resolved", () => {

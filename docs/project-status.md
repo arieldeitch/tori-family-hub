@@ -55,6 +55,30 @@ Behavioural verification with headless Chromium, after waiting for the worker to
 
 `?sw=off` remains unreliable as a general escape hatch and must not be relied on — see the note in [`PWA.md`](./PWA.md). The recovery that actually works when the app cannot boot is the self-healing offline page.
 
+## Live regression fixed — navigation restored, week populated (2026-08-01)
+
+Two separate faults, both reported as "the app is broken" (**ADR-045**).
+
+**1. The navigation disappeared.** `src/routes/index.tsx` sent every signed-in person to `/pilot`, a screen that renders *outside* `AppShell` and therefore has no header, bottom navigation or sidebar. All forty-odd other routes still existed and still rendered inside the shell — they were simply unreachable. **Nothing had been deleted.** The front door had been pointed at one room.
+
+Restored: the root route now sends a signed-in person to **`/today`**; the weekly chores are a first-class module at **`/chores`** inside `AppShell`; `/pilot` is a thin account screen that links back into the app instead of trapping people. `nav.chores` joins the primary bottom navigation, and the mock-backed `/tasks` prototype moves to the secondary list.
+
+Reachable again, all inside the shell with working direct visits and refresh: **Today · מטלות השבוע (chores) · calendar · shopping · more · tasks · transport · errands · follow-ups · shifts · household · notifications · settings · child view · templates · search**.
+
+**2. The weekly view was empty because definitions are not occurrences.** `pilot:chores` creates templates, rotation rules and participants — no dated rows. The view queries `task_instances` for a date range, so it correctly found nothing. The earlier "3 / 3 / 6" convergence was real but proved nothing about a *week*.
+
+New `pilot:week` / `pilot:week:hosted` generate the dated rolling window using `shifts.v1`, persisting occurrences, live assignments, rotation decisions with reason codes and verbatim Hebrew explanations, and advancing the cursor only after a decision is recorded.
+
+**Verified locally** (idempotency and determinism):
+
+| Run | Occurrences created | Totals |
+| --- | --- | --- |
+| 1 | 53 | 0 → 53 |
+| 2 | 15 (back-filled week start) | 53 → 68 |
+| 3 | **0** | **68 → 68** |
+
+Rotation on three consecutive days: one child unloads while the other loads, swapping each day — the ADR-036 stagger. Trash falls on Sunday/Tuesday/Thursday only. Every decision `NEXT_IN_SEQUENCE`.
+
 ## Hosted deployment — WP5B and WP5C applied (2026-08-01)
 
 The hosted pilot project `nrfelnchbmofwrfajfai` (`tori-family-pilot`) is now **level with `main`**. Applied through the normal Supabase migration workflow — no repair, no linked reset, no manual SQL.

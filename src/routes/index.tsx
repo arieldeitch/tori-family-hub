@@ -29,7 +29,20 @@ function RootEntry() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (status === "signed-in") void navigate({ to: "/pilot", replace: true });
+    // A signed-in person goes to the APPLICATION, not to the pilot screen.
+    //
+    // This line used to send them to /pilot, which is a standalone screen with
+    // no app shell and no navigation, so every other module — Today, calendar,
+    // tasks, shopping, transport, follow-ups, household, notifications,
+    // settings — became unreachable even though all forty-odd routes still
+    // existed and still rendered inside AppShell. The pilot narrowed the whole
+    // product to one screen instead of adding a module to it.
+    //
+    // /today is the intended home: "The Today screen is the center of the
+    // product" (README, 01-product-requirements.md). The pilot's weekly chores
+    // now live at /chores as a first-class module inside the same shell, and
+    // /pilot remains reachable for the profile selector.
+    if (status === "signed-in") void navigate({ to: "/today", replace: true });
     else if (status === "signed-out") void navigate({ to: "/pilot/signin", replace: true });
   }, [status, navigate]);
 
