@@ -79,6 +79,24 @@ New `pilot:week` / `pilot:week:hosted` generate the dated rolling window using `
 
 Rotation on three consecutive days: one child unloads while the other loads, swapping each day — the ADR-036 stagger. Trash falls on Sunday/Tuesday/Thursday only. Every decision `NEXT_IN_SEQUENCE`.
 
+### Hosted week generated (2026-08-01)
+
+| Table | Before | After |
+| --- | --- | --- |
+| `task_templates` | 3 | 3 |
+| `task_instances` | **0** | **68** |
+| `task_assignments` | **0** | **68** |
+| `rotation_assignment_log` | **0** | **68** |
+| `rotation_rules` | 3 | 3 |
+| `rotation_members` | 6 | 6 |
+| `task_activity_log` | 0 | 0 (no completions yet — correct) |
+
+`task_instances` at **0** is the precise root cause of the empty weekly view, now closed.
+
+**Current week 2026-07-26 → 2026-08-01: 17 occurrences, every one of the seven days populated** (3 · 2 · 3 · 2 · 3 · 2 · 2 — two daily chores plus trash on Sunday, Tuesday and Thursday). **17/17 assigned**, and **17/17 carry both a reason code and an algorithm version**, so no assignment is unexplained.
+
+Idempotency proven on hosted: runs 2 and 3 created **0** rows with totals unchanged at 68.
+
 ## Hosted deployment — WP5B and WP5C applied (2026-08-01)
 
 The hosted pilot project `nrfelnchbmofwrfajfai` (`tori-family-pilot`) is now **level with `main`**. Applied through the normal Supabase migration workflow — no repair, no linked reset, no manual SQL.
