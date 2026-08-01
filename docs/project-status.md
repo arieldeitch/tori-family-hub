@@ -55,6 +55,49 @@ Behavioural verification with headless Chromium, after waiting for the worker to
 
 `?sw=off` remains unreliable as a general escape hatch and must not be relied on — see the note in [`PWA.md`](./PWA.md). The recovery that actually works when the app cannot boot is the self-healing offline page.
 
+## Hosted deployment — WP5B and WP5C applied (2026-08-01)
+
+The hosted pilot project `nrfelnchbmofwrfajfai` (`tori-family-pilot`) is now **level with `main`**. Applied through the normal Supabase migration workflow — no repair, no linked reset, no manual SQL.
+
+**Before applying**, the ledger was verified consistent and the pending set confirmed to be exactly the two reviewed migrations:
+
+```
+20260724153731 WP2   local + remote
+20260725143927 WP3   local + remote
+20260725154640 WP4   local + remote
+20260730120000 WP5B  local only  → pending
+20260731140000 WP5C  local only  → pending
+```
+
+No remote-only entry existed, so there was no drift. `db push --dry-run` listed exactly those two. Both files were scanned first: **0 destructive statements, 0 writes to `auth`, 0 `USING (true)`, 0 `DISABLE ROW LEVEL SECURITY`.**
+
+### Verified on the hosted project after applying
+
+| Check | Result |
+| --- | --- |
+| Migration ledger | all five local = remote |
+| Tables | **11** created, **11** `ENABLE ROW LEVEL SECURITY` |
+| Policies | **26** (6 identity + 11 WP5B + 9 WP5C), matching per-table counts exactly |
+| `USING (true)` / RLS disabled | **0 / 0** |
+| `anon` probe, all 11 tables | **401 · `42501`** — exists, refused. None returned 200 |
+| `anon` grants on the new tables | **0** |
+| `private` helpers | **9** (3 identity + 4 task + 2 rotation) |
+| Idempotency indexes | `task_instances_occurrence_key_unique`, `rotation_assignment_log_one_per_instance` present |
+| Append-only triggers | `task_activity_log` and `rotation_assignment_log` no-update/no-delete present |
+
+### Approved chores, loaded through the guarded bootstrap
+
+`bun run pilot:chores:hosted` reuses `assertHostedPilotEnvironment` verbatim and shares its convergence logic with the local command, so "converged" cannot mean two different things in two environments. No pilot data entered a migration or `seed.sql` (ADR-034).
+
+- **Idempotent**: `0 → 3` templates, `0 → 3` rules, `0 → 6` participants on the first run, then **3 → 3 and 6 → 6** on two further runs.
+- **Guard proven**: a non-allowlisted project reference is refused with *"is not in the approved allowlist"*.
+- **ADR-036 stagger verified on hosted**: the two dishwasher chores start with **different** children, and the trash chore starts with the same child as unloading. Each rule has its own `cursor_profile_id`, currently `null` (never run).
+- All three rules are `fixed_sequence` · `shifts.v1` · `per_occurrence`.
+
+### Hosted Auth
+
+`external.email: true`, `disable_signup: true` — password sign-in works and public signup stays closed. A sign-in probe now returns `invalid_credentials` rather than `email_provider_disabled`, so the fault recorded on 2026-07-31 is resolved.
+
 ## Verified state after WP5D — the real weekly chores experience
 
 Measured 2026-07-31 against the local Supabase stack. **Nothing hosted was touched.**
