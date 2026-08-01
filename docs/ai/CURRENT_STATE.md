@@ -11,15 +11,16 @@ Every line below was checked against the repository, GitHub, the hosted Supabase
 
 ## Repository
 
-|                          |                                                                                  |
-| ------------------------ | -------------------------------------------------------------------------------- |
-| Branch                   | `main`                                                                           |
-| Upstream                 | `origin/main`, **0 ahead / 0 behind**                                            |
-| HEAD                     | `0523f22` — _Merge pull request #21 from arieldeitch/docs/hosted-week-generated_ |
-| Working tree             | **clean** — no staged, unstaged or untracked changes                             |
-| Stashes                  | none                                                                             |
-| Open PRs                 | none                                                                             |
-| Last 4 CI runs on `main` | all **success**                                                                  |
+|                          |                                                                                              |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| Branch                   | `main`                                                                                       |
+| Upstream                 | `origin/main`, **0 ahead / 0 behind**                                                        |
+| Last code commit         | `0523f22` — _Merge pull request #21 from arieldeitch/docs/hosted-week-generated_             |
+| HEAD                     | `16b8c17` — this consolidation. **Documentation only**; no code has changed since `0523f22`. |
+| Working tree             | **clean** — no staged, unstaged or untracked changes                                         |
+| Stashes                  | none                                                                                         |
+| Open PRs                 | none                                                                                         |
+| Last 4 CI runs on `main` | all **success**                                                                              |
 
 **Rollback tags** (newest first): `recovery-point/pre-docs-consolidation-2026-08-01` · `recovery-point/pre-shell-restore-2026-08-01` · `recovery-point/pre-wp5d-2026-07-31` · `recovery-point/pre-wp5b-2026-07-31`
 

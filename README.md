@@ -6,7 +6,7 @@
 
 ## Status
 
-**Verified 2026-08-01, 19:05 Asia/Jerusalem.** `main` @ `0523f22`, clean, no open PRs, CI green. The hosted backend is complete and populated; **the live frontend has not been rebuilt since PR #18**, so the weekly chores module and the restored navigation are merged but not yet live. Fast resume: [`docs/ai/CURRENT_STATE.md`](./docs/ai/CURRENT_STATE.md) → [`docs/ai/NEXT_STEPS.md`](./docs/ai/NEXT_STEPS.md).
+**Verified 2026-08-01, 19:05 Asia/Jerusalem.** Last code commit `0523f22`, clean, no open PRs, CI green (`main` has moved on only for documentation since). The hosted backend is complete and populated; **the live frontend has not been rebuilt since PR #18**, so the weekly chores module and the restored navigation are merged but not yet live. Fast resume: [`docs/ai/CURRENT_STATE.md`](./docs/ai/CURRENT_STATE.md) → [`docs/ai/NEXT_STEPS.md`](./docs/ai/NEXT_STEPS.md).
 
 - Prototype built in Lovable; GitHub connected; Claude Code active.
 - **WP0 (foundation fixes)** and **WP1 (Knowledge Pack)** complete and merged to `main`.

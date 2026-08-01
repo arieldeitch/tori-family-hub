@@ -23,7 +23,7 @@ Continuity for GPT conversations about Tori. Read alongside [`claude-context.md`
 
 ### Verified state
 
-`main` @ **`0523f22`**, clean, in sync, no open PRs, last four CI runs green.
+Last code commit **`0523f22`**, clean, in sync, no open PRs, last four CI runs green. `main` has advanced past it only for documentation.
 
 **Backend is ready.** All 5 migrations applied to `tori-family-pilot` (`nrfelnchbmofwrfajfai`). Hosted rows: 68 occurrences, 68 assignments, 68 rotation decisions, 3 templates, 3 rules, 6 participants. The week of 2026-07-26 → 2026-08-01 has 17 occurrences across all seven days, every one assigned with a reason code and algorithm version. Auth: password sign-in on, public signup off.
 

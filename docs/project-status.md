@@ -12,7 +12,7 @@ _Last updated: **2026-08-01, 19:05 Asia/Jerusalem (16:05 UTC)** — end-of-sessi
 
 ### Repository
 
-`main` @ **`0523f22`**, in sync with `origin/main` (0 ahead / 0 behind). Working tree **clean**; no stashes; **no open PRs**; last four CI runs on `main` all **success**.
+Last **code** commit **`0523f22`**, in sync with `origin/main` (0 ahead / 0 behind). Working tree **clean**; no stashes; **no open PRs**; last four CI runs on `main` all **success**. `main` has since advanced for documentation only — every statement below describes the state at `0523f22`, which is still the newest code.
 
 ### The four states a piece of work can be in
 
